@@ -3,32 +3,24 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    
-    // Log para você verificar no F12 do navegador se os dados estão preenchidos
-    console.log("Dados enviados:", { email, senha });
-
     try {
-      const response = await axios.post('http://127.0.0.1:8000/login', {
-        email: email, // Garante que está pegando o estado 'email'
-        senha: senha  // Garante que está pegando o estado 'senha'
+      const response = await axios.post('http://127.0.0.1:8000/register', {
+        nome: nome,
+        email: email,
+        senha: senha
       });
-      
-      alert("Bem-vindo, " + response.data.user);
-      navigate('/dashboard');
+      alert(response.data.message);
+      navigate('/login');
     } catch (error) {
-      if (error.response && error.response.status === 422) {
-        console.error("Erro 422 detalhado:", error.response.data.detail);
-        alert("Erro de validação: Verifique se todos os campos estão preenchidos.");
-      } else {
-        alert("Erro no login: " + (error.response?.data?.detail || "Erro desconhecido"));
-      }
+      alert("Erro no cadastro: " + (error.response?.data?.detail || "Erro desconhecido"));
     }
   };
 
@@ -60,11 +52,26 @@ const Login = () => {
           </Link>
 
           <div style={{ marginBottom: '40px' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '10px' }}>Entrar na plataforma</h3>
-            <p style={{ opacity: 0.4, fontSize: '0.9rem' }}>Insira seus dados para acessar o painel.</p>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '10px' }}>Criar conta</h3>
+            <p style={{ opacity: 0.4, fontSize: '0.9rem' }}>Cadastre-se para começar a usar o chat.</p>
           </div>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ fontSize: '0.7rem', fontWeight: '700', opacity: 0.3, textTransform: 'uppercase', marginLeft: '5px', display: 'block', marginBottom: '8px' }}>Nome Completo</label>
+              <input 
+                type="text" 
+                placeholder="Seu nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                required
+                style={{ 
+                  width: '100%', padding: '18px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.08)', 
+                  background: 'rgba(0,0,0,0.3)', color: 'white', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box'
+                }} 
+              />
+            </div>
+
             <div style={{ textAlign: 'left' }}>
               <label style={{ fontSize: '0.7rem', fontWeight: '700', opacity: 0.3, textTransform: 'uppercase', marginLeft: '5px', display: 'block', marginBottom: '8px' }}>E-mail</label>
               <input 
@@ -84,7 +91,7 @@ const Login = () => {
               <label style={{ fontSize: '0.7rem', fontWeight: '700', opacity: 0.3, textTransform: 'uppercase', marginLeft: '5px', display: 'block', marginBottom: '8px' }}>Senha</label>
               <input 
                 type="password" 
-                placeholder="••••••••"
+                placeholder="Crie uma senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required
@@ -103,14 +110,14 @@ const Login = () => {
                 cursor: 'pointer', fontSize: '1rem', transition: '0.3s'
               }}
             >
-              ACESSAR DASHBOARD
+              CRIAR CONTA AGORA
             </button>
           </form>
 
           <div style={{ marginTop: '35px', paddingTop: '25px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <p style={{ fontSize: '0.85rem', opacity: 0.4 }}>
-              Ainda não tem acesso? <br/>
-              <Link to="/cadastrar" style={{ color: '#25D366', textDecoration: 'none', fontWeight: '700' }}>Crie sua conta agora</Link>
+              Já possui uma conta? <br/>
+              <Link to="/login" style={{ color: '#25D366', textDecoration: 'none', fontWeight: '700' }}>Fazer login</Link>
             </p>
           </div>
         </motion.div>
@@ -126,4 +133,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

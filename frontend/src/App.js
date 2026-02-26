@@ -7,6 +7,8 @@ import PageTransition from './components/PageTransition';
 import Tech from './pages/Tech';
 import Sobre from './pages/Sobre';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import FlowEditor from './pages/FlowEditor';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -46,11 +48,30 @@ function AnimatedRoutes() {
             </PageTransition>
           } 
         />
+
+        <Route 
+          path="/cadastrar" 
+          element={
+            <PageTransition>
+              <Register />
+            </PageTransition>
+          } 
+        />
+
         <Route 
           path="/sobre" 
           element={
             <PageTransition>
               <Sobre />
+            </PageTransition>
+          } 
+        />
+
+        <Route 
+          path="/editor/:id" 
+          element={
+            <PageTransition>
+              <FlowEditor />
             </PageTransition>
           } 
         />
