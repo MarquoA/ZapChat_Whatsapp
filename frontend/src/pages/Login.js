@@ -3,51 +3,52 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // Log para você verificar no F12 do navegador se os dados estão preenchidos
-    console.log("Dados enviados:", { email, senha });
+    setErro('');
+    setLoading(true);
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/login', {
-        email: email, // Garante que está pegando o estado 'email'
-        senha: senha  // Garante que está pegando o estado 'senha'
-      });
-      
-      alert("Bem-vindo, " + response.data.user);
-      navigate('/dashboard');
-    } catch (error) {
-      if (error.response && error.response.status === 422) {
-        console.error("Erro 422 detalhado:", error.response.data.detail);
-        alert("Erro de validação: Verifique se todos os campos estão preenchidos.");
-      } else {
-        alert("Erro no login: " + (error.response?.data?.detail || "Erro desconhecido"));
-      }
-    }
+  const response = await axios.post(`${API_URL}/login`, { email, senha });
+
+  // Salva token JWT e dados do usuário
+  localStorage.setItem('token', response.data.token);
+  localStorage.setItem('usuario_id', response.data.id);
+  localStorage.setItem('usuario_nome', response.data.user);
+
+  navigate('/dashboard');
+} catch (error) {
+  setErro(error.response?.data?.detail || 'Erro ao fazer login. Tente novamente.');
+} finally {
+  setLoading(false);
+}
   };
 
   return (
     <div style={{ backgroundColor: '#0d140d', color: 'white', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '20px' }}>
-        
-        <div style={{ 
+
+        <div style={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          width: '600px', height: '600px', 
+          width: '600px', height: '600px',
           background: 'radial-gradient(circle, rgba(37, 211, 102, 0.05) 0%, transparent 70%)',
-          zIndex: 0 
+          zIndex: 0
         }} />
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ 
-            width: '100%', maxWidth: '420px', padding: '60px 40px', 
+          style={{
+            width: '100%', maxWidth: '420px', padding: '60px 40px',
             background: 'rgba(255,255,255,0.02)', borderRadius: '40px',
             border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)',
             zIndex: 1, textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
@@ -67,57 +68,68 @@ const Login = () => {
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ textAlign: 'left' }}>
               <label style={{ fontSize: '0.7rem', fontWeight: '700', opacity: 0.3, textTransform: 'uppercase', marginLeft: '5px', display: 'block', marginBottom: '8px' }}>E-mail</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                style={{ 
-                  width: '100%', padding: '18px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.08)', 
+                style={{
+                  width: '100%', padding: '18px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.08)',
                   background: 'rgba(0,0,0,0.3)', color: 'white', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box'
-                }} 
+                }}
               />
             </div>
-            
+
             <div style={{ textAlign: 'left' }}>
               <label style={{ fontSize: '0.7rem', fontWeight: '700', opacity: 0.3, textTransform: 'uppercase', marginLeft: '5px', display: 'block', marginBottom: '8px' }}>Senha</label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 placeholder="••••••••"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required
-                style={{ 
-                  width: '100%', padding: '18px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.08)', 
+                style={{
+                  width: '100%', padding: '18px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.08)',
                   background: 'rgba(0,0,0,0.3)', color: 'white', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box'
-                }} 
+                }}
               />
             </div>
 
-            <button 
+            {/* Mensagem de erro */}
+            {erro && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                style={{ background: 'rgba(255,75,75,0.1)', border: '1px solid rgba(255,75,75,0.3)', borderRadius: '10px', padding: '12px', fontSize: '0.82rem', color: '#ff4b4b', textAlign: 'left' }}>
+                ❌ {erro}
+              </motion.div>
+            )}
+
+            <motion.button
               type="submit"
-              style={{ 
+              disabled={loading}
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              style={{
                 marginTop: '15px', padding: '20px', borderRadius: '15px', border: 'none',
-                background: '#25D366', color: '#0d140d', fontWeight: '900',
-                cursor: 'pointer', fontSize: '1rem', transition: '0.3s'
+                background: loading ? 'rgba(37,211,102,0.5)' : '#25D366',
+                color: '#0d140d', fontWeight: '900',
+                cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', transition: '0.3s'
               }}
             >
-              ACESSAR DASHBOARD
-            </button>
+              {loading ? 'ENTRANDO...' : 'ACESSAR DASHBOARD'}
+            </motion.button>
           </form>
 
           <div style={{ marginTop: '35px', paddingTop: '25px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <p style={{ fontSize: '0.85rem', opacity: 0.4 }}>
-              Ainda não tem acesso? <br/>
+              Ainda não tem acesso? <br />
               <Link to="/cadastrar" style={{ color: '#25D366', textDecoration: 'none', fontWeight: '700' }}>Crie sua conta agora</Link>
             </p>
           </div>
         </motion.div>
 
-        <Link to="/" style={{ 
-          position: 'absolute', bottom: '40px', color: 'rgba(255,255,255,0.2)', 
-          textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600' 
+        <Link to="/" style={{
+          position: 'absolute', bottom: '40px', color: 'rgba(255,255,255,0.2)',
+          textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600'
         }}>
           ← Voltar para o site principal
         </Link>
