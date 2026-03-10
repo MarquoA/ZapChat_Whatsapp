@@ -8,6 +8,7 @@ from app.routes.usuario_routes import router as usuario_router
 from app.routes.instancia_routes import router as instancia_router
 from app.routes.bot_routes import router as bot_router
 from app.routes.pagamento_routes import router as pagamento_router
+from app.routes.esqueci_senha_routes import router as esqueci_router
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -55,6 +56,7 @@ app.include_router(usuario_router)
 app.include_router(instancia_router)
 app.include_router(bot_router)
 app.include_router(pagamento_router)
+app.include_router(esqueci_router)
 
 class UsuarioCreate(BaseModel):
     nome: str

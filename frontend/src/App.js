@@ -10,6 +10,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import FlowEditor from './pages/FlowEditor';
 import Assinar from './pages/Assinar';
+import EsqueciSenha from './pages/EsqueciSenha';
+import RedefinirSenha from './pages/RedefinirSenha';
+import NotFound from './pages/NotFound';
 
 // ─── PROTEÇÃO DE ROTA ────────────────────────────────────────────────────────
 const RotaProtegida = ({ children }) => {
@@ -30,6 +33,9 @@ function AnimatedRoutes() {
         <Route path="/sobre" element={<PageTransition><Sobre /></PageTransition>} />
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/cadastrar" element={<PageTransition><Register /></PageTransition>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        <Route path="/esqueci-senha" element={<PageTransition><EsqueciSenha /></PageTransition>} />
+        <Route path="/redefinir-senha" element={<PageTransition><RedefinirSenha /></PageTransition>} />
 
         {/* Rotas protegidas */}
         <Route path="/assinar" element={

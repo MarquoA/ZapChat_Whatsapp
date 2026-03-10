@@ -48,7 +48,6 @@ const FAQItem = ({ question, answer, index }) => {
   );
 };
 
-// ── FAQ de Pagamentos (mesmo estilo do FAQItem) ──────────────────────────────
 const PricingFAQItem = ({ question, answer, index }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -96,7 +95,6 @@ const Home = () => {
     { q: "O que acontece se eu cancelar?", a: "Você mantém o acesso até o fim do período pago. Após o vencimento, sua conta é desativada e seus dados ficam armazenados por 30 dias caso queira reativar." },
   ];
 
-  // Preços mensais e anuais (anual = 2 meses grátis = /10 * 12)
   const planos = [
     {
       name: "Starter",
@@ -127,7 +125,6 @@ const Home = () => {
     },
   ];
 
-  // Tabela comparativa — linhas de features
   const compareRows = [
     { feature: "Conexões WhatsApp",         starter: "1",         pro: "3",             business: "Ilimitadas" },
     { feature: "Editor visual de fluxos",   starter: true,        pro: true,            business: true },
@@ -346,21 +343,14 @@ const Home = () => {
           <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.6rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '12px 0 10px' }}>Escolha sua escala.</h2>
           <p style={{ opacity: 0.4, fontSize: '0.92rem', margin: '0 0 32px' }}>Sem taxas escondidas. Cancele quando quiser. 7 dias de garantia.</p>
 
-          {/* ── Toggle mensal / anual ── */}
           <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '50px', padding: '6px 8px' }}
           >
             <button onClick={() => setBillingAnual(false)} className="toggle-pill"
-              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', transition: '0.25s',
-                background: !billingAnual ? '#25D366' : 'transparent',
-                color: !billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)'
-              }}
+              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', transition: '0.25s', background: !billingAnual ? '#25D366' : 'transparent', color: !billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)' }}
             >Mensal</button>
             <button onClick={() => setBillingAnual(true)} className="toggle-pill"
-              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.25s',
-                background: billingAnual ? '#25D366' : 'transparent',
-                color: billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)'
-              }}
+              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.25s', background: billingAnual ? '#25D366' : 'transparent', color: billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)' }}
             >
               Anual
               <span style={{ background: billingAnual ? 'rgba(0,0,0,0.15)' : 'rgba(37,211,102,0.15)', color: billingAnual ? '#0a0f0a' : '#25D366', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.5px' }}>
@@ -381,7 +371,6 @@ const Home = () => {
               <h3 style={{ fontSize: '1.15rem', fontWeight: '800', marginBottom: '6px' }}>{p.name}</h3>
               <p style={{ fontSize: '0.8rem', opacity: 0.38, marginBottom: '22px', lineHeight: '1.5', minHeight: '34px' }}>{p.description}</p>
 
-              {/* Preço com animação de troca */}
               <div style={{ marginBottom: '26px' }}>
                 <AnimatePresence mode="wait">
                   <motion.div key={billingAnual ? 'anual' : 'mensal'}
@@ -409,10 +398,13 @@ const Home = () => {
                 ))}
               </div>
 
+              {/* ── BOTÃO ATUALIZADO ── */}
               <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                onClick={() => p.name === 'Business' ? window.open('https://wa.me/5511999999999?text=Olá%2C%20tenho%20interesse%20no%20plano%20Business%20do%20ZapChat!', '_blank') : navigate('/cadastrar')}
+                onClick={() => p.name === 'Business'
+                  ? window.open('https://wa.me/5511999999999?text=Olá%2C%20tenho%20interesse%20no%20plano%20Business%20do%20ZapChat!', '_blank')
+                  : navigate(`/cadastrar?plano=${p.name.toLowerCase()}&periodo=${billingAnual ? 'anual' : 'mensal'}`)}
                 style={{ marginTop: '28px', width: '100%', padding: '14px', borderRadius: '10px', border: 'none', background: p.highlight ? '#25D366' : 'rgba(255,255,255,0.06)', color: p.highlight ? '#0a0f0a' : 'white', fontWeight: '800', cursor: 'pointer', fontSize: '0.8rem', transition: '0.3s' }}
-              >{p.cta} </motion.button>
+              >{p.cta}</motion.button>
             </motion.div>
           ))}
         </div>
@@ -425,7 +417,6 @@ const Home = () => {
         >
           <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '280px', height: '280px', background: 'radial-gradient(circle, rgba(37,211,102,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
           <div className="guarantee-flex" style={{ display: 'flex', alignItems: 'center', gap: '60px', flexWrap: 'wrap' }}>
-            {/* Selo de garantia */}
             <motion.div whileHover={{ rotate: [0, -3, 3, 0] }} transition={{ duration: 0.4 }} style={{ flexShrink: 0, textAlign: 'center', width: '130px' }}>
               <div style={{ width: '120px', height: '120px', borderRadius: '50%', border: '3px solid rgba(37,211,102,0.4)', background: 'rgba(37,211,102,0.07)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#25D366', lineHeight: 1 }}>7</div>
@@ -433,24 +424,14 @@ const Home = () => {
                 <div style={{ fontSize: '0.48rem', fontWeight: '700', color: 'white', letterSpacing: '0.5px', textTransform: 'uppercase', opacity: 0.35, marginTop: '1px' }}>garantia</div>
               </div>
             </motion.div>
-
-            {/* Texto */}
             <div style={{ flex: 1, minWidth: '240px' }}>
-              <h3 style={{ fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)', fontWeight: '900', letterSpacing: '-1px', marginBottom: '12px' }}>
-                Garantia incondicional de 7 dias.
-              </h3>
+              <h3 style={{ fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)', fontWeight: '900', letterSpacing: '-1px', marginBottom: '12px' }}>Garantia incondicional de 7 dias.</h3>
               <p style={{ opacity: 0.5, lineHeight: '1.75', fontSize: '0.93rem', margin: 0, maxWidth: '520px' }}>
                 Se por qualquer motivo o ZapChat não funcionar para o seu negócio nos primeiros 7 dias, devolvemos 100% do valor pago. Sem perguntas, sem burocracia, sem formulário. Basta mandar uma mensagem.
               </p>
             </div>
-
-            {/* Cards de garantia */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
-              {[
-                { text: 'Reembolso integral em 24h' },
-                { text: 'Sem fidelidade ou multa' },
-                { text: 'Cancelamento imediato' },
-              ].map((item, i) => (
+              {[{ text: 'Reembolso integral em 24h' }, { text: 'Sem fidelidade ou multa' }, { text: 'Cancelamento imediato' }].map((item, i) => (
                 <div key={i} className="guarantee-card"
                   style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 18px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', fontSize: '0.82rem', fontWeight: '600', whiteSpace: 'nowrap' }}
                 >
@@ -469,7 +450,6 @@ const Home = () => {
           <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Comparativo</motion.span>
           <h2 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2.2rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '12px 0 0' }}>O que está em cada plano.</h2>
         </div>
-
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="compare-wrap"
           style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', overflowX: 'auto' }}
         >
@@ -487,8 +467,7 @@ const Home = () => {
             </thead>
             <tbody>
               {compareRows.map((row, i) => (
-                <motion.tr key={i}
-                  initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.04 }}
+                <motion.tr key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.04 }}
                   style={{ borderBottom: i < compareRows.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
                 >
                   <td style={{ padding: '15px 24px', fontSize: '0.85rem', opacity: 0.6, fontWeight: '500' }}>{row.feature}</td>
