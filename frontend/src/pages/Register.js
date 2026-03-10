@@ -15,7 +15,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
-  // Se veio de um plano específico, guarda para redirecionar depois
   const plano    = searchParams.get('plano');
   const periodo  = searchParams.get('periodo');
   const redirectTo = plano && periodo
@@ -31,16 +30,14 @@ const Register = () => {
 
     setLoading(true);
     try {
-      // 1. Cadastra o usuário
       await axios.post(`${API_URL}/register`, { nome, email, senha });
 
-      // 2. Faz login automático
       const loginResp = await axios.post(`${API_URL}/login`, { email, senha });
       localStorage.setItem('token', loginResp.data.token);
       localStorage.setItem('usuario_id', loginResp.data.id);
       localStorage.setItem('usuario_nome', loginResp.data.user);
+      localStorage.setItem('usuario_plano', loginResp.data.plano); // ← CORRIGIDO
 
-      // 3. Redireciona para /assinar (com plano se veio de um botão específico)
       navigate(redirectTo, { replace: true });
     } catch (error) {
       setErro(error.response?.data?.detail || 'Erro ao criar conta. Tente novamente.');

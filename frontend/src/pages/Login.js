@@ -13,7 +13,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
-  // Pega a URL de redirect se vier de /assinar ou outra rota protegida
   const redirectTo = searchParams.get('redirect') || '/dashboard';
 
   const handleLogin = async (e) => {
@@ -25,7 +24,7 @@ const Login = () => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('usuario_id', response.data.id);
       localStorage.setItem('usuario_nome', response.data.user);
-      // Redireciona para onde o usuário queria ir
+      localStorage.setItem('usuario_plano', response.data.plano); // ← NOVO
       navigate(redirectTo, { replace: true });
     } catch (error) {
       setErro(error.response?.data?.detail || 'Erro ao fazer login. Tente novamente.');

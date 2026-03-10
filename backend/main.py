@@ -1,24 +1,90 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from app.database import get_db_connection
 from app.routes.fluxo_routes import router as fluxo_router
-from app.routes.usuario_routes import router as usuario_router
 from app.routes.instancia_routes import router as instancia_router
 from app.routes.bot_routes import router as bot_router
 from app.routes.pagamento_routes import router as pagamento_router
 from app.routes.esqueci_senha_routes import router as esqueci_router
+from app.routes.disparos_routes import router as disparos_router
+
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from collections import defaultdict
+import threading
+import time
 import json
+import os
+
+# ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 SECRET_KEY = "zapchat_senha_MmC"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# ─── RATE LIMITER (em memória, sem dependências externas) ────────────────────
+# Estrutura: { ip: { "tentativas": int, "bloqueado_ate": timestamp, "janela_inicio": timestamp } }
+
+_lock = threading.Lock()
+_rate_data: dict = defaultdict(lambda: {"tentativas": 0, "bloqueado_ate": 0.0, "janela_inicio": time.time()})
+
+# Configurações
+JANELA_SEGUNDOS = 60        # janela de tempo para contar tentativas
+MAX_TENTATIVAS = 5          # máximo de tentativas na janela
+BLOQUEIO_SEGUNDOS = 300     # 5 minutos bloqueado após exceder
+
+
+def get_client_ip(request: Request) -> str:
+    """Pega o IP real mesmo atrás de proxy/Nginx."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host
+
+
+def checar_rate_limit(ip: str):
+    """Verifica e registra tentativa. Lança 429 se bloqueado ou limite atingido."""
+    agora = time.time()
+    with _lock:
+        dados = _rate_data[ip]
+
+        # Ainda está no período de bloqueio?
+        if agora < dados["bloqueado_ate"]:
+            segundos_restantes = int(dados["bloqueado_ate"] - agora)
+            raise HTTPException(
+                status_code=429,
+                detail=f"IP bloqueado por excesso de tentativas. Tente novamente em {segundos_restantes}s."
+            )
+
+        # Resetar janela se já passou o tempo
+        if agora - dados["janela_inicio"] > JANELA_SEGUNDOS:
+            dados["tentativas"] = 0
+            dados["janela_inicio"] = agora
+
+        dados["tentativas"] += 1
+
+        # Atingiu o limite? Bloqueia o IP
+        if dados["tentativas"] > MAX_TENTATIVAS:
+            dados["bloqueado_ate"] = agora + BLOQUEIO_SEGUNDOS
+            dados["tentativas"] = 0
+            raise HTTPException(
+                status_code=429,
+                detail=f"Muitas tentativas. IP bloqueado por {BLOQUEIO_SEGUNDOS // 60} minutos."
+            )
+
+
+def liberar_ip(ip: str):
+    """Chamado após login bem-sucedido — zera o contador do IP."""
+    with _lock:
+        _rate_data[ip] = {"tentativas": 0, "bloqueado_ate": 0.0, "janela_inicio": time.time()}
+
+
+# ─── AUTH HELPERS ─────────────────────────────────────────────────────────────
 
 def hash_senha(senha: str) -> str:
     return pwd_context.hash(senha)
@@ -42,21 +108,37 @@ security = HTTPBearer()
 def get_usuario_atual(credentials: HTTPAuthorizationCredentials = Depends(security)):
     return verificar_token(credentials.credentials)
 
+
+# ─── APP ──────────────────────────────────────────────────────────────────────
+
 app = FastAPI()
+
+# CORS — em dev aceita localhost; em produção lê FRONTEND_URL do .env
+# Quando tiver o domínio, adicione ao .env: FRONTEND_URL=https://seudominio.com.br
+_frontend_url = os.getenv("FRONTEND_URL", "")
+ALLOWED_ORIGINS = list(filter(None, [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    _frontend_url if _frontend_url and _frontend_url != "https://google.com" else None,
+]))
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 app.include_router(fluxo_router)
-app.include_router(usuario_router)
 app.include_router(instancia_router)
 app.include_router(bot_router)
 app.include_router(pagamento_router)
 app.include_router(esqueci_router)
+app.include_router(disparos_router)
+
+
+# ─── MODELS ───────────────────────────────────────────────────────────────────
 
 class UsuarioCreate(BaseModel):
     nome: str
@@ -67,10 +149,22 @@ class UsuarioLogin(BaseModel):
     email: str
     senha: str
 
+class FluxoDados(BaseModel):
+    usuario_id: int
+    nome_fluxo: str
+    fluxo: dict
+
+
+# ─── ROTAS PÚBLICAS (com rate limiting) ───────────────────────────────────────
+
 @app.post("/register")
-async def register(usuario: UsuarioCreate):
+async def register(usuario: UsuarioCreate, request: Request):
+    ip = get_client_ip(request)
+    checar_rate_limit(ip)  # máx 5 cadastros/min por IP
+
     if len(usuario.senha) < 6:
         raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 6 caracteres.")
+
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
@@ -85,6 +179,7 @@ async def register(usuario: UsuarioCreate):
             (usuario.nome, usuario.email, senha_hash)
         )
         conn.commit()
+        liberar_ip(ip)  # cadastro ok, zera contador
         return {"message": "Usuário cadastrado com sucesso!"}
     except HTTPException:
         raise
@@ -95,39 +190,60 @@ async def register(usuario: UsuarioCreate):
         cursor.close()
         conn.close()
 
+
 @app.post("/login")
-async def login(usuario: UsuarioLogin):
+async def login(usuario: UsuarioLogin, request: Request):
+    ip = get_client_ip(request)
+    checar_rate_limit(ip)  # máx 5 tentativas/min por IP → bloqueia 5 min
+
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT * FROM usuarios WHERE email = %s", (usuario.email,))
+        cursor.execute("""
+            SELECT u.*, COALESCE(a.plano, 'starter') AS plano
+            FROM usuarios u
+            LEFT JOIN assinaturas a
+                ON a.usuario_id = u.id
+                AND a.status IN ('ativo', 'trial')
+            WHERE u.email = %s
+            ORDER BY a.id DESC
+            LIMIT 1
+        """, (usuario.email,))
         user = cursor.fetchone()
+
         if not user or not verificar_senha(usuario.senha, user["senha"]):
+            # NÃO zera o contador em falha — acumula para bloqueio
             raise HTTPException(status_code=401, detail="E-mail ou senha incorretos.")
+
+        # Login ok — zera contador do IP
+        liberar_ip(ip)
+
         token = criar_token({"sub": str(user["id"]), "nome": user["nome"]})
         return {
             "message": "Login realizado com sucesso!",
             "token": token,
             "user": user["nome"],
-            "id": user["id"]
+            "id": user["id"],
+            "plano": user["plano"],
         }
     finally:
         cursor.close()
         conn.close()
 
+
+# ─── ROTAS PROTEGIDAS ─────────────────────────────────────────────────────────
+
 @app.get("/me")
 async def me(usuario: dict = Depends(get_usuario_atual)):
     return {"usuario_id": usuario["sub"], "nome": usuario["nome"]}
 
-class FluxoDados(BaseModel):
-    usuario_id: int
-    nome_fluxo: str
-    fluxo: dict
 
 @app.post("/salvar-fluxo")
-async def salvar_fluxo(dados: FluxoDados):
+async def salvar_fluxo(dados: FluxoDados, usuario: dict = Depends(get_usuario_atual)):
+    if str(dados.usuario_id) != str(usuario["sub"]):
+        raise HTTPException(status_code=403, detail="Acesso negado.")
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
@@ -147,8 +263,11 @@ async def salvar_fluxo(dados: FluxoDados):
         cursor.close()
         conn.close()
 
+
 @app.get("/carregar-fluxo/{usuario_id}")
-async def carregar_fluxo(usuario_id: int):
+async def carregar_fluxo(usuario_id: int, usuario: dict = Depends(get_usuario_atual)):
+    if str(usuario_id) != str(usuario["sub"]):
+        raise HTTPException(status_code=403, detail="Acesso negado.")
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
@@ -167,6 +286,7 @@ async def carregar_fluxo(usuario_id: int):
     finally:
         cursor.close()
         conn.close()
+
 
 if __name__ == "__main__":
     import uvicorn
