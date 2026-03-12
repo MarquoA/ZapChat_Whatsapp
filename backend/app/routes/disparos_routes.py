@@ -124,7 +124,7 @@ async def processar_disparos(usuario_id: int, contatos: list, mensagem: str, ins
     for contato in contatos:
         try:
             # TODO: integrar com Evolution API quando VPS estiver configurada
-            # await evolution_api_enviar(instancia_id, contato, mensagem)
+            # await evolution_api_enviar(instancia_id, contato, mensagem) DESCOMENTAR / TROCAR
             registrar_disparo(usuario_id, contato, mensagem, "enviado")
         except Exception:
             registrar_disparo(usuario_id, contato, mensagem, "erro")

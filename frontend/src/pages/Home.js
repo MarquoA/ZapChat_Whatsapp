@@ -12,8 +12,9 @@ const AnimatedCounter = ({ target, suffix = '', prefix = '' }) => {
   const inView = useInView(ref, { once: true });
   useEffect(() => {
     if (!inView) return;
+    const duration = 2000;
+    const step = target / (duration / 16);
     let start = 0;
-    const step = target / (2000 / 16);
     const timer = setInterval(() => {
       start += step;
       if (start >= target) { setCount(target); clearInterval(timer); }
@@ -28,10 +29,12 @@ const FAQItem = ({ question, answer, index }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.07 }}
+      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }} transition={{ delay: index * 0.07 }}
       style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
-      <button onClick={() => setIsOpen(!isOpen)}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         style={{ width: '100%', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'white', textAlign: 'left', fontSize: '1rem', fontWeight: '600', padding: '22px 0', gap: '20px' }}
       >
         <span>{question}</span>
@@ -52,10 +55,12 @@ const PricingFAQItem = ({ question, answer, index }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.07 }}
+      initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }} transition={{ delay: index * 0.07 }}
       style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
-      <button onClick={() => setIsOpen(!isOpen)}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         style={{ width: '100%', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'white', textAlign: 'left', fontSize: '0.95rem', fontWeight: '600', padding: '20px 0', gap: '20px' }}
       >
         <span>{question}</span>
@@ -91,7 +96,7 @@ const Home = () => {
     { q: "Como funciona o trial de 7 dias?", a: "Você cria sua conta e tem acesso completo ao plano escolhido por 7 dias. Após o período, basta assinar para continuar usando — sem interrupção no atendimento dos seus clientes." },
     { q: "Posso trocar de plano depois?", a: "Sim. Você pode fazer upgrade ou downgrade do seu plano a qualquer momento direto pelo dashboard. A cobrança é ajustada proporcionalmente ao período restante." },
     { q: "Quais formas de pagamento são aceitas?", a: "Aceitamos cartão de crédito, boleto bancário e Pix. Os pagamentos são processados com segurança pelo Mercado Pago." },
-    { q: "O plano anual tem desconto?", a: "Sim! Ao escolher o plano anual você economiza 2 meses, pagando apenas 10 parcelas pelo preço de 12. O desconto é aplicado automaticamente no checkout." },
+    { q: "O plano anual tem desconto?", a: "Sim. Ao escolher o plano anual você economiza 2 meses, pagando apenas 10 parcelas pelo preço de 12. O desconto é aplicado automaticamente no checkout." },
     { q: "O que acontece se eu cancelar?", a: "Você mantém o acesso até o fim do período pago. Após o vencimento, sua conta é desativada e seus dados ficam armazenados por 30 dias caso queira reativar." },
   ];
 
@@ -103,7 +108,7 @@ const Home = () => {
       description: "Para quem quer organizar o atendimento e não perder clientes.",
       features: ["1 Conexão Oficial Meta", "Editor visual de fluxos", "Atendimento 24h automático", "Dashboard de métricas", "Suporte via e-mail"],
       highlight: false,
-      cta: "COMEÇE AGORA - 7 DIAS GRÁTIS"
+      cta: "COMEÇAR — 7 DIAS GRÁTIS"
     },
     {
       name: "Pro",
@@ -112,7 +117,7 @@ const Home = () => {
       description: "Para operações que buscam escala e conversão agressiva.",
       features: ["Tudo do Starter, mais:", "3 Conexões simultâneas", "IA com memória de contexto", "Blocos avançados (imagem, IA)", "Disparos em massa", "Suporte VIP via WhatsApp"],
       highlight: true,
-      cta: "COMEÇE AGORA"
+      cta: "COMEÇAR AGORA"
     },
     {
       name: "Business",
@@ -121,7 +126,7 @@ const Home = () => {
       description: "A solução definitiva para grandes empresas e agências.",
       features: ["Tudo do Pro, mais:", "Conexões ilimitadas", "Treinamento de IA customizado", "Remoção da marca ZapChat", "Gerente de conta exclusivo", "Acesso antecipado a novidades"],
       highlight: false,
-      cta: "COMEÇE AGORA - FALAR COM A EQUIPE"
+      cta: "FALAR COM A EQUIPE"
     },
   ];
 
@@ -180,8 +185,8 @@ const Home = () => {
         .toggle-pill { transition: all 0.25s; }
         .toggle-pill:hover { opacity: 0.85; }
         .compare-table tr:hover td { background: rgba(37,211,102,0.03) !important; }
-        .guarantee-card:hover { border-color: rgba(37,211,102,0.25) !important; transform: translateY(-2px); }
         .guarantee-card { transition: all 0.25s; }
+        .guarantee-card:hover { border-color: rgba(37,211,102,0.25) !important; transform: translateY(-2px); }
       `}</style>
 
       <Navbar />
@@ -201,11 +206,24 @@ const Home = () => {
             </motion.div>
 
             <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)', lineHeight: '1.05', fontWeight: '900', margin: '0 0 22px', letterSpacing: '-2.5px' }}>
-              Seu WhatsApp trabalhando<br />
+              Suas vendas acontecendo<br />
               <span style={{ color: '#25D366' }}>
                 <Typewriter
-                  options={{ autoStart: true, loop: true, cursor: '|', delay: 60, deleteSpeed: 35 }}
-                  onInit={(tw) => { tw.typeString('enquanto você dorme.').pauseFor(2000).deleteAll().typeString('vendendo 24h por dia.').pauseFor(2000).deleteAll().typeString('atendendo 1000 clientes.').pauseFor(2000).deleteAll().start(); }}
+                  options={{ autoStart: true, loop: false, cursor: '|', delay: 60, deleteSpeed: 35 }}
+                  onInit={(tw) => {
+                    tw.typeString('enquanto você dorme.')
+                      .pauseFor(1500)
+                      .deleteAll(45)
+                      .typeString('sem você precisar fazer nada.')
+                      .pauseFor(1500)
+                      .deleteAll(45)
+                      .typeString('enquanto seus concorrentes perdem clientes.')
+                      .callFunction(() => {
+                        const cursor = document.querySelector('.Typewriter__cursor');
+                        if (cursor) cursor.style.display = 'none';
+                      })
+                      .start();
+                  }}
                 />
               </span>
             </h1>
@@ -224,15 +242,13 @@ const Home = () => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', opacity: 0.4, fontSize: '0.78rem', flexWrap: 'wrap' }}>
-              <span>✓ Cancele quando quiser</span><span>·</span>
-              <span>✓ Setup em 10 min</span><span>·</span>
-              <span>✓ 7 dias de garantia</span>
+              <span>Cancele quando quiser</span><span>·</span>
+              <span>Setup em 10 min</span><span>·</span>
+              <span>7 dias de garantia</span>
             </div>
           </motion.div>
 
-          <motion.div className="hero-img-wrap" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.3 }}
-            style={{ flex: 1, position: 'relative' }}
-          >
+          <motion.div className="hero-img-wrap" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.3 }} style={{ flex: 1, position: 'relative' }}>
             <DashboardMockup />
             <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, delay: 1 }}
               style={{ position: 'absolute', bottom: '-18px', left: '-18px', zIndex: 40, background: '#0d1a0d', border: '1px solid rgba(37,211,102,0.28)', borderRadius: '12px', padding: '11px 16px', boxShadow: '0 8px 30px rgba(0,0,0,0.4)' }}
@@ -255,13 +271,13 @@ const Home = () => {
       </section>
 
       {/* ══ ESTATÍSTICAS ════════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '50px 10%', background: '#0a0f0a' }}>
+      <section className="section-pad" style={{ padding: '50px 10%' }}>
         <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '18px', overflow: 'hidden' }}>
           {[
             { value: 10, suffix: ' min', label: 'Para ativar o bot', prefix: '<' },
             { value: 99, suffix: '.9%', label: 'Uptime garantido', prefix: '' },
             { value: 24, suffix: '/7', label: 'Horas de operação', prefix: '' },
-            { value: 7, suffix: ' dias', label: 'De teste grátis', prefix: '' },
+            { value: 7,  suffix: ' dias', label: 'De teste grátis', prefix: '' },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               style={{ padding: '36px 24px', textAlign: 'center', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.06)' : 'none', background: i % 2 === 0 ? 'rgba(37,211,102,0.02)' : 'transparent' }}
@@ -278,15 +294,11 @@ const Home = () => {
       {/* ══ SHOWCASE: EDITOR ════════════════════════════════════════════ */}
       <section className="section-pad" style={{ padding: '80px 10% 100px' }}>
         <div className="showcase-flex" style={{ display: 'flex', gap: '70px', alignItems: 'center' }}>
-          <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-            style={{ flex: 1.3, position: 'relative' }}
-          >
+          <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} style={{ flex: 1.3, position: 'relative' }}>
             <EditorMockup />
           </motion.div>
 
-          <motion.div className="showcase-text" initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.15 }}
-            style={{ flex: 1, maxWidth: '440px' }}
-          >
+          <motion.div className="showcase-text" initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.15 }} style={{ flex: 1, maxWidth: '440px' }}>
             <span style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Editor de Fluxos</span>
             <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.4rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '14px 0 18px', lineHeight: '1.1' }}>
               Monte seu bot como um fluxograma.
@@ -294,7 +306,12 @@ const Home = () => {
             <p style={{ opacity: 0.52, lineHeight: '1.75', marginBottom: '28px', fontSize: '0.93rem' }}>
               Arraste blocos, conecte respostas e defina o caminho que cada cliente vai percorrer. Teste em tempo real sem precisar publicar.
             </p>
-            {["Blocos de texto com delay de digitação", "Opções de resposta com conexões visuais", "Teste instantâneo no próprio painel", "Salva automaticamente no banco de dados"].map((item, i) => (
+            {[
+              "Blocos de texto com delay de digitação",
+              "Opções de resposta com conexões visuais",
+              "Teste instantâneo no próprio painel",
+              "Salva automaticamente no banco de dados",
+            ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.08 }}
                 style={{ display: 'flex', alignItems: 'center', gap: '11px', marginBottom: '12px' }}
               >
@@ -317,12 +334,12 @@ const Home = () => {
         </div>
         <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '18px' }}>
           {[
-            { accent: '01', t: "API Oficial Meta", d: "Conexão direta com a infraestrutura da Meta. Zero emuladores, zero risco de banimento." },
-            { accent: '02', t: "Delay de Digitação", d: "O bot simula digitação humana com delays configuráveis. Seus clientes não percebem a diferença." },
-            { accent: '03', t: "Fluxos Ilimitados", d: "Crie quantos fluxos quiser. Atendimento, vendas, suporte — tudo no mesmo painel." },
+            { accent: '01', t: "API Oficial Meta",        d: "Conexão direta com a infraestrutura da Meta. Zero emuladores, zero risco de banimento." },
+            { accent: '02', t: "Delay de Digitação",      d: "O bot simula digitação humana com delays configuráveis. Seus clientes não percebem a diferença." },
+            { accent: '03', t: "Fluxos Ilimitados",       d: "Crie quantos fluxos quiser. Atendimento, vendas, suporte — tudo no mesmo painel." },
             { accent: '04', t: "Dashboard em Tempo Real", d: "Sessões ativas, fluxos criados e status da conexão sempre visíveis." },
-            { accent: '05', t: "Dados Criptografados", d: "JWT + Bcrypt. Suas senhas e tokens protegidos com padrão bancário." },
-            { accent: '06', t: "IA Generativa (Pro)", d: "Quando o cliente sai do fluxo, a IA entra respondendo com contexto do seu negócio." },
+            { accent: '05', t: "Dados Criptografados",    d: "JWT + Bcrypt. Suas senhas e tokens protegidos com padrão bancário." },
+            { accent: '06', t: "IA Generativa (Pro)",     d: "Quando o cliente sai do fluxo, a IA entra respondendo com contexto do seu negócio." },
           ].map((f, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.09 }}
               whileHover={{ y: -4, borderColor: 'rgba(37,211,102,0.2)' }}
@@ -347,20 +364,19 @@ const Home = () => {
             style={{ display: 'inline-flex', alignItems: 'center', gap: '14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '50px', padding: '6px 8px' }}
           >
             <button onClick={() => setBillingAnual(false)} className="toggle-pill"
-              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', transition: '0.25s', background: !billingAnual ? '#25D366' : 'transparent', color: !billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)' }}
+              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', background: !billingAnual ? '#25D366' : 'transparent', color: !billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)' }}
             >Mensal</button>
             <button onClick={() => setBillingAnual(true)} className="toggle-pill"
-              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.25s', background: billingAnual ? '#25D366' : 'transparent', color: billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)' }}
+              style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px', background: billingAnual ? '#25D366' : 'transparent', color: billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)' }}
             >
               Anual
-              <span style={{ background: billingAnual ? 'rgba(0,0,0,0.15)' : 'rgba(37,211,102,0.15)', color: billingAnual ? '#0a0f0a' : '#25D366', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '900', letterSpacing: '0.5px' }}>
+              <span style={{ background: billingAnual ? 'rgba(0,0,0,0.15)' : 'rgba(37,211,102,0.15)', color: billingAnual ? '#0a0f0a' : '#25D366', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '900' }}>
                 -2 meses
               </span>
             </button>
           </motion.div>
         </div>
 
-        {/* ── Cards de plano ── */}
         <div className="plans-flex" style={{ display: 'flex', gap: '18px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {planos.map((p, i) => (
             <motion.div key={i} className="plan-card"
@@ -376,9 +392,9 @@ const Home = () => {
                   <motion.div key={billingAnual ? 'anual' : 'mensal'}
                     initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-2px', lineHeight: 1 }}>R$ {billingAnual ? p.priceA : p.priceM}</span>
-                      <span style={{ fontSize: '0.8rem', opacity: 0.32, fontWeight: '400', letterSpacing: '0', marginLeft: '10px' }}> / mês</span>
+                      <span style={{ fontSize: '0.8rem', opacity: 0.32, fontWeight: '400', marginLeft: '10px' }}>/mês</span>
                     </div>
                     {billingAnual && (
                       <p style={{ fontSize: '0.72rem', color: '#25D366', marginTop: '5px', fontWeight: '700', opacity: 0.85 }}>
@@ -398,7 +414,6 @@ const Home = () => {
                 ))}
               </div>
 
-              {/* ── BOTÃO ATUALIZADO ── */}
               <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 onClick={() => p.name === 'Business'
                   ? window.open('https://wa.me/5511999999999?text=Olá%2C%20tenho%20interesse%20no%20plano%20Business%20do%20ZapChat!', '_blank')
@@ -410,7 +425,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══ SEÇÃO DE GARANTIA ═══════════════════════════════════════════ */}
+      {/* ══ GARANTIA ════════════════════════════════════════════════════ */}
       <section className="section-pad" style={{ padding: '20px 10% 80px' }}>
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           style={{ padding: '52px 60px', borderRadius: '28px', background: 'linear-gradient(135deg, rgba(37,211,102,0.05) 0%, rgba(37,211,102,0.01) 100%)', border: '1px solid rgba(37,211,102,0.14)', position: 'relative', overflow: 'hidden' }}
@@ -427,16 +442,16 @@ const Home = () => {
             <div style={{ flex: 1, minWidth: '240px' }}>
               <h3 style={{ fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)', fontWeight: '900', letterSpacing: '-1px', marginBottom: '12px' }}>Garantia incondicional de 7 dias.</h3>
               <p style={{ opacity: 0.5, lineHeight: '1.75', fontSize: '0.93rem', margin: 0, maxWidth: '520px' }}>
-                Se por qualquer motivo o ZapChat não funcionar para o seu negócio nos primeiros 7 dias, devolvemos 100% do valor pago. Sem perguntas, sem burocracia, sem formulário. Basta mandar uma mensagem.
+                Se por qualquer motivo o ZapChat não funcionar para o seu negócio nos primeiros 7 dias, devolvemos 100% do valor pago. Sem perguntas, sem burocracia. Basta mandar uma mensagem.
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
-              {[{ text: 'Reembolso integral em 24h' }, { text: 'Sem fidelidade ou multa' }, { text: 'Cancelamento imediato' }].map((item, i) => (
+              {['Reembolso integral em 24h', 'Sem fidelidade ou multa', 'Cancelamento imediato'].map((item, i) => (
                 <div key={i} className="guarantee-card"
                   style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 18px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', fontSize: '0.82rem', fontWeight: '600', whiteSpace: 'nowrap' }}
                 >
-                  <span style={{ color: '#25D366', fontWeight: '900', fontSize: '0.9rem' }}>✓</span>
-                  <span style={{ opacity: 0.7 }}>{item.text}</span>
+                  <span style={{ color: '#25D366', fontWeight: '900' }}>✓</span>
+                  <span style={{ opacity: 0.7 }}>{item}</span>
                 </div>
               ))}
             </div>
@@ -451,7 +466,7 @@ const Home = () => {
           <h2 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2.2rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '12px 0 0' }}>O que está em cada plano.</h2>
         </div>
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="compare-wrap"
-          style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', overflowX: 'auto' }}
+          style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}
         >
           <table className="compare-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
             <thead>
@@ -481,7 +496,7 @@ const Home = () => {
         </motion.div>
       </section>
 
-      {/* ══ FAQ DE PAGAMENTOS ═══════════════════════════════════════════ */}
+      {/* ══ FAQ PAGAMENTOS ══════════════════════════════════════════════ */}
       <section className="section-pad" style={{ padding: '0 10% 100px' }}>
         <div style={{ maxWidth: '760px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '44px' }}>
@@ -506,7 +521,9 @@ const Home = () => {
                 <span style={{ color: '#25D366', fontSize: '0.62rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>Acesso Beta</span>
               </div>
               <h2 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2rem)', fontWeight: '900', letterSpacing: '-1px', marginBottom: '14px', lineHeight: '1.15' }}>Seja um dos primeiros a usar o ZapChat.</h2>
-              <p style={{ opacity: 0.48, lineHeight: '1.72', fontSize: '0.92rem', margin: 0 }}>Estamos no período beta e abrindo vagas para os primeiros usuários. Quem entrar agora garante preço de lançamento e acesso direto à equipe fundadora para reportar melhorias.</p>
+              <p style={{ opacity: 0.48, lineHeight: '1.72', fontSize: '0.92rem', margin: 0 }}>
+                Estamos no período beta e abrindo vagas para os primeiros usuários. Quem entrar agora garante preço de lançamento e acesso direto à equipe fundadora para reportar melhorias.
+              </p>
             </div>
             <div style={{ flexShrink: 0, textAlign: 'center' }}>
               <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(37,211,102,0.18)', borderRadius: '18px', padding: '28px 38px', marginBottom: '18px', animation: 'glow-pulse 3s infinite' }}>
@@ -561,14 +578,29 @@ const Home = () => {
             <p style={{ opacity: 0.32, fontSize: '0.82rem', lineHeight: '1.75', maxWidth: '210px', margin: 0 }}>Automação de WhatsApp com API oficial da Meta. Anti-ban, sem código, pronto em 10 minutos.</p>
           </div>
           {[
-            { title: 'Produto', items: [{ label: 'Como Funciona', action: () => navigate('/tecnologia') }, { label: 'Planos', action: () => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }) }, { label: 'Criar Conta', action: () => navigate('/cadastrar') }, { label: 'Fazer Login', action: () => navigate('/login') }] },
-            { title: 'Empresa', items: [{ label: 'Contato', action: () => navigate('/sobre') }, { label: 'Termos de Uso', action: null }, { label: 'Privacidade (LGPD)', action: null }] },
-            { title: 'Social', items: [{ label: 'Instagram', action: null }, { label: 'LinkedIn', action: null }, { label: 'YouTube', action: null }] },
+            { title: 'Produto', items: [
+              { label: 'Como Funciona', action: () => navigate('/tecnologia') },
+              { label: 'Planos', action: () => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }) },
+              { label: 'Criar Conta', action: () => navigate('/cadastrar') },
+              { label: 'Fazer Login', action: () => navigate('/login') },
+            ]},
+            { title: 'Empresa', items: [
+              { label: 'Contato', action: () => navigate('/sobre') },
+              { label: 'Termos de Uso', action: () => navigate('/termos') },
+              { label: 'Privacidade (LGPD)', action: () => navigate('/privacidade') },
+            ]},
+            { title: 'Social', items: [
+              { label: 'Instagram', action: null },
+              { label: 'LinkedIn', action: null },
+              { label: 'YouTube', action: null },
+            ]},
           ].map((col, ci) => (
             <div key={ci}>
-              <h4 style={{ marginBottom: '14px', fontSize: '0.76rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.45, margin: '0 0 14px' }}>{col.title}</h4>
+              <h4 style={{ marginBottom: '14px', fontSize: '0.76rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.45 }}>{col.title}</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.83rem', lineHeight: '2.4', opacity: 0.38 }}>
-                {col.items.map((item, ii) => <li key={ii} style={{ cursor: item.action ? 'pointer' : 'default' }} onClick={item.action || undefined}>{item.label}</li>)}
+                {col.items.map((item, ii) => (
+                  <li key={ii} style={{ cursor: item.action ? 'pointer' : 'default' }} onClick={item.action || undefined}>{item.label}</li>
+                ))}
               </ul>
             </div>
           ))}

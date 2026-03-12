@@ -12,9 +12,11 @@ import FlowEditor from './pages/FlowEditor';
 import Assinar from './pages/Assinar';
 import EsqueciSenha from './pages/EsqueciSenha';
 import RedefinirSenha from './pages/RedefinirSenha';
+import Termos from './pages/Termos';
+import Privacidade from './pages/Privacidade';
+import CookieBanner from './components/CookieBanner';
 import NotFound from './pages/NotFound';
 
-// ─── PROTEÇÃO DE ROTA ────────────────────────────────────────────────────────
 const RotaProtegida = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) return <Navigate to="/login" replace />;
@@ -27,17 +29,16 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Rotas públicas */}
         <Route path="/" element={<PageTransition><Home /></PageTransition>} />
         <Route path="/tecnologia" element={<PageTransition><Tech /></PageTransition>} />
         <Route path="/sobre" element={<PageTransition><Sobre /></PageTransition>} />
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/cadastrar" element={<PageTransition><Register /></PageTransition>} />
-        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         <Route path="/esqueci-senha" element={<PageTransition><EsqueciSenha /></PageTransition>} />
         <Route path="/redefinir-senha" element={<PageTransition><RedefinirSenha /></PageTransition>} />
+        <Route path="/termos" element={<Termos />} />
+        <Route path="/privacidade" element={<Privacidade />} />
 
-        {/* Rotas protegidas */}
         <Route path="/assinar" element={
           <RotaProtegida>
             <PageTransition><Assinar /></PageTransition>
@@ -53,6 +54,8 @@ function AnimatedRoutes() {
             <PageTransition><FlowEditor /></PageTransition>
           </RotaProtegida>
         } />
+        
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
   );
@@ -63,6 +66,7 @@ function App() {
     <Router>
       <div style={{ overflowX: 'hidden' }}>
         <AnimatedRoutes />
+        <CookieBanner />
       </div>
     </Router>
   );

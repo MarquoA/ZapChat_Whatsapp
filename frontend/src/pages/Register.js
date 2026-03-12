@@ -12,6 +12,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [aceitouTermos, setAceitouTermos] = useState(false); // ← NOVO
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
@@ -27,6 +28,7 @@ const Register = () => {
 
     if (senha.length < 6) return setErro('A senha deve ter pelo menos 6 caracteres.');
     if (senha !== confirmarSenha) return setErro('As senhas não coincidem.');
+    if (!aceitouTermos) return setErro('Você precisa aceitar os Termos de Uso para continuar.'); // ← NOVO
 
     setLoading(true);
     try {
@@ -36,7 +38,7 @@ const Register = () => {
       localStorage.setItem('token', loginResp.data.token);
       localStorage.setItem('usuario_id', loginResp.data.id);
       localStorage.setItem('usuario_nome', loginResp.data.user);
-      localStorage.setItem('usuario_plano', loginResp.data.plano); // ← CORRIGIDO
+      localStorage.setItem('usuario_plano', loginResp.data.plano);
 
       navigate(redirectTo, { replace: true });
     } catch (error) {
@@ -110,6 +112,46 @@ const Register = () => {
                 <p style={{ fontSize: '0.72rem', color: '#ff4b4b', marginTop: '5px', marginLeft: '5px' }}>As senhas não coincidem</p>
               )}
             </div>
+
+            {/* ─── CHECKBOX TERMOS ─────────────────────────────────────── */}
+            <div
+              onClick={() => setAceitouTermos(!aceitouTermos)}
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer',
+                padding: '14px 16px', borderRadius: '12px', textAlign: 'left',
+                background: aceitouTermos ? 'rgba(37,211,102,0.06)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${aceitouTermos ? 'rgba(37,211,102,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                transition: '0.2s', userSelect: 'none',
+              }}>
+              <div style={{
+                width: '18px', height: '18px', borderRadius: '5px', flexShrink: 0, marginTop: '1px',
+                border: `2px solid ${aceitouTermos ? '#25D366' : 'rgba(255,255,255,0.2)'}`,
+                background: aceitouTermos ? '#25D366' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s',
+              }}>
+                {aceitouTermos && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4L3.5 6.5L9 1" stroke="#0d140d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                Li e aceito os{' '}
+                <Link to="/termos" target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  style={{ color: '#25D366', textDecoration: 'none', fontWeight: 700 }}>
+                  Termos de Uso
+                </Link>
+                {' '}e a{' '}
+                <Link to="/privacidade" target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  style={{ color: '#25D366', textDecoration: 'none', fontWeight: 700 }}>
+                  Política de Privacidade
+                </Link>
+                {' '}da ZapChat.
+              </p>
+            </div>
+            {/* ─────────────────────────────────────────────────────────── */}
 
             {erro && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}

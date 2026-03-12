@@ -267,6 +267,24 @@ async def webhook(request: Request):
     cursor.close()
     conn.close()
 
+    # Registra no histórico se pagamento foi aprovado
+    if novo_status == "ativo":
+        valor = mp_data.get("auto_recurring", {}).get("transaction_amount", 0)
+        plano_dados = mp_data.get("reason", "").lower()
+        plano = "business" if "business" in plano_dados else "pro" if "pro" in plano_dados else "starter"
+        periodo = "anual" if mp_data.get("auto_recurring", {}).get("frequency", 1) == 12 else "mensal"
+
+        conn2 = get_db_connection()
+        cursor2 = conn2.cursor()
+        cursor2.execute("""
+            INSERT INTO historico_pagamentos
+                (usuario_id, mp_payment_id, mp_subscription_id, plano, periodo, valor, status, metodo_pagamento)
+            VALUES (%s, %s, %s, %s, %s, %s, 'aprovado', 'credit_card')
+        """, (ext_ref, subscription_id, subscription_id, plano, periodo, valor))
+        conn2.commit()
+        cursor2.close()
+        conn2.close()
+
     return {"status": "ok"}
 
 # ─── ROTA: MINHA ASSINATURA ───────────────────────────────────────────────────
