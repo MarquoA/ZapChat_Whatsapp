@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Typewriter from 'typewriter-effect';
 import DashboardMockup from '../components/DashboardMockup';
 import EditorMockup from '../components/EditorMockup';
+import WaChatMockup from '../components/WaChatMockup';
 
 const AnimatedCounter = ({ target, suffix = '', prefix = '' }) => {
   const [count, setCount] = useState(0);
@@ -12,9 +13,8 @@ const AnimatedCounter = ({ target, suffix = '', prefix = '' }) => {
   const inView = useInView(ref, { once: true });
   useEffect(() => {
     if (!inView) return;
-    const duration = 2000;
-    const step = target / (duration / 16);
     let start = 0;
+    const step = target / (2000 / 16);
     const timer = setInterval(() => {
       start += step;
       if (start >= target) { setCount(target); clearInterval(timer); }
@@ -29,39 +29,11 @@ const FAQItem = ({ question, answer, index }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }} transition={{ delay: index * 0.07 }}
+      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.06 }}
       style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ width: '100%', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'white', textAlign: 'left', fontSize: '1rem', fontWeight: '600', padding: '22px 0', gap: '20px' }}
-      >
-        <span>{question}</span>
-        <motion.span animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.2 }} style={{ color: '#25D366', fontSize: '1.4rem', flexShrink: 0 }}>+</motion.span>
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
-            <p style={{ paddingBottom: '22px', fontSize: '0.93rem', opacity: 0.55, lineHeight: '1.75' }}>{answer}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-const PricingFAQItem = ({ question, answer, index }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }} transition={{ delay: index * 0.07 }}
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-    >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        style={{ width: '100%', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'white', textAlign: 'left', fontSize: '0.95rem', fontWeight: '600', padding: '20px 0', gap: '20px' }}
+      <button onClick={() => setIsOpen(!isOpen)}
+        style={{ width: '100%', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'white', textAlign: 'left', fontSize: '0.97rem', fontWeight: '600', padding: '20px 0', gap: '20px' }}
       >
         <span>{question}</span>
         <motion.span animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.2 }} style={{ color: '#25D366', fontSize: '1.3rem', flexShrink: 0 }}>+</motion.span>
@@ -69,7 +41,7 @@ const PricingFAQItem = ({ question, answer, index }) => {
       <AnimatePresence>
         {isOpen && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
-            <p style={{ paddingBottom: '20px', fontSize: '0.88rem', opacity: 0.52, lineHeight: '1.75' }}>{answer}</p>
+            <p style={{ paddingBottom: '20px', fontSize: '0.9rem', opacity: 0.52, lineHeight: '1.75' }}>{answer}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -83,66 +55,39 @@ const Home = () => {
   const [billingAnual, setBillingAnual] = useState(false);
 
   const faqs = [
-    { q: "É seguro contra banimento?", a: "Sim. Utilizamos exclusivamente a API Cloud oficial da Meta. Seu número opera dentro das regras com estabilidade garantida e proteção total contra banimentos." },
-    { q: "Preciso deixar o celular ligado?", a: "Não. A conexão é realizada via servidor dedicado. Seu celular pode estar desligado que o bot continua atendendo 24 horas por dia, 7 dias por semana." },
-    { q: "Quanto tempo leva para configurar?", a: "Em menos de 10 minutos você conecta seu número, cria seu primeiro fluxo e ativa o bot. Nossa interface foi desenhada para ser intuitiva, sem necessidade de conhecimento técnico." },
-    { q: "Posso cancelar quando quiser?", a: "Sim, sem fidelidade e sem multas. Você pode cancelar a qualquer momento direto pelo dashboard. Oferecemos também 7 dias de garantia incondicional." },
-    { q: "A IA fala em nome da minha empresa?", a: "Exatamente. Você configura o nome, tom de voz e as informações do seu negócio. A IA se apresenta como parte da sua equipe e responde com base no que você definir." },
-    { q: "Funciona para qual tipo de negócio?", a: "Para qualquer negócio que usa WhatsApp para atender clientes: lojas, clínicas, imobiliárias, academias, prestadores de serviço, e-commerce e muito mais." },
-    { q: "Preciso de conhecimento técnico?", a: "Nenhum. O editor de fluxos é visual — você arrasta e conecta blocos como montar um fluxograma. Se você sabe usar um celular, você sabe usar o ZapChat." },
-  ];
-
-  const pricingFaqs = [
-    { q: "Como funciona o trial de 7 dias?", a: "Você cria sua conta e tem acesso completo ao plano escolhido por 7 dias. Após o período, basta assinar para continuar usando — sem interrupção no atendimento dos seus clientes." },
-    { q: "Posso trocar de plano depois?", a: "Sim. Você pode fazer upgrade ou downgrade do seu plano a qualquer momento direto pelo dashboard. A cobrança é ajustada proporcionalmente ao período restante." },
+    { q: "É seguro contra banimento?",            a: "Sim. Utilizamos exclusivamente a API Cloud oficial da Meta. Seu número opera dentro das regras com estabilidade garantida e proteção total contra banimentos." },
+    { q: "Preciso deixar o celular ligado?",       a: "Não. A conexão é realizada via servidor dedicado. Seu celular pode estar desligado que o bot continua atendendo 24 horas por dia, 7 dias por semana." },
+    { q: "Quanto tempo leva para configurar?",     a: "Em menos de 10 minutos você conecta seu número, cria seu primeiro fluxo e ativa o bot. Nossa interface foi desenhada para ser intuitiva, sem necessidade de conhecimento técnico." },
+    { q: "Posso cancelar quando quiser?",          a: "Sim, sem fidelidade e sem multas. Você pode cancelar a qualquer momento direto pelo dashboard. Oferecemos também 7 dias de garantia incondicional." },
+    { q: "A IA fala em nome da minha empresa?",    a: "Exatamente. Você configura o nome, tom de voz e as informações do seu negócio. A IA se apresenta como parte da sua equipe e responde com base no que você definir." },
+    { q: "Funciona para qual tipo de negócio?",    a: "Para qualquer negócio que usa WhatsApp para atender clientes: lojas, clínicas, imobiliárias, academias, prestadores de serviço, e-commerce e muito mais." },
+    { q: "Preciso de conhecimento técnico?",       a: "Nenhum. O editor de fluxos é visual — você arrasta e conecta blocos como montar um fluxograma. Se você sabe usar um celular, você sabe usar o ZapChat." },
+    { q: "Como funciona o trial de 7 dias?",       a: "Você cria sua conta e tem acesso completo ao plano escolhido por 7 dias. Após o período, basta assinar para continuar usando — sem interrupção no atendimento dos seus clientes." },
+    { q: "Posso trocar de plano depois?",          a: "Sim. Você pode fazer upgrade ou downgrade do seu plano a qualquer momento direto pelo dashboard. A cobrança é ajustada proporcionalmente ao período restante." },
     { q: "Quais formas de pagamento são aceitas?", a: "Aceitamos cartão de crédito, boleto bancário e Pix. Os pagamentos são processados com segurança pelo Mercado Pago." },
-    { q: "O plano anual tem desconto?", a: "Sim. Ao escolher o plano anual você economiza 2 meses, pagando apenas 10 parcelas pelo preço de 12. O desconto é aplicado automaticamente no checkout." },
-    { q: "O que acontece se eu cancelar?", a: "Você mantém o acesso até o fim do período pago. Após o vencimento, sua conta é desativada e seus dados ficam armazenados por 30 dias caso queira reativar." },
+    { q: "O plano anual tem desconto?",            a: "Sim. Ao escolher o plano anual você economiza 2 meses, pagando apenas 10 parcelas pelo preço de 12. O desconto é aplicado automaticamente no checkout." },
+    { q: "O que acontece se eu cancelar?",         a: "Você mantém o acesso até o fim do período pago. Após o vencimento, sua conta é desativada e seus dados ficam armazenados por 30 dias caso queira reativar." },
   ];
 
   const planos = [
-    {
-      name: "Starter",
-      priceM: "127",
-      priceA: "106",
-      description: "Para quem quer organizar o atendimento e não perder clientes.",
-      features: ["1 Conexão Oficial Meta", "Editor visual de fluxos", "Atendimento 24h automático", "Dashboard de métricas", "Suporte via e-mail"],
-      highlight: false,
-      cta: "COMEÇAR — 7 DIAS GRÁTIS"
-    },
-    {
-      name: "Pro",
-      priceM: "297",
-      priceA: "248",
-      description: "Para operações que buscam escala e conversão agressiva.",
-      features: ["Tudo do Starter, mais:", "3 Conexões simultâneas", "IA com memória de contexto", "Blocos avançados (imagem, IA)", "Disparos em massa", "Suporte VIP via WhatsApp"],
-      highlight: true,
-      cta: "COMEÇAR AGORA"
-    },
-    {
-      name: "Business",
-      priceM: "797",
-      priceA: "664",
-      description: "A solução definitiva para grandes empresas e agências.",
-      features: ["Tudo do Pro, mais:", "Conexões ilimitadas", "Treinamento de IA customizado", "Remoção da marca ZapChat", "Gerente de conta exclusivo", "Acesso antecipado a novidades"],
-      highlight: false,
-      cta: "FALAR COM A EQUIPE"
-    },
+    { name: "Starter",  priceM: "127", priceA: "106", description: "Para quem quer organizar o atendimento e não perder clientes.",        features: ["1 Conexão Oficial Meta","Editor visual de fluxos","Atendimento 24h automático","Dashboard de métricas","Suporte via e-mail"],                                                              highlight: false, cta: "COMEÇAR — 7 DIAS GRÁTIS" },
+    { name: "Pro",      priceM: "297", priceA: "248", description: "Para operações que buscam escala e conversão agressiva.",             features: ["Tudo do Starter, mais:","3 Conexões simultâneas","IA com memória de contexto","Blocos avançados (imagem, IA)","Disparos em massa","Suporte VIP via WhatsApp"],          highlight: true,  cta: "COMEÇAR AGORA" },
+    { name: "Business", priceM: "797", priceA: "664", description: "A solução definitiva para grandes empresas e agências.",              features: ["Tudo do Pro, mais:","Conexões ilimitadas","Treinamento de IA customizado","Remoção da marca ZapChat","Gerente de conta exclusivo","Acesso antecipado a novidades"], highlight: false, cta: "FALAR COM A EQUIPE" },
   ];
 
   const compareRows = [
-    { feature: "Conexões WhatsApp",         starter: "1",         pro: "3",             business: "Ilimitadas" },
-    { feature: "Editor visual de fluxos",   starter: true,        pro: true,            business: true },
-    { feature: "Atendimento 24h",           starter: true,        pro: true,            business: true },
-    { feature: "Dashboard de métricas",     starter: true,        pro: true,            business: true },
-    { feature: "Disparos em massa",         starter: false,       pro: true,            business: true },
-    { feature: "IA com memória",            starter: false,       pro: true,            business: true },
-    { feature: "Blocos de imagem / IA",     starter: false,       pro: true,            business: true },
-    { feature: "Treinamento de IA custom",  starter: false,       pro: false,           business: true },
-    { feature: "White label (sem marca)",   starter: false,       pro: false,           business: true },
-    { feature: "Gerente de conta",          starter: false,       pro: false,           business: true },
-    { feature: "Suporte",                   starter: "E-mail",    pro: "WhatsApp VIP",  business: "Dedicado" },
-    { feature: "Trial grátis",              starter: "7 dias",    pro: "7 dias",        business: "7 dias" },
+    { feature: "Conexões WhatsApp",        starter: "1",      pro: "3",            business: "Ilimitadas" },
+    { feature: "Editor visual de fluxos",  starter: true,     pro: true,           business: true },
+    { feature: "Atendimento 24h",          starter: true,     pro: true,           business: true },
+    { feature: "Dashboard de métricas",    starter: true,     pro: true,           business: true },
+    { feature: "Disparos em massa",        starter: false,    pro: true,           business: true },
+    { feature: "IA com memória",           starter: false,    pro: true,           business: true },
+    { feature: "Blocos de imagem / IA",    starter: false,    pro: true,           business: true },
+    { feature: "Treinamento de IA custom", starter: false,    pro: false,          business: true },
+    { feature: "White label (sem marca)",  starter: false,    pro: false,          business: true },
+    { feature: "Gerente de conta",         starter: false,    pro: false,          business: true },
+    { feature: "Suporte",                  starter: "E-mail", pro: "WhatsApp VIP", business: "Dedicado" },
+    { feature: "Trial grátis",             starter: "7 dias", pro: "7 dias",       business: "7 dias" },
   ];
 
   const renderCell = (val) => {
@@ -156,13 +101,13 @@ const Home = () => {
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         @keyframes glow-pulse { 0%,100%{box-shadow:0 0 20px rgba(37,211,102,0.15)} 50%{box-shadow:0 0 45px rgba(37,211,102,0.35)} }
         @media (max-width: 900px) {
           .hero-flex { flex-direction: column !important; }
           .hero-img-wrap { display: none !important; }
           .showcase-flex { flex-direction: column !important; }
           .showcase-text { max-width: 100% !important; }
+          .dash-showcase { flex-direction: column !important; }
           .plans-flex { flex-direction: column !important; align-items: center !important; }
           .plan-card { min-width: unset !important; width: 100% !important; max-width: 420px !important; }
           .beta-flex { flex-direction: column !important; gap: 32px !important; align-items: flex-start !important; }
@@ -183,7 +128,6 @@ const Home = () => {
           .compare-wrap { overflow-x: auto !important; }
         }
         .toggle-pill { transition: all 0.25s; }
-        .toggle-pill:hover { opacity: 0.85; }
         .compare-table tr:hover td { background: rgba(37,211,102,0.03) !important; }
         .guarantee-card { transition: all 0.25s; }
         .guarantee-card:hover { border-color: rgba(37,211,102,0.25) !important; transform: translateY(-2px); }
@@ -206,22 +150,19 @@ const Home = () => {
             </motion.div>
 
             <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)', lineHeight: '1.05', fontWeight: '900', margin: '0 0 22px', letterSpacing: '-2.5px' }}>
-              Suas vendas acontecendo<br />
+              Seu WhatsApp trabalhando<br />
               <span style={{ color: '#25D366' }}>
                 <Typewriter
-                  options={{ autoStart: true, loop: false, cursor: '|', delay: 60, deleteSpeed: 35 }}
+                  options={{ autoStart: true, loop: false, cursor: '' }}
                   onInit={(tw) => {
-                    tw.typeString('enquanto você dorme.')
-                      .pauseFor(1500)
-                      .deleteAll(45)
-                      .typeString('sem você precisar fazer nada.')
-                      .pauseFor(1500)
-                      .deleteAll(45)
-                      .typeString('enquanto seus concorrentes perdem clientes.')
-                      .callFunction(() => {
-                        const cursor = document.querySelector('.Typewriter__cursor');
-                        if (cursor) cursor.style.display = 'none';
-                      })
+                    tw
+                      .typeString('enquanto você dorme.')
+                      .pauseFor(1800)
+                      .deleteAll(30)
+                      .typeString('vendendo 24h por dia.')
+                      .pauseFor(1800)
+                      .deleteAll(30)
+                      .typeString('sem você precisar de nada.')
                       .start();
                   }}
                 />
@@ -248,8 +189,11 @@ const Home = () => {
             </div>
           </motion.div>
 
-          <motion.div className="hero-img-wrap" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.3 }} style={{ flex: 1, position: 'relative' }}>
-            <DashboardMockup />
+          {/* Chat mockup direita — sem switcher */}
+          <motion.div className="hero-img-wrap" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.3 }}
+            style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}
+          >
+            <WaChatMockup />
             <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, delay: 1 }}
               style={{ position: 'absolute', bottom: '-18px', left: '-18px', zIndex: 40, background: '#0d1a0d', border: '1px solid rgba(37,211,102,0.28)', borderRadius: '12px', padding: '11px 16px', boxShadow: '0 8px 30px rgba(0,0,0,0.4)' }}
             >
@@ -275,9 +219,9 @@ const Home = () => {
         <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '18px', overflow: 'hidden' }}>
           {[
             { value: 10, suffix: ' min', label: 'Para ativar o bot', prefix: '<' },
-            { value: 99, suffix: '.9%', label: 'Uptime garantido', prefix: '' },
-            { value: 24, suffix: '/7', label: 'Horas de operação', prefix: '' },
-            { value: 7,  suffix: ' dias', label: 'De teste grátis', prefix: '' },
+            { value: 99, suffix: '.9%',  label: 'Uptime garantido',  prefix: '' },
+            { value: 24, suffix: '/7',   label: 'Horas de operação', prefix: '' },
+            { value: 7,  suffix: ' dias',label: 'De teste grátis',   prefix: '' },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               style={{ padding: '36px 24px', textAlign: 'center', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.06)' : 'none', background: i % 2 === 0 ? 'rgba(37,211,102,0.02)' : 'transparent' }}
@@ -291,13 +235,13 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══ SHOWCASE: EDITOR ════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '80px 10% 100px' }}>
+      {/* ══ DEGRADÊ + SHOWCASE: EDITOR ══════════════════════════════════ */}
+      <div style={{ height: 70, background: 'linear-gradient(to bottom, #0a0f0a, rgba(37,211,102,0.03))' }} />
+      <section className="section-pad" style={{ padding: '0 10% 100px', background: 'rgba(37,211,102,0.02)' }}>
         <div className="showcase-flex" style={{ display: 'flex', gap: '70px', alignItems: 'center' }}>
           <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} style={{ flex: 1.3, position: 'relative' }}>
             <EditorMockup />
           </motion.div>
-
           <motion.div className="showcase-text" initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.15 }} style={{ flex: 1, maxWidth: '440px' }}>
             <span style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Editor de Fluxos</span>
             <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.4rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '14px 0 18px', lineHeight: '1.1' }}>
@@ -306,12 +250,7 @@ const Home = () => {
             <p style={{ opacity: 0.52, lineHeight: '1.75', marginBottom: '28px', fontSize: '0.93rem' }}>
               Arraste blocos, conecte respostas e defina o caminho que cada cliente vai percorrer. Teste em tempo real sem precisar publicar.
             </p>
-            {[
-              "Blocos de texto com delay de digitação",
-              "Opções de resposta com conexões visuais",
-              "Teste instantâneo no próprio painel",
-              "Salva automaticamente no banco de dados",
-            ].map((item, i) => (
+            {["Blocos de texto com delay de digitação", "Opções de resposta com conexões visuais", "Teste instantâneo no próprio painel", "Salva automaticamente no banco de dados"].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.08 }}
                 style={{ display: 'flex', alignItems: 'center', gap: '11px', marginBottom: '12px' }}
               >
@@ -325,9 +264,65 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
+      <div style={{ height: 70, background: 'linear-gradient(to bottom, rgba(37,211,102,0.03), #0a0f0a)' }} />
+
+      {/* ══ DEGRADÊ + SHOWCASE: DASHBOARD ═══════════════════════════════ */}
+      <div style={{ height: 70, background: 'linear-gradient(to bottom, #0a0f0a, rgba(37,211,102,0.04))' }} />
+      <section className="section-pad" style={{ padding: '60px 10% 80px', background: 'rgba(37,211,102,0.025)' }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: 60 }}>
+          <span style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Dashboard</span>
+          <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.4rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '12px 0 14px', lineHeight: '1.1' }}>
+            Tudo sob controle em um só painel.
+          </h2>
+          <p style={{ opacity: 0.48, lineHeight: '1.75', fontSize: '0.93rem', maxWidth: 520, margin: '0 auto' }}>
+            Veja em tempo real sessões ativas, fluxos performando e status de cada conexão WhatsApp — sem precisar perguntar para ninguém.
+          </p>
+        </motion.div>
+
+        <div className="dash-showcase" style={{ display: 'flex', gap: '60px', alignItems: 'center', flexDirection: 'row-reverse', flexWrap: 'wrap' }}>
+          <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} style={{ flex: '1 1 420px', position: 'relative' }}>
+            <DashboardMockup />
+            <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, delay: 0.5 }}
+              style={{ position: 'absolute', top: 20, right: -14, zIndex: 40, background: '#0d1a0d', border: '1px solid rgba(37,211,102,0.28)', borderRadius: 12, padding: '10px 14px', boxShadow: '0 8px 30px rgba(0,0,0,0.4)' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#25D366', animation: 'pulse-dot 2s infinite' }} />
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#25D366' }}>Tempo real</span>
+              </div>
+              <p style={{ fontSize: '0.62rem', opacity: 0.4, margin: '2px 0 0' }}>Métricas atualizadas</p>
+            </motion.div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.15 }} style={{ flex: '1 1 340px', maxWidth: 420 }}>
+            {[
+              { num: '01', titulo: 'Métricas de disparos', desc: 'Total enviado, erros e taxa de entrega por hora — tudo em gráficos claros.' },
+              { num: '02', titulo: 'Sessões ativas',       desc: 'Veja quantos clientes estão em atendimento agora, por fluxo e instância.' },
+              { num: '03', titulo: 'Status da conexão',    desc: 'Saiba em tempo real se seu WhatsApp está conectado e operando.' },
+              { num: '04', titulo: 'Controle de plano',    desc: 'Gerencie instâncias, histórico de pagamentos e assinatura em um lugar.' },
+            ].map((card, i) => (
+              <motion.div key={i}
+                initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.1 }}
+                style={{ display: 'flex', gap: 16, marginBottom: 20, padding: '16px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', transition: '0.25s', cursor: 'default' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(37,211,102,0.2)'; e.currentTarget.style.background = 'rgba(37,211,102,0.03)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+              >
+                <div style={{ fontSize: '0.58rem', fontWeight: 900, color: '#25D366', opacity: 0.55, letterSpacing: 2, marginTop: 3, flexShrink: 0 }}>{card.num}</div>
+                <div>
+                  <p style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{card.titulo}</p>
+                  <p style={{ fontSize: '0.8rem', opacity: 0.45, margin: 0, lineHeight: 1.6 }}>{card.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/cadastrar')}
+              style={{ marginTop: 8, background: '#25D366', color: '#0a0f0a', padding: '13px 26px', borderRadius: 10, fontWeight: 800, cursor: 'pointer', border: 'none', fontSize: '0.85rem' }}
+            >Criar minha conta grátis →</motion.button>
+          </motion.div>
+        </div>
+      </section>
+      <div style={{ height: 70, background: 'linear-gradient(to bottom, rgba(37,211,102,0.04), #0a0f0a)' }} />
 
       {/* ══ FEATURES ════════════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '80px 10% 100px', background: 'rgba(255,255,255,0.01)' }}>
+      <section className="section-pad" style={{ padding: '80px 10% 100px' }}>
         <div style={{ marginBottom: '55px' }}>
           <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Por que o ZapChat</motion.span>
           <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.6rem)', fontWeight: '900', letterSpacing: '-2px', margin: '12px 0 0' }}>Construído para não cair.</h2>
@@ -353,13 +348,13 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══ PLANOS ══════════════════════════════════════════════════════ */}
-      <section id="plans" className="section-pad" style={{ padding: '100px 10% 60px' }}>
+      {/* ══ DEGRADÊ + PLANOS ════════════════════════════════════════════ */}
+      <div style={{ height: 60, background: 'linear-gradient(to bottom, #0a0f0a, rgba(37,211,102,0.03))' }} />
+      <section id="plans" className="section-pad" style={{ padding: '60px 10% 60px', background: 'rgba(37,211,102,0.015)' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Planos</motion.span>
           <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.6rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '12px 0 10px' }}>Escolha sua escala.</h2>
           <p style={{ opacity: 0.4, fontSize: '0.92rem', margin: '0 0 32px' }}>Sem taxas escondidas. Cancele quando quiser. 7 dias de garantia.</p>
-
           <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '50px', padding: '6px 8px' }}
           >
@@ -370,9 +365,7 @@ const Home = () => {
               style={{ padding: '8px 22px', borderRadius: '40px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px', background: billingAnual ? '#25D366' : 'transparent', color: billingAnual ? '#0a0f0a' : 'rgba(255,255,255,0.45)' }}
             >
               Anual
-              <span style={{ background: billingAnual ? 'rgba(0,0,0,0.15)' : 'rgba(37,211,102,0.15)', color: billingAnual ? '#0a0f0a' : '#25D366', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '900' }}>
-                -2 meses
-              </span>
+              <span style={{ background: billingAnual ? 'rgba(0,0,0,0.15)' : 'rgba(37,211,102,0.15)', color: billingAnual ? '#0a0f0a' : '#25D366', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '900' }}>-2 meses</span>
             </button>
           </motion.div>
         </div>
@@ -386,25 +379,17 @@ const Home = () => {
               {p.highlight && <span style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: '#25D366', color: '#0a0f0a', padding: '4px 15px', borderRadius: '20px', fontSize: '0.6rem', fontWeight: '900', letterSpacing: '1px', whiteSpace: 'nowrap' }}>MAIS POPULAR</span>}
               <h3 style={{ fontSize: '1.15rem', fontWeight: '800', marginBottom: '6px' }}>{p.name}</h3>
               <p style={{ fontSize: '0.8rem', opacity: 0.38, marginBottom: '22px', lineHeight: '1.5', minHeight: '34px' }}>{p.description}</p>
-
               <div style={{ marginBottom: '26px' }}>
                 <AnimatePresence mode="wait">
-                  <motion.div key={billingAnual ? 'anual' : 'mensal'}
-                    initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}
-                  >
+                  <motion.div key={billingAnual ? 'anual' : 'mensal'} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.2 }}>
                     <div style={{ display: 'flex', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-2px', lineHeight: 1 }}>R$ {billingAnual ? p.priceA : p.priceM}</span>
                       <span style={{ fontSize: '0.8rem', opacity: 0.32, fontWeight: '400', marginLeft: '10px' }}>/mês</span>
                     </div>
-                    {billingAnual && (
-                      <p style={{ fontSize: '0.72rem', color: '#25D366', marginTop: '5px', fontWeight: '700', opacity: 0.85 }}>
-                        Cobrado anualmente · 2 meses grátis
-                      </p>
-                    )}
+                    {billingAnual && <p style={{ fontSize: '0.72rem', color: '#25D366', marginTop: '5px', fontWeight: '700', opacity: 0.85 }}>Cobrado anualmente · 2 meses grátis</p>}
                   </motion.div>
                 </AnimatePresence>
               </div>
-
               <div style={{ flexGrow: 1 }}>
                 {p.features.map((f, j) => (
                   <div key={j} style={{ marginBottom: '11px', display: 'flex', alignItems: 'flex-start', gap: '9px' }}>
@@ -413,7 +398,6 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-
               <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 onClick={() => p.name === 'Business'
                   ? window.open('https://wa.me/5511999999999?text=Olá%2C%20tenho%20interesse%20no%20plano%20Business%20do%20ZapChat!', '_blank')
@@ -424,9 +408,10 @@ const Home = () => {
           ))}
         </div>
       </section>
+      <div style={{ height: 60, background: 'linear-gradient(to bottom, rgba(37,211,102,0.03), #0a0f0a)' }} />
 
       {/* ══ GARANTIA ════════════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '20px 10% 80px' }}>
+      <section className="section-pad" style={{ padding: '40px 10% 80px' }}>
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           style={{ padding: '52px 60px', borderRadius: '28px', background: 'linear-gradient(135deg, rgba(37,211,102,0.05) 0%, rgba(37,211,102,0.01) 100%)', border: '1px solid rgba(37,211,102,0.14)', position: 'relative', overflow: 'hidden' }}
         >
@@ -466,7 +451,7 @@ const Home = () => {
           <h2 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2.2rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '12px 0 0' }}>O que está em cada plano.</h2>
         </div>
         <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="compare-wrap"
-          style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}
+          style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', overflowX: 'auto' }}
         >
           <table className="compare-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
             <thead>
@@ -496,21 +481,8 @@ const Home = () => {
         </motion.div>
       </section>
 
-      {/* ══ FAQ PAGAMENTOS ══════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '0 10% 100px' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '44px' }}>
-            <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Pagamentos</motion.span>
-            <h2 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2.2rem)', fontWeight: '900', letterSpacing: '-1px', margin: '12px 0 0' }}>Dúvidas sobre cobrança.</h2>
-          </div>
-          <div className="faq-inner" style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 32px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            {pricingFaqs.map((f, i) => <PricingFAQItem key={i} question={f.q} answer={f.a} index={i} />)}
-          </div>
-        </div>
-      </section>
-
       {/* ══ BETA ════════════════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '60px 10% 80px', background: 'rgba(255,255,255,0.01)' }}>
+      <section className="section-pad" style={{ padding: '0 10% 80px' }}>
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="beta-inner"
           style={{ padding: '55px 65px', borderRadius: '30px', background: 'linear-gradient(135deg, rgba(37,211,102,0.07) 0%, rgba(37,211,102,0.02) 100%)', border: '1px solid rgba(37,211,102,0.16)' }}
         >
@@ -538,9 +510,9 @@ const Home = () => {
         </motion.div>
       </section>
 
-      {/* ══ FAQ GERAL ═══════════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '100px 10%' }}>
-        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+      {/* ══ FAQ ÚNICO (geral + pagamentos mesclados) ════════════════════ */}
+      <section className="section-pad" style={{ padding: '60px 10% 100px' }}>
+        <div style={{ maxWidth: '780px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '52px' }}>
             <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase' }}>Dúvidas</motion.span>
             <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.3rem)', fontWeight: '900', letterSpacing: '-1px', margin: '12px 0 0' }}>Perguntas frequentes.</h2>
@@ -552,7 +524,7 @@ const Home = () => {
       </section>
 
       {/* ══ CTA FINAL ═══════════════════════════════════════════════════ */}
-      <section className="section-pad" style={{ padding: '60px 10% 110px' }}>
+      <section className="section-pad" style={{ padding: '0 10% 110px' }}>
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           style={{ textAlign: 'center', padding: '75px 50px', borderRadius: '32px', background: 'linear-gradient(135deg, rgba(37,211,102,0.07) 0%, rgba(37,211,102,0.02) 100%)', border: '1px solid rgba(37,211,102,0.14)', position: 'relative', overflow: 'hidden' }}
         >
@@ -578,29 +550,14 @@ const Home = () => {
             <p style={{ opacity: 0.32, fontSize: '0.82rem', lineHeight: '1.75', maxWidth: '210px', margin: 0 }}>Automação de WhatsApp com API oficial da Meta. Anti-ban, sem código, pronto em 10 minutos.</p>
           </div>
           {[
-            { title: 'Produto', items: [
-              { label: 'Como Funciona', action: () => navigate('/tecnologia') },
-              { label: 'Planos', action: () => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }) },
-              { label: 'Criar Conta', action: () => navigate('/cadastrar') },
-              { label: 'Fazer Login', action: () => navigate('/login') },
-            ]},
-            { title: 'Empresa', items: [
-              { label: 'Contato', action: () => navigate('/sobre') },
-              { label: 'Termos de Uso', action: () => navigate('/termos') },
-              { label: 'Privacidade (LGPD)', action: () => navigate('/privacidade') },
-            ]},
-            { title: 'Social', items: [
-              { label: 'Instagram', action: null },
-              { label: 'LinkedIn', action: null },
-              { label: 'YouTube', action: null },
-            ]},
+            { title: 'Produto',  items: [{ label: 'Como Funciona', action: () => navigate('/tecnologia') }, { label: 'Planos', action: () => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }) }, { label: 'Criar Conta', action: () => navigate('/cadastrar') }, { label: 'Fazer Login', action: () => navigate('/login') }] },
+            { title: 'Empresa',  items: [{ label: 'Contato', action: () => navigate('/sobre') }, { label: 'Termos de Uso', action: () => navigate('/termos') }, { label: 'Privacidade (LGPD)', action: () => navigate('/privacidade') }] },
+            { title: 'Social',   items: [{ label: 'Instagram', action: null }, { label: 'LinkedIn', action: null }, { label: 'YouTube', action: null }] },
           ].map((col, ci) => (
             <div key={ci}>
               <h4 style={{ marginBottom: '14px', fontSize: '0.76rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.45 }}>{col.title}</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.83rem', lineHeight: '2.4', opacity: 0.38 }}>
-                {col.items.map((item, ii) => (
-                  <li key={ii} style={{ cursor: item.action ? 'pointer' : 'default' }} onClick={item.action || undefined}>{item.label}</li>
-                ))}
+                {col.items.map((item, ii) => <li key={ii} style={{ cursor: item.action ? 'pointer' : 'default' }} onClick={item.action || undefined}>{item.label}</li>)}
               </ul>
             </div>
           ))}

@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +12,8 @@ from app.routes.bot_routes import router as bot_router
 from app.routes.pagamento_routes import router as pagamento_router
 from app.routes.esqueci_senha_routes import router as esqueci_router
 from app.routes.disparos_routes import router as disparos_router
+from app.routes.metricas_routes import router as metricas_router   # NOVO
+from app.routes.usuario_routes import router as usuario_router     # NOVO
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -27,20 +32,17 @@ ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# ─── RATE LIMITER (em memória, sem dependências externas) ────────────────────
-# Estrutura: { ip: { "tentativas": int, "bloqueado_ate": timestamp, "janela_inicio": timestamp } }
+# ─── RATE LIMITER ─────────────────────────────────────────────────────────────
 
 _lock = threading.Lock()
 _rate_data: dict = defaultdict(lambda: {"tentativas": 0, "bloqueado_ate": 0.0, "janela_inicio": time.time()})
 
-# Configurações
-JANELA_SEGUNDOS = 60        # janela de tempo para contar tentativas
-MAX_TENTATIVAS = 5          # máximo de tentativas na janela
-BLOQUEIO_SEGUNDOS = 300     # 5 minutos bloqueado após exceder
+JANELA_SEGUNDOS  = 60
+MAX_TENTATIVAS   = 5
+BLOQUEIO_SEGUNDOS = 300
 
 
 def get_client_ip(request: Request) -> str:
-    """Pega o IP real mesmo atrás de proxy/Nginx."""
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return forwarded.split(",")[0].strip()
@@ -48,27 +50,19 @@ def get_client_ip(request: Request) -> str:
 
 
 def checar_rate_limit(ip: str):
-    """Verifica e registra tentativa. Lança 429 se bloqueado ou limite atingido."""
     agora = time.time()
     with _lock:
         dados = _rate_data[ip]
-
-        # Ainda está no período de bloqueio?
         if agora < dados["bloqueado_ate"]:
             segundos_restantes = int(dados["bloqueado_ate"] - agora)
             raise HTTPException(
                 status_code=429,
                 detail=f"IP bloqueado por excesso de tentativas. Tente novamente em {segundos_restantes}s."
             )
-
-        # Resetar janela se já passou o tempo
         if agora - dados["janela_inicio"] > JANELA_SEGUNDOS:
             dados["tentativas"] = 0
             dados["janela_inicio"] = agora
-
         dados["tentativas"] += 1
-
-        # Atingiu o limite? Bloqueia o IP
         if dados["tentativas"] > MAX_TENTATIVAS:
             dados["bloqueado_ate"] = agora + BLOQUEIO_SEGUNDOS
             dados["tentativas"] = 0
@@ -79,7 +73,6 @@ def checar_rate_limit(ip: str):
 
 
 def liberar_ip(ip: str):
-    """Chamado após login bem-sucedido — zera o contador do IP."""
     with _lock:
         _rate_data[ip] = {"tentativas": 0, "bloqueado_ate": 0.0, "janela_inicio": time.time()}
 
@@ -113,8 +106,6 @@ def get_usuario_atual(credentials: HTTPAuthorizationCredentials = Depends(securi
 
 app = FastAPI()
 
-# CORS — em dev aceita localhost; em produção lê FRONTEND_URL do .env
-# Quando tiver o domínio, adicione ao .env: FRONTEND_URL=https://seudominio.com.br
 _frontend_url = os.getenv("FRONTEND_URL", "")
 ALLOWED_ORIGINS = list(filter(None, [
     "http://localhost:3000",
@@ -136,6 +127,8 @@ app.include_router(bot_router)
 app.include_router(pagamento_router)
 app.include_router(esqueci_router)
 app.include_router(disparos_router)
+app.include_router(metricas_router)   # NOVO
+app.include_router(usuario_router)    # NOVO
 
 
 # ─── MODELS ───────────────────────────────────────────────────────────────────
@@ -155,12 +148,12 @@ class FluxoDados(BaseModel):
     fluxo: dict
 
 
-# ─── ROTAS PÚBLICAS (com rate limiting) ───────────────────────────────────────
+# ─── ROTAS PÚBLICAS ───────────────────────────────────────────────────────────
 
 @app.post("/register")
 async def register(usuario: UsuarioCreate, request: Request):
     ip = get_client_ip(request)
-    checar_rate_limit(ip)  # máx 5 cadastros/min por IP
+    checar_rate_limit(ip)
 
     if len(usuario.senha) < 6:
         raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 6 caracteres.")
@@ -179,7 +172,7 @@ async def register(usuario: UsuarioCreate, request: Request):
             (usuario.nome, usuario.email, senha_hash)
         )
         conn.commit()
-        liberar_ip(ip)  # cadastro ok, zera contador
+        liberar_ip(ip)
         return {"message": "Usuário cadastrado com sucesso!"}
     except HTTPException:
         raise
@@ -194,7 +187,7 @@ async def register(usuario: UsuarioCreate, request: Request):
 @app.post("/login")
 async def login(usuario: UsuarioLogin, request: Request):
     ip = get_client_ip(request)
-    checar_rate_limit(ip)  # máx 5 tentativas/min por IP → bloqueia 5 min
+    checar_rate_limit(ip)
 
     conn = get_db_connection()
     if not conn:
@@ -214,12 +207,9 @@ async def login(usuario: UsuarioLogin, request: Request):
         user = cursor.fetchone()
 
         if not user or not verificar_senha(usuario.senha, user["senha"]):
-            # NÃO zera o contador em falha — acumula para bloqueio
             raise HTTPException(status_code=401, detail="E-mail ou senha incorretos.")
 
-        # Login ok — zera contador do IP
         liberar_ip(ip)
-
         token = criar_token({"sub": str(user["id"]), "nome": user["nome"]})
         return {
             "message": "Login realizado com sucesso!",

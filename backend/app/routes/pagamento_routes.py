@@ -4,6 +4,7 @@ import hmac
 import hashlib
 import json
 import requests
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
@@ -13,7 +14,13 @@ from app.database import get_db_connection
 router = APIRouter()
 security = HTTPBearer()
 
-SECRET_KEY      = "zapchat_senha_MmC"
+# ─── FIX BUG #SEGURANÇA: SECRET_KEY nunca deve ficar hardcoded no código.
+# Era: SECRET_KEY = "zapchat_senha_MmC"
+# Agora lê do .env. Se não estiver configurada, o sistema não sobe.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY não definida no .env. Gere com: python -c \"import secrets; print(secrets.token_hex(32))\"")
+
 ALGORITHM       = "HS256"
 MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
 MP_API          = "https://api.mercadopago.com"
@@ -57,29 +64,39 @@ def headers_mp():
 
 def verificar_hmac_webhook(body_bytes: bytes, x_signature: str, x_request_id: str) -> bool:
     webhook_secret = os.getenv("MP_WEBHOOK_SECRET")
+
     if not webhook_secret:
         ambiente = os.getenv("AMBIENTE", "dev")
         if ambiente == "producao":
             return False
-        print("AVISO: MP_WEBHOOK_SECRET não configurado.")
+        print("AVISO: MP_WEBHOOK_SECRET não configurado. Em produção isso rejeitaria o webhook.")
         return True
+
     try:
         partes = dict(p.split("=", 1) for p in x_signature.split(","))
         ts = partes.get("ts", "")
         v1 = partes.get("v1", "")
+
         data_id = ""
         try:
             body_json = json.loads(body_bytes)
             data_id = str(body_json.get("data", {}).get("id", ""))
         except Exception:
             pass
+
         manifest = f"id:{data_id};request-id:{x_request_id};ts:{ts};"
-        hash_esperado = hmac.new(
+
+        # ─── FIX BUG #7: hmac.new() não existe como método do módulo.
+        # Era: hmac.new(key, msg, hashlib.sha256).hexdigest()
+        # Correto: hmac.digest() — disponível desde Python 3.7, mais limpo.
+        hash_esperado = hmac.digest(
             webhook_secret.encode("utf-8"),
             manifest.encode("utf-8"),
-            hashlib.sha256
-        ).hexdigest()
+            "sha256"
+        ).hex()
+
         return hmac.compare_digest(hash_esperado, v1)
+
     except Exception as e:
         print(f"Erro na validação HMAC: {e}")
         return False
@@ -111,7 +128,7 @@ def criar_plano_mp(plano: str, periodo: str, usuario: dict = Depends(get_usuario
             "transaction_amount": preco,
             "currency_id":        "BRL",
         },
-        "back_url": f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/dashboard",
+        "back_url": f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/pagamento-confirmado",
         "payment_methods_allowed": {
             "payment_types": [
                 {"id": "credit_card"},
@@ -130,10 +147,6 @@ def criar_plano_mp(plano: str, periodo: str, usuario: dict = Depends(get_usuario
 
 @router.post("/pagamentos/assinar")
 def assinar(payload: AssinarPayload, usuario: dict = Depends(get_usuario_atual)):
-    """
-    Retorna o link do checkout do plano no Mercado Pago.
-    O usuário escolhe e cadastra o cartão diretamente no checkout do MP.
-    """
     if payload.plano not in PLANOS:
         raise HTTPException(status_code=400, detail="Plano inválido.")
     if payload.periodo not in ("mensal", "anual"):
@@ -142,16 +155,19 @@ def assinar(payload: AssinarPayload, usuario: dict = Depends(get_usuario_atual))
     usuario_id = int(usuario["sub"])
     dados = PLANOS[payload.plano]
 
-    # Bloqueia se já tem assinatura ativa ou em trial
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT status, plano FROM assinaturas
-        WHERE usuario_id = %s ORDER BY id DESC LIMIT 1
-    """, (usuario_id,))
-    existente = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor(dictionary=True)
+
+        # Verifica se já tem assinatura ativa ou trial
+        cursor.execute("""
+            SELECT status, plano FROM assinaturas
+            WHERE usuario_id = %s ORDER BY id DESC LIMIT 1
+        """, (usuario_id,))
+        existente = cursor.fetchone()
+        cursor.close()
+    finally:
+        conn.close()
 
     if existente and existente["status"] in ("ativo", "trial"):
         raise HTTPException(
@@ -172,42 +188,46 @@ def assinar(payload: AssinarPayload, usuario: dict = Depends(get_usuario_atual))
             detail=f"Plano MP não configurado. Rode /pagamentos/criar-plano-mp e salve o ID no .env como {env_key}."
         )
 
-    # Busca email do usuário para preencher o checkout
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT nome, email FROM usuarios WHERE id = %s", (usuario_id,))
-    user = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT nome, email FROM usuarios WHERE id = %s", (usuario_id,))
+        user = cursor.fetchone()
+        cursor.close()
+    finally:
+        conn.close()
 
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
-    # Salva como pendente no banco antes de redirecionar
+    # Salva como pendente antes de redirecionar
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO assinaturas (usuario_id, plano, periodo, status)
-        VALUES (%s, %s, %s, 'pendente')
-        ON DUPLICATE KEY UPDATE
-            plano   = VALUES(plano),
-            periodo = VALUES(periodo),
-            status  = 'pendente'
-    """, (usuario_id, payload.plano, payload.periodo))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO assinaturas (usuario_id, plano, periodo, status)
+            VALUES (%s, %s, %s, 'pendente')
+            ON DUPLICATE KEY UPDATE
+                plano   = VALUES(plano),
+                periodo = VALUES(periodo),
+                status  = 'pendente'
+        """, (usuario_id, payload.plano, payload.periodo))
+        conn.commit()
+        cursor.close()
+    finally:
+        conn.close()
 
-    # Monta o link de checkout do plano diretamente
-    # O usuário cadastra o cartão no checkout do MP e a assinatura é criada lá
+    # ─── FIX BUG #URL: usar urlencode para evitar quebra com emails especiais.
+    # Era: f"&payer_email={user['email']}" — perigoso com caracteres como + @ &
+    from urllib.parse import urlencode
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    checkout_url = (
-        f"https://www.mercadopago.com.br/subscriptions/checkout"
-        f"?preapproval_plan_id={plan_id}"
-        f"&payer_email={user['email']}"
-        f"&external_reference={usuario_id}"
-        f"&back_url={frontend_url}/dashboard"
-    )
+    params = {
+        "preapproval_plan_id": plan_id,
+        "payer_email":         user["email"],
+        "external_reference":  str(usuario_id),
+        "back_url":            f"{frontend_url}/pagamento-confirmado",
+    }
+    checkout_url = f"https://www.mercadopago.com.br/subscriptions/checkout?{urlencode(params)}"
 
     return {
         "checkout_url": checkout_url,
@@ -243,7 +263,18 @@ async def webhook(request: Request):
 
     mp_data   = resp.json()
     mp_status = mp_data.get("status")
-    ext_ref   = mp_data.get("external_reference")
+
+    # ─── FIX BUG #2: external_reference vem como string do MP.
+    # Era: ext_ref = mp_data.get("external_reference") — podia ser "123" (string)
+    # e o WHERE usuario_id = %s falhava silenciosamente sem atualizar nenhuma linha.
+    try:
+        ext_ref = int(mp_data.get("external_reference", 0))
+    except (ValueError, TypeError):
+        print(f"[WEBHOOK] external_reference inválido: {mp_data.get('external_reference')}")
+        return {"status": "external_reference inválido"}
+
+    if not ext_ref:
+        return {"status": "sem external_reference"}
 
     status_map = {
         "authorized": "ativo",
@@ -253,37 +284,86 @@ async def webhook(request: Request):
     }
     novo_status = status_map.get(mp_status, "pendente")
 
+    # ─── FIX BUG #3: periodo_fim era sempre 1 mês mesmo para planos anuais.
+    # Solução: usa o next_payment_date que o próprio MP retorna — mais confiável
+    # do que calcular manualmente, pois o MP já considera cobranças, pausas, etc.
+    prox_pagamento = mp_data.get("next_payment_date")  # ex: "2025-04-13T00:00:00.000-03:00"
+
+    if prox_pagamento:
+        # MP retorna ISO 8601 — converte para datetime para o MySQL
+        try:
+            periodo_fim = datetime.fromisoformat(prox_pagamento.replace("Z", "+00:00"))
+        except ValueError:
+            # Fallback: calcula manualmente pela frequência
+            frequencia = mp_data.get("auto_recurring", {}).get("frequency", 1)
+            from dateutil.relativedelta import relativedelta
+            periodo_fim = datetime.now() + relativedelta(months=frequencia)
+    else:
+        # Sem next_payment_date (ex: status cancelado), usa frequência
+        frequencia = mp_data.get("auto_recurring", {}).get("frequency", 1)
+        from dateutil.relativedelta import relativedelta
+        periodo_fim = datetime.now() + relativedelta(months=frequencia)
+
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE assinaturas
-        SET status = %s,
-            mp_subscription_id = %s,
-            periodo_inicio = NOW(),
-            periodo_fim = DATE_ADD(NOW(), INTERVAL 1 MONTH)
-        WHERE usuario_id = %s
-    """, (novo_status, subscription_id, ext_ref))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE assinaturas
+            SET status             = %s,
+                mp_subscription_id = %s,
+                periodo_inicio     = NOW(),
+                periodo_fim        = %s
+            WHERE usuario_id = %s
+        """, (novo_status, subscription_id, periodo_fim, ext_ref))
+        conn.commit()
+        rows_afetados = cursor.rowcount
+        cursor.close()
+    finally:
+        conn.close()
+
+    # Log para depuração — remova em produção se quiser
+    print(f"[WEBHOOK] usuario_id={ext_ref} | status={novo_status} | rows={rows_afetados} | periodo_fim={periodo_fim}")
+
+    if rows_afetados == 0:
+        # Pode acontecer se não existir linha pendente — insere
+        print(f"[WEBHOOK] Nenhuma linha atualizada para usuario_id={ext_ref}. Tentando INSERT.")
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            plano_dados = mp_data.get("reason", "").lower()
+            plano = "business" if "business" in plano_dados else "pro" if "pro" in plano_dados else "starter"
+            frequencia = mp_data.get("auto_recurring", {}).get("frequency", 1)
+            periodo = "anual" if frequencia == 12 else "mensal"
+            cursor.execute("""
+                INSERT INTO assinaturas
+                    (usuario_id, plano, periodo, status, mp_subscription_id, periodo_inicio, periodo_fim)
+                VALUES (%s, %s, %s, %s, %s, NOW(), %s)
+            """, (ext_ref, plano, periodo, novo_status, subscription_id, periodo_fim))
+            conn.commit()
+            cursor.close()
+        finally:
+            conn.close()
 
     # Registra no histórico se pagamento foi aprovado
     if novo_status == "ativo":
         valor = mp_data.get("auto_recurring", {}).get("transaction_amount", 0)
         plano_dados = mp_data.get("reason", "").lower()
         plano = "business" if "business" in plano_dados else "pro" if "pro" in plano_dados else "starter"
-        periodo = "anual" if mp_data.get("auto_recurring", {}).get("frequency", 1) == 12 else "mensal"
+        frequencia = mp_data.get("auto_recurring", {}).get("frequency", 1)
+        periodo = "anual" if frequencia == 12 else "mensal"
 
-        conn2 = get_db_connection()
-        cursor2 = conn2.cursor()
-        cursor2.execute("""
-            INSERT INTO historico_pagamentos
-                (usuario_id, mp_payment_id, mp_subscription_id, plano, periodo, valor, status, metodo_pagamento)
-            VALUES (%s, %s, %s, %s, %s, %s, 'aprovado', 'credit_card')
-        """, (ext_ref, subscription_id, subscription_id, plano, periodo, valor))
-        conn2.commit()
-        cursor2.close()
-        conn2.close()
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO historico_pagamentos
+                    (usuario_id, mp_payment_id, mp_subscription_id, plano, periodo, valor, status, metodo_pagamento)
+                VALUES (%s, %s, %s, %s, %s, %s, 'aprovado', 'credit_card')
+            """, (ext_ref, subscription_id, subscription_id, plano, periodo, valor))
+            conn.commit()
+            cursor.close()
+        finally:
+            conn.close()
 
     return {"status": "ok"}
 
@@ -294,15 +374,30 @@ def minha_assinatura(usuario: dict = Depends(get_usuario_atual)):
     usuario_id = int(usuario["sub"])
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT plano, periodo, status, periodo_inicio, periodo_fim, trial_fim
-        FROM assinaturas
-        WHERE usuario_id = %s ORDER BY id DESC LIMIT 1
-    """, (usuario_id,))
-    assinatura = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor(dictionary=True)
+
+        # ─── FIX BUG #4: trial expirado nunca era marcado como expirado.
+        # Agora toda vez que o usuário consulta a assinatura, o sistema verifica
+        # se o trial já acabou e atualiza o status antes de retornar.
+        cursor.execute("""
+            UPDATE assinaturas
+            SET status = 'expirado'
+            WHERE usuario_id = %s
+              AND status = 'trial'
+              AND trial_fim < NOW()
+        """, (usuario_id,))
+        conn.commit()
+
+        cursor.execute("""
+            SELECT plano, periodo, status, periodo_inicio, periodo_fim, trial_fim
+            FROM assinaturas
+            WHERE usuario_id = %s ORDER BY id DESC LIMIT 1
+        """, (usuario_id,))
+        assinatura = cursor.fetchone()
+        cursor.close()
+    finally:
+        conn.close()
 
     if not assinatura:
         return {"tem_assinatura": False}
@@ -320,15 +415,17 @@ def cancelar_assinatura(usuario: dict = Depends(get_usuario_atual)):
     usuario_id = int(usuario["sub"])
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT mp_subscription_id FROM assinaturas
-        WHERE usuario_id = %s AND status IN ('ativo', 'trial')
-        ORDER BY id DESC LIMIT 1
-    """, (usuario_id,))
-    assinatura = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT mp_subscription_id FROM assinaturas
+            WHERE usuario_id = %s AND status IN ('ativo', 'trial')
+            ORDER BY id DESC LIMIT 1
+        """, (usuario_id,))
+        assinatura = cursor.fetchone()
+        cursor.close()
+    finally:
+        conn.close()
 
     if not assinatura:
         raise HTTPException(status_code=404, detail="Assinatura ativa não encontrada.")
@@ -343,14 +440,16 @@ def cancelar_assinatura(usuario: dict = Depends(get_usuario_atual)):
             raise HTTPException(status_code=502, detail=f"Erro MP: {resp.text}")
 
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE assinaturas SET status = 'cancelado'
-        WHERE usuario_id = %s AND status IN ('ativo', 'trial')
-    """, (usuario_id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE assinaturas SET status = 'cancelado'
+            WHERE usuario_id = %s AND status IN ('ativo', 'trial')
+        """, (usuario_id,))
+        conn.commit()
+        cursor.close()
+    finally:
+        conn.close()
 
     return {"status": "cancelado"}
 
@@ -359,25 +458,27 @@ def cancelar_assinatura(usuario: dict = Depends(get_usuario_atual)):
 def _ativar_trial(usuario_id: int, plano: str):
     trial_dias = PLANOS[plano]["trial_dias"]
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO assinaturas
-            (usuario_id, plano, periodo, status, trial_fim, periodo_inicio, periodo_fim)
-        VALUES
-            (%s, %s, 'mensal', 'trial',
-             DATE_ADD(NOW(), INTERVAL %s DAY),
-             NOW(),
-             DATE_ADD(NOW(), INTERVAL %s DAY))
-        ON DUPLICATE KEY UPDATE
-            plano          = VALUES(plano),
-            status         = 'trial',
-            trial_fim      = VALUES(trial_fim),
-            periodo_inicio = NOW(),
-            periodo_fim    = VALUES(periodo_fim)
-    """, (usuario_id, plano, trial_dias, trial_dias))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO assinaturas
+                (usuario_id, plano, periodo, status, trial_fim, periodo_inicio, periodo_fim)
+            VALUES
+                (%s, %s, 'mensal', 'trial',
+                 DATE_ADD(NOW(), INTERVAL %s DAY),
+                 NOW(),
+                 DATE_ADD(NOW(), INTERVAL %s DAY))
+            ON DUPLICATE KEY UPDATE
+                plano          = VALUES(plano),
+                status         = 'trial',
+                trial_fim      = VALUES(trial_fim),
+                periodo_inicio = NOW(),
+                periodo_fim    = VALUES(periodo_fim)
+        """, (usuario_id, plano, trial_dias, trial_dias))
+        conn.commit()
+        cursor.close()
+    finally:
+        conn.close()
 
     return {
         "checkout_url": None,

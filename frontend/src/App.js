@@ -12,6 +12,7 @@ import FlowEditor from './pages/FlowEditor';
 import Assinar from './pages/Assinar';
 import EsqueciSenha from './pages/EsqueciSenha';
 import RedefinirSenha from './pages/RedefinirSenha';
+import PagamentoConfirmado from './pages/PagamentoConfirmado';
 import Termos from './pages/Termos';
 import Privacidade from './pages/Privacidade';
 import CookieBanner from './components/CookieBanner';
@@ -36,6 +37,7 @@ function AnimatedRoutes() {
         <Route path="/cadastrar" element={<PageTransition><Register /></PageTransition>} />
         <Route path="/esqueci-senha" element={<PageTransition><EsqueciSenha /></PageTransition>} />
         <Route path="/redefinir-senha" element={<PageTransition><RedefinirSenha /></PageTransition>} />
+        <Route path="/pagamento-confirmado" element={<PagamentoConfirmado />} />
         <Route path="/termos" element={<Termos />} />
         <Route path="/privacidade" element={<Privacidade />} />
 

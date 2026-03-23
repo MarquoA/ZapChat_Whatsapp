@@ -1,92 +1,145 @@
 import { motion } from "framer-motion";
 
-// ── Nó do fluxo ───────────────────────────────────────────────────────────────
-const FlowNode = ({ top, left, content, options, delay, isActive }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ delay, type: "spring", stiffness: 160, damping: 20 }}
-    style={{
-      position: "absolute", top, left,
-      width: 192,
-      background: "#0f1a0f",
-      border: `1px solid ${isActive ? "rgba(37,211,102,0.45)" : "rgba(255,255,255,0.09)"}`,
-      borderRadius: 10,
-      boxShadow: isActive
-        ? "0 0 0 1px rgba(37,211,102,0.2), 0 8px 28px rgba(0,0,0,0.55)"
-        : "0 8px 28px rgba(0,0,0,0.55)",
-      overflow: "visible",
-      zIndex: 10,
-    }}
-  >
-    <div style={{
-      padding: "6px 10px",
-      display: "flex", alignItems: "center", gap: 8,
-      borderBottom: "1px solid rgba(255,255,255,0.07)",
-      background: "rgba(255,255,255,0.02)",
-      borderRadius: "10px 10px 0 0",
-    }}>
-      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#25D366", boxShadow: "0 0 6px rgba(37,211,102,0.8)", flexShrink: 0 }} />
-      <span style={{ color: "#25D366", fontSize: "0.55rem", fontWeight: 800, letterSpacing: 1 }}>✕ 2 SEC</span>
-      <span style={{ marginLeft: "auto", color: "#ff5555", fontSize: "0.55rem", fontWeight: 700 }}>APAGAR</span>
-    </div>
-    <div style={{ padding: "10px 10px 8px" }}>
-      <p style={{ fontSize: "0.72rem", fontWeight: 500, margin: "0 0 10px", lineHeight: 1.5, color: "rgba(255,255,255,0.85)" }}>{content}</p>
-      {options && (
-        <div>
-          <p style={{ fontSize: "0.48rem", fontWeight: 700, opacity: 0.3, textTransform: "uppercase", letterSpacing: 1.5, margin: "0 0 6px" }}>
-            Opções de resposta <span style={{ float: "right", color: "#25D366", opacity: 1 }}>+ ADD</span>
-          </p>
-          {options.map((opt, i) => (
-            <div key={i} style={{
-              padding: "5px 8px", background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6,
-              fontSize: "0.62rem", marginBottom: 4, color: "rgba(255,255,255,0.72)",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              position: "relative",
-            }}>
-              <span>{i + 1} - {opt}</span>
-              <span style={{ color: "#ff5555", fontSize: "0.6rem", fontWeight: 700 }}>✕</span>
-              <div style={{
-                position: "absolute", right: -6, top: "50%", transform: "translateY(-50%)",
-                width: 10, height: 10, borderRadius: "50%",
-                background: "#25D366", border: "2px solid #0f1a0f",
-                boxShadow: "0 0 6px rgba(37,211,102,0.7)",
-              }} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-    {!options && (
-      <div style={{
-        position: "absolute", bottom: -6, left: "50%", transform: "translateX(-50%)",
-        width: 11, height: 11, borderRadius: "50%",
-        background: "#25D366", border: "2px solid #0f1a0f",
-        boxShadow: "0 0 7px rgba(37,211,102,0.8)",
-      }} />
-    )}
-    <div style={{
-      position: "absolute", top: "50%", left: -6, transform: "translateY(-50%)",
-      width: 11, height: 11, borderRadius: "50%",
-      background: "#1a2a1a", border: "2px solid rgba(37,211,102,0.5)",
-      boxShadow: "0 0 5px rgba(37,211,102,0.4)",
-    }} />
-  </motion.div>
-);
+const FlowNode = ({ top, left, content, options, delay, isActive, type = "txt" }) => {
+  const colors = {
+    txt: { border: "rgba(37,211,102,0.4)", dot: "#25D366", dotShadow: "rgba(37,211,102,0.8)", label: "#25D366", labelText: "Mensagem de Texto" },
+    ia:  { border: "rgba(180,100,255,0.4)", dot: "#b464ff", dotShadow: "rgba(180,100,255,0.8)", label: "#b464ff", labelText: "IA Com Contexto" },
+    img: { border: "rgba(100,180,255,0.4)", dot: "#64b4ff", dotShadow: "rgba(100,180,255,0.8)", label: "#64b4ff", labelText: "Imagem" },
+  };
+  const c = colors[type];
 
-const Connector = ({ x1, y1, x2, y2, delay }) => (
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, type: "spring", stiffness: 160, damping: 20 }}
+      style={{
+        position: "absolute", top, left,
+        width: type === "ia" ? 172 : 160,
+        background: "#0f1a0f",
+        border: `1px solid ${c.border}`,
+        borderRadius: 8,
+        overflow: "visible",
+        zIndex: 10,
+      }}
+    >
+      <div style={{
+        padding: "4px 7px", display: "flex", alignItems: "center", gap: 5,
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(255,255,255,0.02)",
+        borderRadius: "8px 8px 0 0",
+      }}>
+        <span style={{ width: 5, height: 5, borderRadius: "50%", background: c.dot, boxShadow: `0 0 5px ${c.dotShadow}`, flexShrink: 0 }} />
+        <span style={{ color: c.label, fontSize: "0.5rem", fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase" }}>{c.labelText}</span>
+        <span style={{ fontSize: "0.45rem", fontWeight: 700, color: "rgba(255,255,255,0.35)", background: type === "ia" ? "rgba(180,100,255,0.1)" : type === "img" ? "rgba(100,180,255,0.1)" : "rgba(255,255,255,0.06)", borderRadius: 3, padding: "1px 4px", marginLeft: 1 }}>
+          {type === "ia" ? "3 s" : "2 s"}
+        </span>
+        <span style={{ marginLeft: "auto", color: "#ff5555", fontSize: "0.45rem", fontWeight: 700 }}>APAGAR</span>
+      </div>
+
+      <div style={{ padding: "6px 7px" }}>
+
+        {type === "txt" && (
+          <>
+            <p style={{ fontSize: "0.58rem", color: "rgba(255,255,255,0.82)", lineHeight: 1.4, margin: "0 0 4px" }}>{content}</p>
+            <p style={{ fontSize: "0.45rem", color: "rgba(255,255,255,0.22)", margin: "0 0 5px" }}>{content.length} caracteres</p>
+            <p style={{ fontSize: "0.45rem", fontWeight: 700, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: 1, display: "flex", justifyContent: "space-between", margin: "0 0 4px" }}>
+              Opções de Resposta <span style={{ color: "#25D366" }}>+ ADD</span>
+            </p>
+            {options ? options.map((opt, i) => (
+              <div key={i} style={{
+                padding: "3px 6px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+                fontSize: "0.5rem", color: "rgba(255,255,255,0.65)",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                marginBottom: 3, position: "relative",
+              }}>
+                <span>{i + 1} - {opt}</span>
+                <span style={{ color: "#ff5555", fontSize: "0.5rem", fontWeight: 700 }}>✕</span>
+                <div style={{ position: "absolute", right: -5, top: "50%", transform: "translateY(-50%)", width: 8, height: 8, borderRadius: "50%", background: "#25D366", border: "2px solid #0f1a0f" }} />
+              </div>
+            )) : (
+              <p style={{ fontSize: "0.45rem", color: "rgba(255,255,255,0.2)", fontStyle: "italic", textAlign: "center", padding: "3px 0", margin: 0 }}>
+                Sem opcoes — saída única pelo fundo
+              </p>
+            )}
+          </>
+        )}
+
+        {type === "ia" && (
+          <>
+            <p style={{ fontSize: "0.45rem", color: "rgba(255,255,255,0.32)", textTransform: "uppercase", letterSpacing: 1, margin: "0 0 3px", fontWeight: 700 }}>Modelo de IA</p>
+            <div style={{
+              width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(180,100,255,0.25)",
+              borderRadius: 4, padding: "3px 6px", fontSize: "0.5rem", color: "rgba(255,255,255,0.65)",
+              display: "flex", justifyContent: "space-between", marginBottom: 6, boxSizing: "border-box",
+            }}>GPT-3.5 Turbo <span style={{ opacity: 0.4 }}>▾</span></div>
+            <p style={{ fontSize: "0.45rem", color: "rgba(255,255,255,0.32)", textTransform: "uppercase", letterSpacing: 1, margin: "0 0 3px", fontWeight: 700 }}>Instrucao do Bot</p>
+            <div style={{
+              width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 4, padding: "4px 6px", fontSize: "0.5rem", color: "rgba(255,255,255,0.45)",
+              lineHeight: 1.4, boxSizing: "border-box", minHeight: 36,
+            }}>Ex: Voce é um atendente da empresa X. Responda de forma educada e objetiva sobre nossos produtos...</div>
+            <p style={{ fontSize: "0.45rem", color: "rgba(180,100,255,0.55)", margin: "4px 0 0", lineHeight: 1.35 }}>
+              A IA responde com base nessa instrucao e no histórico da conversa.
+            </p>
+          </>
+        )}
+
+        {type === "img" && (
+          <>
+            <div style={{
+              width: "100%", borderRadius: 4, background: "rgba(100,180,255,0.06)",
+              border: "1px solid rgba(100,180,255,0.2)", overflow: "hidden", marginBottom: 5, boxSizing: "border-box",
+            }}>
+              <div style={{ width: "100%", height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{
+                  width: "80%", height: 24, background: "rgba(255,255,255,0.06)",
+                  borderRadius: 3, border: "1px solid rgba(100,180,255,0.15)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "0.5rem", color: "rgba(100,180,255,0.5)",
+                }}>▶ team viewer</div>
+              </div>
+              <div style={{ fontSize: "0.45rem", color: "rgba(100,180,255,0.6)", textAlign: "center", padding: "2px 0", borderTop: "1px solid rgba(100,180,255,0.1)" }}>
+                Remover imagem
+              </div>
+            </div>
+            <p style={{ fontSize: "0.5rem", color: "rgba(255,255,255,0.75)", margin: 0 }}>Segue o team viewer do nosso atendime</p>
+          </>
+        )}
+      </div>
+
+      {/* Handle entrada esquerda */}
+      <div style={{
+        position: "absolute", left: -5, top: "50%", transform: "translateY(-50%)",
+        width: 8, height: 8, borderRadius: "50%",
+        background: "#1a2a1a", border: `2px solid ${c.border}`,
+      }} />
+
+      {/* Handle saída fundo */}
+      {(type === "ia" || type === "img" || (type === "txt" && !options)) && (
+        <div style={{
+          position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)",
+          width: 8, height: 8, borderRadius: "50%",
+          background: c.dot, border: "2px solid #0f1a0f",
+        }} />
+      )}
+    </motion.div>
+  );
+};
+
+const Connector = ({ x1, y1, x2, y2, delay, color = "rgba(37,211,102,0.55)" }) => (
   <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 5, overflow: "visible" }}>
     <motion.path
-      d={`M ${x1} ${y1} C ${x1 + 70} ${y1}, ${x2 - 70} ${y2}, ${x2} ${y2}`}
-      fill="none" stroke="rgba(37,211,102,0.55)" strokeWidth="1.8" strokeDasharray="7,5"
+      d={`M ${x1} ${y1} C ${x1 + 60} ${y1}, ${x2 - 60} ${y2}, ${x2} ${y2}`}
+      fill="none" stroke={color} strokeWidth="1.5" strokeDasharray="5,4"
       initial={{ pathLength: 0, opacity: 0 }}
       animate={{ pathLength: 1, opacity: 1 }}
       transition={{ delay: delay + 0.3, duration: 0.9, ease: "easeInOut" }}
     />
-    <motion.circle r="3.5" fill="#25D366" style={{ filter: "drop-shadow(0 0 5px #25D366)" }}>
+    <motion.circle r="3" fill={color.replace(/[\d.]+\)$/, "1)")}>
       <animateMotion dur="2.8s" repeatCount="indefinite" begin={`${delay + 1.2}s`}
-        path={`M ${x1} ${y1} C ${x1 + 70} ${y1}, ${x2 - 70} ${y2}, ${x2} ${y2}`}
+        path={`M ${x1} ${y1} C ${x1 + 60} ${y1}, ${x2 - 60} ${y2}, ${x2} ${y2}`}
       />
     </motion.circle>
   </svg>
@@ -94,75 +147,86 @@ const Connector = ({ x1, y1, x2, y2, delay }) => (
 
 export default function EditorMockup() {
   return (
-    <div style={{ position: "relative", width: "100%", maxWidth: 580, margin: "0 auto", userSelect: "none" }}>
-      <div style={{
-        position: "absolute", inset: "-20px", zIndex: 0, pointerEvents: "none",
-        background: "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(37,211,102,0.07) 0%, transparent 70%)"
-      }} />
+    <div style={{ position: "relative", width: "100%", maxWidth: 720, margin: "0 auto", userSelect: "none" }}>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
         style={{
-          position: "relative", zIndex: 1, borderRadius: 14,
-          border: "1px solid rgba(37,211,102,0.2)",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)",
+          position: "relative", zIndex: 1, borderRadius: 12,
+          border: "1px solid rgba(37,211,102,0.22)",
+          boxShadow: "0 24px 60px rgba(0,0,0,0.65)",
           overflow: "hidden", background: "#080e08",
         }}
       >
         {/* Top bar */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 16px", background: "#060b06",
+          padding: "7px 12px", background: "#060b06",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontWeight: 900, fontSize: "0.82rem", letterSpacing: -0.5 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontWeight: 900, fontSize: "0.78rem", letterSpacing: -0.5, color: "#fff" }}>
               ZAP<span style={{ color: "#25D366" }}>CHAT</span>
             </span>
-            <div style={{
-              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 7, padding: "5px 14px", fontSize: "0.68rem", color: "rgba(255,255,255,0.75)", fontWeight: 500,
-            }}>Exemplo de Fluxo</div>
+            <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 5, padding: "3px 9px", fontSize: "0.62rem", color: "rgba(255,255,255,0.7)" }}>
+              Exemplo de Fluxo
+            </div>
+            <span style={{ fontSize: "0.5rem", color: "rgba(255,255,255,0.3)" }}>6 nodes · 6 conexões</span>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <span style={{ border: "1px solid rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.75)", padding: "7px 18px", borderRadius: 8, fontSize: "0.62rem", fontWeight: 800 }}>VOLTAR</span>
-            <span style={{ background: "#25D366", color: "#060a06", padding: "7px 18px", borderRadius: 8, fontSize: "0.62rem", fontWeight: 900, boxShadow: "0 0 14px rgba(37,211,102,0.3)" }}>SALVAR</span>
+          <div style={{ display: "flex", gap: 5 }}>
+            {["[ ]", "MAPA", "VOLTAR"].map(label => (
+              <span key={label} style={{ border: "1px solid rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.7)", padding: "4px 10px", borderRadius: 5, fontSize: "0.52rem", fontWeight: 700 }}>{label}</span>
+            ))}
+            <span style={{ background: "#25D366", color: "#060b06", padding: "4px 12px", borderRadius: 5, fontSize: "0.52rem", fontWeight: 900 }}>SALVAR</span>
           </div>
         </div>
 
         {/* Body */}
-        <div style={{ display: "flex", height: 290 }}>
+        <div style={{ display: "flex", height: 500 }}>
 
           {/* Sidebar */}
           <div style={{
-            width: 148, background: "#060b06", padding: "14px 10px",
+            width: 130, background: "#060b06", padding: "10px 8px",
             borderRight: "1px solid rgba(255,255,255,0.06)", flexShrink: 0,
-            display: "flex", flexDirection: "column", gap: 12,
+            display: "flex", flexDirection: "column", gap: 7,
           }}>
-            <p style={{ fontSize: "0.5rem", fontWeight: 800, opacity: 0.35, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 2px" }}>COMPONENTES</p>
+            <p style={{ fontSize: "0.45rem", fontWeight: 800, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: 2, margin: "0 0 1px" }}>Adicionar Bloco</p>
 
-            <motion.div
-              animate={{ boxShadow: ["0 0 0px rgba(37,211,102,0)", "0 0 14px rgba(37,211,102,0.28)", "0 0 0px rgba(37,211,102,0)"] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-              style={{ background: "rgba(37,211,102,0.07)", border: "1px solid rgba(37,211,102,0.28)", borderRadius: 9, padding: "10px 10px" }}
-            >
-              <p style={{ color: "#25D366", fontWeight: 900, fontSize: "0.72rem", margin: "0 0 3px" }}>+ TEXTO</p>
-              <p style={{ fontSize: "0.58rem", opacity: 0.45, margin: 0, lineHeight: 1.45 }}>Nova mensagem com delay.</p>
-            </motion.div>
+            {[
+              { title: "TEXTO",          desc: "Mensagem com delay e opcoes ramificadas.", bg: "rgba(37,211,102,0.08)",  border: "rgba(37,211,102,0.3)",  color: "#25D366" },
+              { title: "IMAGEM",         desc: "Envie imagem com legenda opcional.",       bg: "rgba(100,180,255,0.08)", border: "rgba(100,180,255,0.3)", color: "#64b4ff" },
+              { title: "IA COM CONTEXTO",desc: "Bot com IA baseado no histórico.",         bg: "rgba(180,100,255,0.08)", border: "rgba(180,100,255,0.3)", color: "#b464ff" },
+            ].map(b => (
+              <div key={b.title} style={{ background: b.bg, border: `1px solid ${b.border}`, borderRadius: 6, padding: "7px 8px" }}>
+                <p style={{ color: b.color, fontWeight: 900, fontSize: "0.6rem", margin: "0 0 2px" }}>{b.title}</p>
+                <p style={{ fontSize: "0.48rem", color: "rgba(255,255,255,0.38)", lineHeight: 1.35, margin: 0 }}>{b.desc}</p>
+              </div>
+            ))}
 
-            <div style={{
-              marginTop: "auto", background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.06)", borderRadius: 9, padding: "10px 10px",
-            }}>
-              <p style={{ color: "#25D366", fontWeight: 800, fontSize: "0.6rem", margin: "0 0 7px" }}>DICAS ÚTEIS</p>
+            <div style={{ marginTop: "auto" }}>
+              <p style={{ fontSize: "0.45rem", fontWeight: 800, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: 2, margin: "0 0 5px" }}>Legenda</p>
               {[
-                "Arraste os pontos verdes para conectar.",
-                "Use o DELAY para simular digitação.",
-                "Ao apagar uma opção, o link some automaticamente.",
-              ].map((tip, i) => (
-                <p key={i} style={{ fontSize: "0.55rem", opacity: 0.45, margin: "0 0 4px", lineHeight: 1.45 }}>• {tip}</p>
+                { color: "#25D366",              label: "Opcoes de resposta" },
+                { color: "rgba(37,211,102,0.35)",label: "Fluxo padrao" },
+                { color: "#64b4ff",              label: "Saida de imagem" },
+                { color: "#b464ff",              label: "Saida de IA" },
+              ].map(l => (
+                <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.48rem", color: "rgba(255,255,255,0.4)", marginBottom: 3 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: l.color, flexShrink: 0 }} />
+                  {l.label}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 7 }}>
+              <p style={{ fontSize: "0.45rem", fontWeight: 800, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: 2, margin: "0 0 5px" }}>Atalhos</p>
+              {[["Ctrl+S","Salvar"],["Scroll","Zoom in/out"],["Arrastar","Mover canvas"],["1 seq","Ver tudo"]].map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                  <span style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 3, padding: "1px 4px", fontSize: "0.42rem", color: "rgba(255,255,255,0.45)", fontFamily: "monospace" }}>{k}</span>
+                  <span style={{ fontSize: "0.42rem", color: "rgba(255,255,255,0.28)" }}>{v}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -171,50 +235,30 @@ export default function EditorMockup() {
           <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0a110a" }}>
             <div style={{
               position: "absolute", inset: 0, pointerEvents: "none",
-              backgroundImage: "radial-gradient(rgba(255,255,255,0.09) 1px, transparent 1px)",
+              backgroundImage: "radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)",
               backgroundSize: "22px 22px",
             }} />
-            <div style={{
-              position: "absolute", inset: 0, pointerEvents: "none",
-              background: "radial-gradient(ellipse 80% 70% at 55% 45%, rgba(37,211,102,0.04) 0%, transparent 65%)",
-            }} />
 
-            {/* Conectores */}
-            <Connector x1={174} y1={88}  x2={270} y2={62}  delay={0.9} />
-            <Connector x1={174} y1={112} x2={270} y2={198} delay={1.1} />
-            <Connector x1={462} y1={74}  x2={340} y2={188} delay={1.4} />
+            <Connector x1={160} y1={75}  x2={210} y2={48}  delay={0.9} />
+            <Connector x1={160} y1={94}  x2={210} y2={188} delay={1.1} />
+            <Connector x1={370} y1={57}  x2={390} y2={168} delay={1.2} color="rgba(180,100,255,0.5)" />
+            <Connector x1={370} y1={74}  x2={370} y2={188} delay={1.3} />
+            <Connector x1={290} y1={272} x2={290} y2={342} delay={1.5} color="rgba(100,180,255,0.5)" />
+            <Connector x1={476} y1={320} x2={370} y2={342} delay={1.6} color="rgba(180,100,255,0.45)" />
 
-            {/* Nó 1 */}
-            <FlowNode
-              top={24} left={10}
-              content="Olá!"
-              options={["Desejo falar com suporte.", "Desejo encerrar por aqui."]}
-              delay={0.4} isActive
-            />
+            <FlowNode top={20}  left={6}   type="txt" content="Olá, como posso te ajudar hoje?"                                           options={["Desejo falar com suporte.", "Desejo encerrar por aqui."]} delay={0.4} isActive />
+            <FlowNode top={10}  left={210} type="txt" content="Qual área de suporte você gostaria de falar?"                              options={["Infraestrutura", "Vendas"]}                             delay={0.6} />
+            <FlowNode top={158} left={210} type="txt" content="Obrigado! Caso queira falar conosco novamente só enviar uma mensagem :)"                                                                      delay={0.8} />
+            <FlowNode top={148} left={390} type="ia"  content=""                                                                                                                                             delay={1.0} />
+            <FlowNode top={342} left={210} type="img" content=""                                                                                                                                             delay={1.2} />
 
-            {/* Nó 2 */}
-            <FlowNode
-              top={8} left={250}
-              content="Qual área de suporte você gostaria de falar?"
-              options={["Infraestrutura", "Vendas"]}
-              delay={0.6}
-            />
-
-            {/* Nó 3 */}
-            <FlowNode
-              top={162} left={250}
-              content="Obrigado, caso queira falar conosco novamente só enviar uma mensagem :)"
-              delay={0.8}
-            />
-
-            {/* Controles de zoom */}
-            <div style={{ position: "absolute", left: 8, bottom: 10, display: "flex", flexDirection: "column", gap: 3, zIndex: 20 }}>
+            <div style={{ position: "absolute", left: 7, bottom: 8, display: "flex", flexDirection: "column", gap: 3, zIndex: 20 }}>
               {["+", "−", "⤢", "🔒"].map((icon, i) => (
                 <div key={i} style={{
-                  width: 24, height: 24, background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)", borderRadius: 5,
+                  width: 20, height: 20, background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", cursor: "default",
+                  fontSize: "0.6rem", color: "rgba(255,255,255,0.45)",
                 }}>{icon}</div>
               ))}
             </div>
@@ -228,9 +272,8 @@ export default function EditorMockup() {
         style={{
           position: "absolute", top: 38, left: "50%", transform: "translateX(-50%)",
           background: "#25D366", color: "#060a06", padding: "3px 13px", borderRadius: 20,
-          fontSize: "0.55rem", fontWeight: 900, letterSpacing: 0.8,
+          fontSize: "0.48rem", fontWeight: 900, letterSpacing: 0.8,
           zIndex: 10, textTransform: "uppercase", whiteSpace: "nowrap",
-          boxShadow: "0 0 14px rgba(37,211,102,0.3)",
         }}
       >✦ Editor Visual Real do ZapChat</motion.div>
 
@@ -240,12 +283,11 @@ export default function EditorMockup() {
         style={{
           position: "absolute", bottom: -14, left: "50%", transform: "translateX(-50%)",
           background: "rgba(8,14,8,0.96)", border: "1px solid rgba(37,211,102,0.28)",
-          borderRadius: 9, padding: "7px 14px", zIndex: 10,
-          boxShadow: "0 6px 20px rgba(0,0,0,0.4)", whiteSpace: "nowrap",
+          borderRadius: 9, padding: "7px 14px", zIndex: 10, whiteSpace: "nowrap",
         }}
       >
-        <p style={{ color: "#25D366", fontWeight: 800, fontSize: "0.6rem", margin: "0 0 1px" }}>↔ Arraste e conecte blocos visualmente</p>
-        <p style={{ fontSize: "0.52rem", opacity: 0.45, margin: 0 }}>Sem código — igual ao editor real</p>
+        <p style={{ color: "#25D366", fontWeight: 800, fontSize: "0.55rem", margin: "0 0 1px" }}>↔ Arraste e conecte blocos visualmente</p>
+        <p style={{ fontSize: "0.48rem", opacity: 0.45, margin: 0 }}>Sem código — igual ao editor real</p>
         <div style={{
           position: "absolute", top: -7, left: "50%", transform: "translateX(-50%)",
           width: 0, height: 0, borderLeft: "6px solid transparent",
