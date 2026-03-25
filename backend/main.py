@@ -14,6 +14,7 @@ from app.routes.esqueci_senha_routes import router as esqueci_router
 from app.routes.disparos_routes import router as disparos_router
 from app.routes.metricas_routes import router as metricas_router   # NOVO
 from app.routes.usuario_routes import router as usuario_router     # NOVO
+from app.routes.template_routes import router as template_router  # ADICIONAR
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -129,6 +130,7 @@ app.include_router(esqueci_router)
 app.include_router(disparos_router)
 app.include_router(metricas_router)   # NOVO
 app.include_router(usuario_router)    # NOVO
+app.include_router(template_router, prefix="/templates", tags=["Templates"])  # ADICIONAR
 
 
 # ─── MODELS ───────────────────────────────────────────────────────────────────

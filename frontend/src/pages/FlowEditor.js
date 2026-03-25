@@ -78,8 +78,10 @@ const BotNode = ({ id, data }) => {
   const charCount = label.length;
   const charColor = charCount > 1000 ? '#ff4d4d' : charCount > 700 ? '#f0a500' : 'rgba(255,255,255,0.25)';
 
+  const boxBorder = '1px solid rgba(37,211,102,0.2)';
+
   return (
-    <div style={{ background: 'rgba(8,12,8,0.97)', backdropFilter: 'blur(10px)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+    <div style={{ background: 'rgba(8,12,8,0.97)', backdropFilter: 'blur(10px)', border: boxBorder, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(37,211,102,0.04)', borderRadius: '15px 15px 0 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '7px', height: '7px', background: '#25D366', borderRadius: '50%', boxShadow: '0 0 6px #25D366' }} />
@@ -286,6 +288,184 @@ const IANode = ({ id, data }) => {
 
 const nodeTypes = { botNode: BotNode, imageNode: ImageNode, iaNode: IANode };
 
+const normalizeEdgesForHandles = (nodes, edges) => {
+  const normalized = (edges || []).map(e => ({ ...e }));
+  const bySource = new Map();
+  const incomingByTarget = new Map();
+
+  normalized.forEach(edge => {
+    const src = edge.source;
+    const tgt = edge.target;
+    if (!src || !tgt) return;
+
+    if (!bySource.has(src)) bySource.set(src, []);
+    bySource.get(src).push(edge);
+
+    if (!incomingByTarget.has(tgt)) incomingByTarget.set(tgt, []);
+    incomingByTarget.get(tgt).push(edge);
+  });
+
+  const getHandleIndex = (edge) => {
+    if (!edge || !edge.sourceHandle) return 999;
+    const mt = `${edge.sourceHandle}`.match(/^opt(\d+)$/);
+    return mt ? Number(mt[1]) : 999;
+  };
+
+  nodes.forEach(node => {
+    const options = node.data?.options || [];
+    const outgoing = bySource.get(node.id) || [];
+
+    if (options.length > 0) {
+      const sortedOutgoing = [...outgoing].sort((a, b) => getHandleIndex(a) - getHandleIndex(b));
+      let candidate = 0;
+
+      sortedOutgoing.forEach(edge => {
+        if (edge.sourceHandle && edge.sourceHandle.startsWith('opt')) return;
+        while (candidate < options.length && outgoing.some(e => e.sourceHandle === `opt${candidate}`)) {
+          candidate += 1;
+        }
+        if (candidate < options.length) {
+          edge.sourceHandle = `opt${candidate}`;
+          candidate += 1;
+        }
+      });
+    } else if (outgoing.length === 1 && !outgoing[0].sourceHandle) {
+      outgoing[0].sourceHandle = 'default';
+    }
+
+    const connectedOptions = outgoing.filter(e => e.sourceHandle && e.sourceHandle.startsWith('opt')).length;
+    const hasIncoming = incomingByTarget.has(node.id) && incomingByTarget.get(node.id).length > 0;
+    const hasOutgoing = outgoing.length > 0;
+
+    node.data = {
+      ...node.data,
+      incomplete: false, // Desativar aviso de opções sem conexão para evitar mensagens falsas.
+      orphan: !hasIncoming && !hasOutgoing,
+    };
+  });
+
+  return normalized;
+};
+
+const shouldAutoLayout = (nodes) => {
+  if (!nodes || nodes.length === 0) return false;
+  const withPos = nodes.filter(node => node.position && typeof node.position.x === 'number' && typeof node.position.y === 'number');
+  if (withPos.length === 0) return true;
+
+  const xs = withPos.map(node => node.position.x);
+  const ys = withPos.map(node => node.position.y);
+  const range = (Math.max(...xs) - Math.min(...xs)) + (Math.max(...ys) - Math.min(...ys));
+  return range < 180;
+};
+
+const autoLayout = (nodes, edges) => {
+  if (!nodes || nodes.length === 0) return nodes;
+
+  const indegree = new Map(nodes.map(n => [n.id, 0]));
+  const outgoingEdges = new Map(nodes.map(n => [n.id, []]));
+  const incomingEdges = new Map(nodes.map(n => [n.id, []]));
+
+  (edges || []).forEach(edge => {
+    if (!edge.source || !edge.target) return;
+    if (!outgoingEdges.has(edge.source) || !incomingEdges.has(edge.target)) return;
+
+    outgoingEdges.get(edge.source).push(edge);
+    incomingEdges.get(edge.target).push(edge);
+    indegree.set(edge.target, indegree.get(edge.target) + 1);
+  });
+
+  const nodeIds = nodes.map(n => n.id);
+  const roots = nodeIds.filter(id => indegree.get(id) === 0 && (outgoingEdges.get(id)?.length || 0) > 0);
+  const isolated = nodeIds.filter(id => indegree.get(id) === 0 && (outgoingEdges.get(id)?.length || 0) === 0);
+
+  const leveled = [];
+  const visited = new Set();
+  const indegCopy = new Map(indegree);
+
+  let current = roots.length > 0 ? roots : nodeIds.filter(id => indegree.get(id) === 0);
+
+  const getHandleIndex = (edge) => {
+    if (!edge || !edge.sourceHandle) return 999;
+    const match = `${edge.sourceHandle}`.match(/^opt(\d+)$/);
+    return match ? Number(match[1]) : 999;
+  };
+
+  while (current.length > 0) {
+    leveled.push(current);
+    const next = [];
+
+    current.forEach(nodeId => {
+      visited.add(nodeId);
+      const children = outgoingEdges.get(nodeId) || [];
+      const orderedChildren = [...children]
+        .sort((a, b) => getHandleIndex(a) - getHandleIndex(b))
+        .map(edge => edge.target)
+        .filter(Boolean);
+
+      orderedChildren.forEach(childId => {
+        if (!indegCopy.has(childId) || visited.has(childId)) return;
+        indegCopy.set(childId, indegCopy.get(childId) - 1);
+        if (indegCopy.get(childId) <= 0 && !next.includes(childId)) next.push(childId);
+      });
+    });
+
+    current = next;
+  }
+
+  const remaining = nodeIds.filter(id => !visited.has(id));
+  if (remaining.length > 0) leveled.push(remaining);
+
+  const GAP_X = 280;
+  const GAP_Y = 180;
+  const LEFT_X = 80;
+  const TOP_Y = 50;
+
+  const positions = {};
+
+  if (leveled.length > 0) {
+    leveled[0].forEach((nodeId, index) => {
+      positions[nodeId] = { x: LEFT_X, y: TOP_Y + index * GAP_Y };
+    });
+  }
+
+  for (let lvl = 1; lvl < leveled.length; lvl += 1) {
+    let yCurrent = TOP_Y;
+    const levelNodes = leveled[lvl];
+    const positioned = new Set();
+
+    const parentLevel = leveled[lvl - 1] || [];
+
+    parentLevel.forEach(parentId => {
+      const children = outgoingEdges.get(parentId) || [];
+      const orderedChildren = [...children]
+        .sort((a, b) => getHandleIndex(a) - getHandleIndex(b))
+        .map(edge => edge.target)
+        .filter(target => levelNodes.includes(target));
+
+      orderedChildren.forEach(childId => {
+        if (positioned.has(childId)) return;
+        positions[childId] = { x: LEFT_X + lvl * GAP_X, y: yCurrent };
+        yCurrent += GAP_Y;
+        positioned.add(childId);
+      });
+    });
+
+    levelNodes.forEach(nodeId => {
+      if (positioned.has(nodeId)) return;
+      positions[nodeId] = { x: LEFT_X + lvl * GAP_X, y: yCurrent };
+      yCurrent += GAP_Y;
+    });
+  }
+
+  isolated.forEach((id, index) => {
+    positions[id] = { x: LEFT_X + (leveled.length + 1) * GAP_X, y: TOP_Y + index * GAP_Y };
+  });
+
+  return nodes.map(node => ({ ...node, position: positions[node.id] || node.position || { x: 100, y: 100 } }));
+};
+
+// ─── ITEM DA SIDEBAR ──────────────────────────────────────────────────────────
+
 // ─── ITEM DA SIDEBAR ──────────────────────────────────────────────────────────
 const ComponentItem = ({ title, desc, color, locked, onClick }) => (
   <div onClick={locked ? undefined : onClick}
@@ -306,7 +486,7 @@ const FlowContent = () => {
   const navigate = useNavigate();
   const { fitView, setCenter } = useReactFlow();
 
-  const usuarioId = parseInt(localStorage.getItem('usuario_id'));
+  const usuarioId = parseInt(localStorage.getItem('usuario_id')) || 0;
 
   const [plano, setPlano]         = useState(localStorage.getItem('usuario_plano') || 'starter');
   const [isPro, setIsPro]         = useState(['pro', 'business'].includes(localStorage.getItem('usuario_plano') || 'starter'));
@@ -393,7 +573,7 @@ const FlowContent = () => {
   // ── Carrega fluxo e faz fitView APOS carregar ────────────────────────────
   useEffect(() => {
     const idNumerico = parseInt(id);
-    if (!id || id === 'novo' || isNaN(idNumerico) || !usuarioId) {
+    if (!id || id === 'novo' || isNaN(idNumerico) || usuarioId === null || isNaN(usuarioId)) {
       setTimeout(() => fitView({ padding: 0.3, duration: 600 }), 300);
       return;
     }
@@ -418,8 +598,20 @@ const FlowContent = () => {
             modelo:   node.data?.modelo   ?? 'gemini-pro',
           }
         }));
-        setNodes(nodesCarregados);
-        setEdges(data.edges || []);
+
+        const edgesNormalizados = normalizeEdgesForHandles(nodesCarregados, data.edges || []);
+        const nodesParaUsar = shouldAutoLayout(nodesCarregados)
+          ? autoLayout(nodesCarregados, edgesNormalizados)
+          : nodesCarregados;
+        const edgesOrganizados = edgesNormalizados.map(edge => ({
+          ...edge,
+          animated: true,
+          style: { stroke: '#25D366', strokeWidth: 2.5 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#25D366' },
+        }));
+
+        setNodes(nodesParaUsar);
+        setEdges(edgesOrganizados);
         setNomeFluxo(data.nome_fluxo || 'Fluxo');
         setFluxoId(data.id);
         setAlterado(false);
@@ -450,9 +642,10 @@ const FlowContent = () => {
 
   const onConnect = useCallback((params) => {
     setEdges(eds => addEdge({
-      ...params, animated: true,
-      style: { stroke: params.sourceHandle === 'default' ? '#34b7f1' : '#25D366', strokeWidth: 2.5 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: params.sourceHandle === 'default' ? '#34b7f1' : '#25D366' }
+      ...params,
+      animated: true,
+      style: { stroke: '#25D366', strokeWidth: 2.5 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#25D366' }
     }, eds));
     setAlterado(true);
   }, []);

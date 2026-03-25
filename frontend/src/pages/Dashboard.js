@@ -1088,6 +1088,574 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ZAPCHAT — TemplatesTab
+// Arquivo: frontend/src/pages/Dashboard.js  (trecho para adicionar)
+//
+// INSTRUÇÕES DE INTEGRAÇÃO:
+//
+// 1. Cole o componente TemplatesTab em algum lugar antes do componente Dashboard
+//    (por exemplo, logo após o componente ChatbotIA)
+//
+// 2. Em menuItems, adicione uma entrada entre 'Chatbot IA' e 'Testes':
+//    { key: 'Templates', label: 'Templates', bloqueado: false },
+//
+// 3. Em renderContent(), adicione um case no switch:
+//    case 'Templates': return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
+//
+// 4. No main.py do backend, registre o router:
+//    from app.routes.template_routes import router as template_router
+//    app.include_router(template_router)
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── ABA: TEMPLATES ───────────────────────────────────────────────────────────
+const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
+  const t = TEMAS[tema];
+
+  const [templates, setTemplates]           = useState([]);
+  const [carregando, setCarregando]         = useState(true);
+  const [categoriaAtiva, setCategoriaAtiva] = useState('todas');
+  const [preview, setPreview]               = useState(null);   // template selecionado para modal
+  const [nomeFluxo, setNomeFluxo]           = useState('');
+  const [criando, setCriando]               = useState(false);
+  const [erroModal, setErroModal]           = useState('');
+  const [successId, setSuccessId]           = useState(null);
+
+  // ── Carregar templates da API ──
+  useEffect(() => {
+    const carregar = async () => {
+      setCarregando(true);
+      try {
+        // 1. A URL deve ser EXATAMENTE a que funcionou no Docs
+        const res = await authFetch(`${API_URL}/templates`); 
+        
+        if (res.status === 401) { navigate('/login'); return; }
+        
+        const data = await res.json();
+
+        // Compatível tanto com a resposta antiga (array direto) quanto com a resposta atual do backend
+        // (objeto com a chave "templates").
+        const novaLista = Array.isArray(data) ? data : (Array.isArray(data.templates) ? data.templates : []);
+        setTemplates(novaLista);
+
+      } catch (error) {
+        console.error("Erro ao carregar templates:", error);
+        setTemplates([]);
+      } finally {
+        setCarregando(false);
+      }
+    };
+    carregar();
+  }, [navigate]);
+
+  // ── Categorias únicas extraídas dos templates ──
+  const categorias = ['todas', ...new Set(templates.map(t => t.categoria))];
+
+  const templatesFiltrados = categoriaAtiva === 'todas'
+    ? templates
+    : templates.filter(t => t.categoria === categoriaAtiva);
+
+  // ── Labels de categoria legíveis ──
+  const labelCategoria = {
+    todas:       'Todos',
+    saude:       'Saúde',
+    ecommerce:   'E-commerce',
+    alimentacao: 'Alimentação',
+    servicos:    'Serviços',
+  };
+
+  // ── Abrir modal de preview ──
+  const abrirPreview = (template) => {
+    if (!template.disponivel) {
+      navigate('/assinar');
+      return;
+    }
+    setPreview(template);
+    setNomeFluxo(template.nome);
+    setErroModal('');
+  };
+
+  const fecharPreview = () => {
+    setPreview(null);
+    setNomeFluxo('');
+    setErroModal('');
+  };
+
+  // ── Usar template → criar fluxo ──
+  const usarTemplate = async () => {
+    if (!nomeFluxo.trim()) {
+      setErroModal('Dê um nome para o fluxo antes de continuar.');
+      return;
+    }
+    setCriando(true);
+    setErroModal('');
+    try {
+      const res = await authFetch(`${API_URL}/templates/usar`, {
+        method: 'POST',
+        body: JSON.stringify({
+          template_id: preview.id,
+          usuario_id: usuarioId,
+          nome_fluxo: nomeFluxo.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErroModal(data.detail || 'Erro ao criar fluxo.');
+        return;
+      }
+      setSuccessId(data.id);
+      fecharPreview();
+      // Redireciona direto ao editor com o novo fluxo
+      setTimeout(() => navigate(`/editor/${data.id}`), 400);
+    } catch {
+      setErroModal('Erro de conexão. Tente novamente.');
+    } finally {
+      setCriando(false);
+    }
+  };
+
+  // ── Nós do preview (parse do fluxo_json, se disponível) ──
+  const nosPreview = preview?.fluxo_json
+    ? (() => {
+        try {
+          const parsed = typeof preview.fluxo_json === 'string'
+            ? JSON.parse(preview.fluxo_json)
+            : preview.fluxo_json;
+          return parsed.nodes || [];
+        } catch { return []; }
+      })()
+    : [];
+
+  // ─── ESTILOS INTERNOS ─────────────────────────────────────
+  const cardStyle = (disponivel) => ({
+    background: t.card,
+    border: `1px solid ${t.cardBorder}`,
+    borderRadius: 16,
+    padding: '24px',
+    cursor: 'pointer',
+    transition: 'transform 0.18s, border-color 0.18s, box-shadow 0.18s',
+    opacity: disponivel ? 1 : 0.6,
+    position: 'relative',
+    overflow: 'hidden',
+  });
+
+  const tagStyle = (cor) => ({
+    display: 'inline-block',
+    padding: '3px 10px',
+    borderRadius: 20,
+    fontSize: '0.62rem',
+    fontWeight: 800,
+    background: `${cor}18`,
+    color: cor,
+    border: `1px solid ${cor}40`,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  });
+
+  const overlayStyle = {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.65)',
+    zIndex: 200,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+  };
+
+  const getTemplateIcon = (icone, nome) => {
+    if (!icone) return nome ? nome[0].toUpperCase() : 'T';
+    if (/^[a-zA-Z0-9]$/.test(icone)) return icone;
+    // Emojis/professionl: usa primeira letra do nome
+    return nome ? nome[0].toUpperCase() : 'T';
+  };
+
+  const modalStyle = {
+    background: t.sidebar,
+    border: `1px solid ${t.cardBorder}`,
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 620,
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    padding: '32px',
+    position: 'relative',
+  };
+
+  // ─────────────────────────────────────────────────────────
+  return (
+    <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
+
+      {/* Cabeçalho */}
+      <div style={{ marginBottom: 28 }}>
+        <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.7, maxWidth: 560 }}>
+          Escolha um template pronto e comece a atender seus clientes em minutos.
+          O fluxo será criado automaticamente no editor para você personalizar.
+        </p>
+      </div>
+
+      {/* Filtros de categoria */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
+        {categorias.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategoriaAtiva(cat)}
+            style={{
+              padding: '7px 16px',
+              borderRadius: 20,
+              border: `1px solid ${categoriaAtiva === cat ? '#25D366' : t.cardBorder}`,
+              background: categoriaAtiva === cat ? 'rgba(37,211,102,0.1)' : 'transparent',
+              color: categoriaAtiva === cat ? '#25D366' : t.textMuted,
+              fontWeight: categoriaAtiva === cat ? 700 : 500,
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              transition: 'all 0.15s',
+            }}
+          >
+            {labelCategoria[cat] || cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid de cards */}
+      {carregando ? (
+        <div style={{ padding: '60px 0', textAlign: 'center', color: t.textMuted, fontSize: '0.85rem' }}>
+          Carregando templates...
+        </div>
+      ) : templatesFiltrados.length === 0 ? (
+        <div style={{ padding: '60px 0', textAlign: 'center', color: t.textMuted }}>
+          Nenhum template nesta categoria.
+        </div>
+      ) : (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gap: 18,
+        }}>
+          {templatesFiltrados.map(tmpl => (
+            <motion.div
+              key={tmpl.id}
+              style={cardStyle(tmpl.disponivel)}
+              whileHover={tmpl.disponivel ? { y: -4, borderColor: tmpl.cor_destaque, boxShadow: `0 8px 28px ${tmpl.cor_destaque}22` } : {}}
+              onClick={() => abrirPreview(tmpl)}
+            >
+              {/* Barra de cor no topo */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0,
+                height: 3, background: tmpl.cor_destaque, borderRadius: '16px 16px 0 0',
+              }} />
+
+              {/* Badge de plano (se não for starter) */}
+              {tmpl.plano_minimo !== 'starter' && (
+                <div style={{
+                  position: 'absolute', top: 14, right: 14,
+                  background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)',
+                  borderRadius: 20, padding: '2px 9px',
+                  fontSize: '0.58rem', fontWeight: 800, color: '#25D366', textTransform: 'uppercase',
+                }}>
+                  {tmpl.plano_minimo.toUpperCase()}
+                </div>
+              )}
+
+              {/* Badge bloqueado */}
+              {!tmpl.disponivel && (
+                <div style={{
+                  position: 'absolute', top: 14, right: 14,
+                  background: 'rgba(255,75,75,0.12)', border: '1px solid rgba(255,75,75,0.3)',
+                  borderRadius: 20, padding: '2px 9px',
+                  fontSize: '0.58rem', fontWeight: 800, color: '#ff4b4b',
+                }}>
+                  BLOQUEADO
+                </div>
+              )}
+
+              {/* Imagem do template (se disponível) */}
+              {tmpl.imagem_url && (
+                <div style={{
+                  width: '100%', height: 140, borderRadius: 10,
+                  background: `linear-gradient(135deg, ${tmpl.cor_destaque}15 0%, ${tmpl.cor_destaque}08 100%)`,
+                  border: `1px solid ${tmpl.cor_destaque}30`,
+                  marginBottom: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <img 
+                    src={tmpl.imagem_url} 
+                    alt={tmpl.imagem_descricao || tmpl.nome}
+                    style={{
+                      width: '100%', height: '100%', objectFit: 'cover',
+                      filter: !tmpl.disponivel ? 'brightness(0.5) grayscale(0.3)' : 'brightness(1)',
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Ícone (fallback se não tiver imagem) */}
+              {!tmpl.imagem_url && (
+                <div style={{
+                  width: 48, height: 48, borderRadius: 14,
+                  background: `${tmpl.cor_destaque}18`,
+                  border: `1px solid ${tmpl.cor_destaque}30`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.05rem', marginBottom: 16, color: tmpl.cor_destaque,
+                  fontWeight: 700,
+                }}>
+                  {getTemplateIcon(tmpl.icone, tmpl.nome)}
+                </div>
+              )}
+
+              {/* Nome */}
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: t.text, marginBottom: 8 }}>
+                {tmpl.nome}
+              </h4>
+
+              {/* Descrição */}
+              <p style={{ fontSize: '0.76rem', color: t.textMuted, lineHeight: 1.6, marginBottom: 16, minHeight: 48 }}>
+                {tmpl.descricao}
+              </p>
+
+              {/* Rodapé */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={tagStyle(tmpl.cor_destaque)}>
+                  {labelCategoria[tmpl.categoria] || tmpl.categoria}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: tmpl.disponivel ? '#25D366' : t.textMuted, fontWeight: 600 }}>
+                  {tmpl.disponivel ? 'Ver preview →' : 'Fazer upgrade'}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* ── MODAL DE PREVIEW ── */}
+      <AnimatePresence>
+        {preview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={overlayStyle}
+            onClick={(e) => { if (e.target === e.currentTarget) fecharPreview(); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              style={modalStyle}
+            >
+              {/* Barra de cor */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0,
+                height: 4, background: preview.cor_destaque, borderRadius: '20px 20px 0 0',
+              }} />
+
+              {/* Header do modal */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 52, height: 52, borderRadius: 14,
+                    background: `${preview.cor_destaque}18`,
+                    border: `1px solid ${preview.cor_destaque}30`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.5rem', flexShrink: 0,
+                  }}>
+                    {preview.icone}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: t.text, marginBottom: 4 }}>
+                      {preview.nome}
+                    </h3>
+                    <span style={tagStyle(preview.cor_destaque)}>
+                      {labelCategoria[preview.categoria] || preview.categoria}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={fecharPreview}
+                  style={{ background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', color: t.textMuted, fontSize: '0.8rem' }}
+                >
+                  Fechar
+                </button>
+              </div>
+
+              {/* Descrição */}
+              <p style={{ fontSize: '0.83rem', color: t.textMuted, lineHeight: 1.7, marginBottom: 24 }}>
+                {preview.descricao}
+              </p>
+
+              {/* Imagem do template no modal */}
+              {preview.imagem_url && (
+                <div style={{
+                  width: '100%', height: 200, borderRadius: 12,
+                  background: `linear-gradient(135deg, ${preview.cor_destaque}15 0%, ${preview.cor_destaque}08 100%)`,
+                  border: `1px solid ${preview.cor_destaque}30`,
+                  marginBottom: 24, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <img 
+                    src={preview.imagem_url} 
+                    alt={preview.imagem_descricao || preview.nome}
+                    style={{
+                      width: '100%', height: '100%', objectFit: 'cover',
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Preview dos nós do fluxo */}
+              {nosPreview.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <p style={{ fontSize: '0.68rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
+                    Estrutura do fluxo ({nosPreview.length} etapas)
+                  </p>
+                  <div style={{
+                    background: t.input, borderRadius: 12, border: `1px solid ${t.cardBorder}`,
+                    padding: '16px', maxHeight: 260, overflowY: 'auto',
+                    display: 'flex', flexDirection: 'column', gap: 8,
+                  }}>
+                    {nosPreview.map((no, idx) => (
+                      <div key={no.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        {/* Número do nó */}
+                        <div style={{
+                          width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                          background: idx === 0 ? '#25D366' : `${preview.cor_destaque}28`,
+                          border: `1px solid ${idx === 0 ? '#25D366' : preview.cor_destaque}50`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.6rem', fontWeight: 800,
+                          color: idx === 0 ? '#0d140d' : preview.cor_destaque,
+                        }}>
+                          {idx + 1}
+                        </div>
+                        {/* Texto da mensagem (truncado) */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{
+                            fontSize: '0.74rem', color: t.text, lineHeight: 1.5,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {no.data?.label?.replace(/\n/g, ' ') || '(sem texto)'}
+                          </p>
+                          {no.data?.options?.length > 0 && (
+                            <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 2 }}>
+                              {no.data.options.length} opção(ões) de resposta
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Campo de nome do fluxo */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={{
+                  display: 'block', fontSize: '0.68rem', color: t.textMuted,
+                  marginBottom: 7, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px',
+                }}>
+                  Nome do fluxo
+                </label>
+                <input
+                  type="text"
+                  value={nomeFluxo}
+                  onChange={e => setNomeFluxo(e.target.value)}
+                  placeholder="Ex: Atendimento Clínica"
+                  style={{
+                    width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`,
+                    padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none',
+                    fontSize: '0.88rem', boxSizing: 'border-box',
+                  }}
+                />
+                <p style={{ fontSize: '0.65rem', color: t.textMuted, marginTop: 5 }}>
+                  Você poderá renomear o fluxo a qualquer momento no editor.
+                </p>
+              </div>
+
+              {/* Erro */}
+              {erroModal && (
+                <p style={{ fontSize: '0.78rem', color: '#ff4b4b', fontWeight: 600, marginBottom: 14 }}>
+                  {erroModal}
+                </p>
+              )}
+
+              {/* Botões */}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={fecharPreview}
+                  style={{
+                    flex: 1, padding: '12px', background: 'transparent',
+                    border: `1px solid ${t.cardBorder}`, color: t.textMuted,
+                    borderRadius: 10, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+                  }}
+                >
+                  Cancelar
+                </button>
+                <motion.button
+                  onClick={usarTemplate}
+                  disabled={criando}
+                  whileHover={{ scale: criando ? 1 : 1.02 }}
+                  style={{
+                    flex: 2, padding: '12px',
+                    background: criando ? 'rgba(37,211,102,0.3)' : '#25D366',
+                    color: criando ? '#25D366' : '#0d140d',
+                    border: 'none', borderRadius: 10,
+                    fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer',
+                    fontSize: '0.85rem', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', gap: 8, transition: 'background 0.2s',
+                  }}
+                >
+                  {criando && (
+                    <span style={{
+                      width: 13, height: 13,
+                      border: '2px solid rgba(13,20,13,0.3)', borderTop: '2px solid #0d140d',
+                      borderRadius: '50%', display: 'inline-block',
+                      animation: 'spin 0.8s linear infinite',
+                    }} />
+                  )}
+                  {criando ? 'Criando fluxo...' : 'Usar este template'}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DIFF: Alterações no componente Dashboard
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// 1. Dentro do array menuItems, ADICIONE (entre 'Chatbot IA' e 'Testes'):
+//
+//   { key: 'Templates', label: 'Templates', bloqueado: false },
+//
+// Ficará assim:
+//
+//   const menuItems = [
+//     { key: 'Dashboard',     label: 'Dashboard',    bloqueado: false },
+//     { key: 'Instancias',    label: 'Fluxos',        bloqueado: false },
+//     { key: 'WhatsApp',      label: 'WhatsApp',      bloqueado: false },
+//     { key: 'Disparos',      label: 'Disparos',      bloqueado: !PLANO_LIMITES[plano]?.disparos },
+//     { key: 'Chatbot IA',    label: 'Chatbot IA',    bloqueado: !PLANO_LIMITES[plano]?.ia },
+//     { key: 'Templates',     label: 'Templates',     bloqueado: false },   // <-- ADICIONAR
+//     { key: 'Testes',        label: 'Testes & IA',   bloqueado: false },
+//     { key: 'Configuracoes', label: 'Configurações', bloqueado: false },
+//   ];
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Dentro do switch em renderContent(), ADICIONE (antes do default):
+//
+//   case 'Templates': return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. No main.py, ADICIONE:
+//
+//   from app.routes.template_routes import router as template_router
+//   app.include_router(template_router)
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+
 // ─── ABA: INSTÂNCIAS (FLUXOS) ─────────────────────────────────────────────────
 const Instancias = ({ fluxos, carregando, onEditar, onExcluir, tema }) => {
   const t = TEMAS[tema];
@@ -1341,6 +1909,7 @@ const Dashboard = () => {
     { key: 'WhatsApp',      label: 'WhatsApp',        bloqueado: false },
     { key: 'Disparos',      label: 'Disparos',        bloqueado: !PLANO_LIMITES[plano]?.disparos },
     { key: 'Chatbot IA',    label: 'Chatbot IA',      bloqueado: !PLANO_LIMITES[plano]?.ia },
+    { key: 'Templates',     label: 'Templates',       bloqueado: false },
     { key: 'Testes',        label: 'Testes & IA',     bloqueado: false },
     { key: 'Configuracoes', label: 'Configurações',   bloqueado: false },
   ];
@@ -1431,6 +2000,7 @@ const Dashboard = () => {
       case 'WhatsApp':      return <WhatsAppTab fluxos={fluxos} usuarioId={usuarioId} plano={plano} tema={tema} />;
       case 'Disparos':      return <DisparosTab plano={plano} navigate={navigate} tema={tema} />;
       case 'Chatbot IA':    return <ChatbotIA fluxos={fluxos} plano={plano} navigate={navigate} tema={tema} />;
+      case 'Templates': return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
       case 'Testes':        return <TestesIA fluxos={fluxos} plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
       case 'Configuracoes': return <ConfigSettings usuarioId={usuarioId} tema={tema} setTema={setTema} />;
       default:              return null;
