@@ -1,4 +1,5 @@
 # app/routes/esqueci_senha_routes.py
+import logging
 import os
 import secrets
 import requests
@@ -9,6 +10,7 @@ from app.database import get_db_connection
 from jose import JWTError, jwt
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 RESEND_API_KEY  = os.getenv("RESEND_API_KEY")
 FRONTEND_URL    = os.getenv("FRONTEND_URL", "http://localhost:3000")
@@ -116,7 +118,7 @@ def solicitar_redefinicao(payload: SolicitarRedefinicao):
 
     if resp.status_code not in (200, 201):
         # Loga o erro mas não expõe para o usuário
-        print(f"Erro ao enviar email Resend: {resp.text}")
+        logger.error(f"Erro ao enviar email Resend: {resp.status_code} — {resp.text}")
         raise HTTPException(status_code=500, detail="Erro ao enviar email. Tente novamente.")
 
     return {"mensagem": "Se este e-mail estiver cadastrado, você receberá as instruções em instantes."}

@@ -5,3 +5,4 @@ backend/venv/
 build/
 dist/
 .DS_Store
+.env.evolution

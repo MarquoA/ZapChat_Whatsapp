@@ -5,12 +5,13 @@ from pydantic import BaseModel
 from app.database import get_db_connection
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+import os
 
 router   = APIRouter()
 security = HTTPBearer()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = "zapchat_senha_MmC"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM  = "HS256"
 
 

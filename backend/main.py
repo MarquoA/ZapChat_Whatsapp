@@ -1,6 +1,17 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import logging
+import logging.config
+
+# ─── LOGGING GLOBAL ───────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,9 +23,10 @@ from app.routes.bot_routes import router as bot_router
 from app.routes.pagamento_routes import router as pagamento_router
 from app.routes.esqueci_senha_routes import router as esqueci_router
 from app.routes.disparos_routes import router as disparos_router
-from app.routes.metricas_routes import router as metricas_router   # NOVO
-from app.routes.usuario_routes import router as usuario_router     # NOVO
-from app.routes.template_routes import router as template_router  # ADICIONAR
+from app.routes.metricas_routes import router as metricas_router
+from app.routes.usuario_routes import router as usuario_router
+from app.routes.template_routes import router as template_router
+from app.routes.admin_routes import router as admin_router
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -27,7 +39,13 @@ import os
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-SECRET_KEY = "zapchat_senha_MmC"
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY não definida no .env. "
+        "Gere com: python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
@@ -38,14 +56,17 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 _lock = threading.Lock()
 _rate_data: dict = defaultdict(lambda: {"tentativas": 0, "bloqueado_ate": 0.0, "janela_inicio": time.time()})
 
-JANELA_SEGUNDOS  = 60
-MAX_TENTATIVAS   = 5
+JANELA_SEGUNDOS   = 60
+MAX_TENTATIVAS    = 5
 BLOQUEIO_SEGUNDOS = 300
 
 
 def get_client_ip(request: Request) -> str:
+    # Só confia no X-Forwarded-For se vier de um proxy configurado (nginx/cloudflare).
+    # Em produção com nginx, o IP real sempre estará no último valor confiável.
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
+        # Pega o primeiro IP da cadeia (cliente original)
         return forwarded.split(",")[0].strip()
     return request.client.host
 
@@ -107,12 +128,21 @@ def get_usuario_atual(credentials: HTTPAuthorizationCredentials = Depends(securi
 
 app = FastAPI()
 
+# Em produção (AMBIENTE=producao), remove localhost da whitelist de CORS.
+_ambiente = os.getenv("AMBIENTE", "dev")
 _frontend_url = os.getenv("FRONTEND_URL", "")
-ALLOWED_ORIGINS = list(filter(None, [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    _frontend_url if _frontend_url and _frontend_url != "https://google.com" else None,
-]))
+
+if _ambiente == "producao":
+    ALLOWED_ORIGINS = [url for url in [_frontend_url] if url]
+else:
+    ALLOWED_ORIGINS = list(filter(None, [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        _frontend_url or None,
+    ]))
+
+if not ALLOWED_ORIGINS:
+    logger.warning("ALLOWED_ORIGINS está vazio — CORS bloqueará todas as requisições do frontend!")
 
 app.add_middleware(
     CORSMiddleware,
@@ -128,9 +158,10 @@ app.include_router(bot_router)
 app.include_router(pagamento_router)
 app.include_router(esqueci_router)
 app.include_router(disparos_router)
-app.include_router(metricas_router)   # NOVO
-app.include_router(usuario_router)    # NOVO
-app.include_router(template_router, prefix="/templates", tags=["Templates"])  # ADICIONAR
+app.include_router(metricas_router)
+app.include_router(usuario_router)
+app.include_router(template_router, prefix="/templates", tags=["Templates"])
+app.include_router(admin_router)
 
 
 # ─── MODELS ───────────────────────────────────────────────────────────────────
@@ -162,7 +193,7 @@ async def register(usuario: UsuarioCreate, request: Request):
 
     conn = get_db_connection()
     if not conn:
-        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
+        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("SELECT id FROM usuarios WHERE email = %s", (usuario.email,))
@@ -180,7 +211,8 @@ async def register(usuario: UsuarioCreate, request: Request):
         raise
     except Exception as e:
         conn.rollback()
-        raise HTTPException(status_code=400, detail=f"Erro: {str(e)}")
+        logger.error(f"Erro ao registrar usuário: {e}")
+        raise HTTPException(status_code=400, detail="Erro ao cadastrar usuário. Tente novamente.")
     finally:
         cursor.close()
         conn.close()
@@ -193,7 +225,7 @@ async def login(usuario: UsuarioLogin, request: Request):
 
     conn = get_db_connection()
     if not conn:
-        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
+        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("""
@@ -238,7 +270,7 @@ async def salvar_fluxo(dados: FluxoDados, usuario: dict = Depends(get_usuario_at
         raise HTTPException(status_code=403, detail="Acesso negado.")
     conn = get_db_connection()
     if not conn:
-        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
+        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
     cursor = conn.cursor()
     try:
         fluxo_json = json.dumps(dados.fluxo)
@@ -250,7 +282,8 @@ async def salvar_fluxo(dados: FluxoDados, usuario: dict = Depends(get_usuario_at
         return {"message": "Fluxograma salvo com sucesso!"}
     except Exception as e:
         conn.rollback()
-        raise HTTPException(status_code=400, detail=f"Erro ao salvar: {str(e)}")
+        logger.error(f"Erro ao salvar fluxo: {e}")
+        raise HTTPException(status_code=400, detail="Erro ao salvar fluxo. Tente novamente.")
     finally:
         cursor.close()
         conn.close()
@@ -262,7 +295,7 @@ async def carregar_fluxo(usuario_id: int, usuario: dict = Depends(get_usuario_at
         raise HTTPException(status_code=403, detail="Acesso negado.")
     conn = get_db_connection()
     if not conn:
-        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco")
+        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
@@ -274,7 +307,8 @@ async def carregar_fluxo(usuario_id: int, usuario: dict = Depends(get_usuario_at
             return json.loads(resultado['dados_json'])
         return {"nodes": [], "edges": []}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Erro ao carregar: {str(e)}")
+        logger.error(f"Erro ao carregar fluxo: {e}")
+        raise HTTPException(status_code=400, detail="Erro ao carregar fluxo.")
     finally:
         cursor.close()
         conn.close()

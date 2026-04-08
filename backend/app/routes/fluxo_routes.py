@@ -4,11 +4,12 @@ from pydantic import BaseModel
 from jose import JWTError, jwt
 import json
 from app.models.fluxo_model import salvar_fluxo, buscar_fluxo, listar_fluxos, deletar_fluxo
+import os
 
 router = APIRouter()
 security = HTTPBearer()
 
-SECRET_KEY = "zapchat_senha_MmC"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 def get_usuario_atual(credentials: HTTPAuthorizationCredentials = Depends(security)):

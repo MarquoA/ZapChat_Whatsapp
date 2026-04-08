@@ -1,5 +1,6 @@
 # app/routes/bot_routes.py
-from fastapi import APIRouter, HTTPException, Depends
+import logging
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from app.database import get_db_connection
@@ -9,8 +10,9 @@ import json, os
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
-SECRET_KEY = "zapchat_senha_MmC"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM  = "HS256"
 
 SESSAO_TIMEOUT_MINUTOS = 30
@@ -147,7 +149,7 @@ async def simular_resposta(dados: SimularResposta, usuario: dict = Depends(get_u
 # ── /bot/webhook (Evolution API — ativado quando tiver a API KEY) ─────────────
 
 @router.post("/bot/webhook/{instancia_id}")
-async def bot_webhook(instancia_id: int, payload: dict):
+async def bot_webhook(instancia_id: int, payload: dict, request: Request):
     """
     Recebe eventos da Evolution API.
     Quando EVOLUTION_API_KEY estiver configurada no .env, este endpoint
@@ -155,6 +157,14 @@ async def bot_webhook(instancia_id: int, payload: dict):
     """
     EVOLUTION_API_URL = os.getenv("EVOLUTION_API_URL", "")
     EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "")
+
+    # Valida autenticação do webhook da Evolution API
+    if EVOLUTION_API_KEY:
+        apikey_header = request.headers.get("apikey", "")
+        if apikey_header != EVOLUTION_API_KEY:
+            raise HTTPException(status_code=401, detail="Não autorizado.")
+    else:
+        logger.warning("EVOLUTION_API_KEY não configurada — webhook sem autenticação.")
 
     # Ignora eventos que não são mensagens de texto/imagem recebidas
     event = payload.get("event", "")
@@ -224,40 +234,42 @@ async def bot_webhook(instancia_id: int, payload: dict):
                 "apikey":       EVOLUTION_API_KEY,
                 "Content-Type": "application/json",
             }
-            nome_instancia = instancia.get("nome_instancia", str(instancia_id))
+            nome_instancia = instancia.get("evolution_instance_id") or instancia.get("nome", str(instancia_id))
 
-            if resposta.get("tipo_node") == "imagem" and resposta.get("image_url"):
-                # Envia imagem
-                await httpx.AsyncClient().post(
-                    f"{EVOLUTION_API_URL}/message/sendMedia/{nome_instancia}",
-                    headers=headers,
-                    json={
-                        "number":   contato,
-                        "mediatype": "image",
-                        "mimetype":  "image/jpeg",
-                        "media":     resposta["image_url"],
-                        "caption":   resposta.get("mensagem", ""),
-                    }
-                )
-            else:
-                # Envia texto
-                texto = engine.montar_mensagem_com_opcoes(
-                    engine.get_no(resposta.get("proximo_node_id") or sessao["node_id_atual"])
-                ) if resposta.get("opcoes") else resposta.get("mensagem", "")
+            async with httpx.AsyncClient(timeout=10) as client:
+                if resposta.get("tipo_node") == "imagem" and resposta.get("image_url"):
+                    # Envia imagem
+                    await client.post(
+                        f"{EVOLUTION_API_URL}/message/sendMedia/{nome_instancia}",
+                        headers=headers,
+                        json={
+                            "number":    contato,
+                            "mediatype": "image",
+                            "mimetype":  "image/jpeg",
+                            "media":     resposta["image_url"],
+                            "caption":   resposta.get("mensagem", ""),
+                        }
+                    )
+                else:
+                    # Envia texto
+                    texto = engine.montar_mensagem_com_opcoes(
+                        engine.get_no(resposta.get("proximo_node_id") or sessao["node_id_atual"])
+                    ) if resposta.get("opcoes") else resposta.get("mensagem", "")
 
-                await httpx.AsyncClient().post(
-                    f"{EVOLUTION_API_URL}/message/sendText/{nome_instancia}",
-                    headers=headers,
-                    json={
-                        "number": contato,
-                        "text":   texto,
-                        "delay":  resposta.get("delay", 2) * 1000,
-                    }
-                )
+                    await client.post(
+                        f"{EVOLUTION_API_URL}/message/sendText/{nome_instancia}",
+                        headers=headers,
+                        json={
+                            "number": contato,
+                            "text":   texto,
+                            "delay":  resposta.get("delay", 2) * 1000,
+                        }
+                    )
 
         return {"status": "ok"}
 
     except Exception as e:
-        return {"status": "erro", "detalhe": str(e)}
+        logger.error(f"Erro no webhook bot instância {instancia_id}: {e}")
+        return {"status": "erro"}
     finally:
         conn.close()

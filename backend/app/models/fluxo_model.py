@@ -1,5 +1,8 @@
+import logging
 from app.database import get_db_connection
 import json
+
+logger = logging.getLogger(__name__)
 
 def salvar_fluxo(usuario_id: int, fluxo_id: int, nome_fluxo: str, nodes: list, edges: list):
     conn = get_db_connection()
@@ -37,7 +40,7 @@ def salvar_fluxo(usuario_id: int, fluxo_id: int, nome_fluxo: str, nodes: list, e
 
     except Exception as e:
         conn.rollback()
-        print(f"Erro ao salvar fluxo: {e}")
+        logger.error(f"Erro ao salvar fluxo: {e}")
         return None
     finally:
         cursor.close()

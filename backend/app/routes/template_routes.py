@@ -15,7 +15,7 @@ from app.models.template_model import (
 
 router = APIRouter()
 security = HTTPBearer()
-SECRET_KEY = os.getenv("SECRET_KEY", "zapchat_secret")
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 

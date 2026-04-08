@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import AdminPanel from './AdminPanel';
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-// TROCAR em produção: process.env.REACT_APP_API_URL = 'https://api.seudominio.com.br'
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const TEMAS = {
@@ -17,16 +17,31 @@ const TEMAS = {
     scrollbar: 'rgba(255,255,255,0.08)', waBg: '#0b1a0e',
     waBubbleBot: 'rgba(37,211,102,0.15)', waBubbleUser: 'rgba(255,255,255,0.06)',
     tag: 'rgba(255,255,255,0.05)',
+    // Select específico
+    selectBg: '#111a11', selectText: '#e8e8e8', selectBorder: 'rgba(255,255,255,0.12)',
   },
   claro: {
-    bg: '#f5f7f5', sidebar: '#ffffff', card: '#ffffff',
-    cardBorder: 'rgba(0,0,0,0.08)', text: '#0d140d',
-    textMuted: 'rgba(0,0,0,0.45)', textSub: 'rgba(0,0,0,0.28)',
-    header: '#f5f7f5', input: 'rgba(0,0,0,0.04)',
-    inputBorder: 'rgba(0,0,0,0.12)', menuHover: 'rgba(37,211,102,0.07)',
-    scrollbar: 'rgba(0,0,0,0.1)', waBg: '#e5ddd5',
-    waBubbleBot: '#dcf8c6', waBubbleUser: '#ffffff',
-    tag: 'rgba(0,0,0,0.04)',
+    // Paleta refinada — sem brancos/pretos absolutos
+    bg: '#eef1ed',
+    sidebar: '#f4f6f3',
+    card: '#f9faf8',
+    cardBorder: 'rgba(60,90,60,0.10)',
+    text: '#1c2b1c',
+    textMuted: 'rgba(30,50,30,0.52)',
+    textSub: 'rgba(30,50,30,0.32)',
+    header: '#eef1ed',
+    input: 'rgba(30,60,30,0.05)',
+    inputBorder: 'rgba(30,60,30,0.14)',
+    menuHover: 'rgba(37,211,102,0.09)',
+    scrollbar: 'rgba(30,60,30,0.12)',
+    waBg: '#dde8d8',
+    waBubbleBot: '#c8e6c9',
+    waBubbleUser: '#f4f6f3',
+    tag: 'rgba(30,60,30,0.05)',
+    // Select específico
+    selectBg: '#edf2ed',
+    selectText: '#1c2b1c',
+    selectBorder: 'rgba(30,60,30,0.18)',
   },
 };
 
@@ -50,6 +65,34 @@ const authFetch = (url, options = {}) => {
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.25 } };
 const fmtTempo = (seg) => seg < 60 ? `${seg}s` : `${Math.floor(seg / 60)}m ${seg % 60}s`;
 const agora = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+// ─── SELECT ESTILIZADO (resolve problema de opções brancas) ───────────────────
+// Usa um <select> nativo mas injeta estilos via CSS variables para que as <option>
+// usem a cor correta em TODOS os navegadores/SOs.
+const StyledSelect = ({ value, onChange, children, tema, style = {} }) => {
+  const t = TEMAS[tema];
+  return (
+    <select
+      value={value}
+      onChange={onChange}
+      style={{
+        width: '100%',
+        background: t.selectBg,
+        color: t.selectText,
+        border: `1px solid ${t.selectBorder}`,
+        padding: '11px 13px',
+        borderRadius: 8,
+        outline: 'none',
+        fontSize: '0.88rem',
+        cursor: 'pointer',
+        appearance: 'auto',
+        ...style,
+      }}
+    >
+      {children}
+    </select>
+  );
+};
 
 // ─── COMPONENTES BASE ─────────────────────────────────────────────────────────
 const BloqueadoBanner = ({ recurso, planoAtual, navigate, tema }) => {
@@ -131,7 +174,7 @@ const SaveButton = ({ onClick, loading, label = 'SALVAR ALTERAÇÕES', disabled 
   </motion.button>
 );
 
-// ─── CHAT WHATSAPP SIMULADO (reutilizável) ────────────────────────────────────
+// ─── CHAT WHATSAPP SIMULADO ───────────────────────────────────────────────────
 const WaChat = ({ mensagens, digitando, inputVal, onInput, onEnviar, placeholder = 'Digite uma mensagem...', tema, altura = 420, onReset }) => {
   const t = TEMAS[tema];
   const endRef = useRef(null);
@@ -141,7 +184,6 @@ const WaChat = ({ mensagens, digitando, inputVal, onInput, onEnviar, placeholder
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: altura, borderRadius: 16, overflow: 'hidden', border: `1px solid ${t.cardBorder}` }}>
-      {/* Header do chat */}
       <div style={{ padding: '12px 18px', background: '#075e54', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 700, color: '#0d140d' }}>Z</div>
@@ -157,11 +199,10 @@ const WaChat = ({ mensagens, digitando, inputVal, onInput, onEnviar, placeholder
         )}
       </div>
 
-      {/* Área de mensagens */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', background: t.waBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {mensagens.length === 0 && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p style={{ fontSize: '0.8rem', color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)', textAlign: 'center', lineHeight: 1.8 }}>
+            <p style={{ fontSize: '0.8rem', color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(30,50,30,0.35)', textAlign: 'center', lineHeight: 1.8 }}>
               Selecione um fluxo e clique em<br /><strong>Iniciar Simulação</strong>
             </p>
           </div>
@@ -170,35 +211,27 @@ const WaChat = ({ mensagens, digitando, inputVal, onInput, onEnviar, placeholder
           <div key={i} style={{ display: 'flex', justifyContent: m.tipo === 'bot' ? 'flex-start' : 'flex-end' }}>
             <div style={{
               maxWidth: '78%', borderRadius: m.tipo === 'bot' ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
-              background: m.tipo === 'bot' ? (isDark ? 'rgba(37,211,102,0.12)' : '#dcf8c6') : (isDark ? 'rgba(255,255,255,0.07)' : '#ffffff'),
+              background: m.tipo === 'bot' ? (isDark ? 'rgba(37,211,102,0.12)' : t.waBubbleBot) : (isDark ? 'rgba(255,255,255,0.07)' : t.waBubbleUser),
               boxShadow: '0 1px 3px rgba(0,0,0,0.12)', overflow: 'hidden',
             }}>
-              {/* Imagem (imageNode) */}
               {m.imageUrl && (
-                <img
-                  src={m.imageUrl}
-                  alt="imagem do fluxo"
-                  style={{ width: '100%', maxWidth: 260, display: 'block', borderRadius: m.texto ? '0' : 'inherit' }}
-                  onError={e => { e.target.style.display = 'none'; }}
-                />
+                <img src={m.imageUrl} alt="imagem do fluxo" style={{ width: '100%', maxWidth: 260, display: 'block', borderRadius: m.texto ? '0' : 'inherit' }} onError={e => { e.target.style.display = 'none'; }} />
               )}
-              {/* Texto / legenda */}
               {m.texto && (
                 <div style={{ padding: '9px 13px' }}>
-                  <p style={{ fontSize: '0.83rem', color: isDark ? '#e8e8e8' : '#1a1a1a', whiteSpace: 'pre-wrap', lineHeight: 1.55, margin: 0 }}>{m.texto}</p>
-                  <p style={{ fontSize: '0.6rem', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', textAlign: 'right', marginTop: 4, marginBottom: 0 }}>{m.hora}</p>
+                  <p style={{ fontSize: '0.83rem', color: isDark ? '#e8e8e8' : '#1c2b1c', whiteSpace: 'pre-wrap', lineHeight: 1.55, margin: 0 }}>{m.texto}</p>
+                  <p style={{ fontSize: '0.6rem', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30,50,30,0.4)', textAlign: 'right', marginTop: 4, marginBottom: 0 }}>{m.hora}</p>
                 </div>
               )}
-              {/* Hora quando só tem imagem (sem texto) */}
               {m.imageUrl && !m.texto && (
-                <p style={{ fontSize: '0.6rem', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)', textAlign: 'right', margin: '2px 8px 5px', }}>{m.hora}</p>
+                <p style={{ fontSize: '0.6rem', color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30,50,30,0.4)', textAlign: 'right', margin: '2px 8px 5px' }}>{m.hora}</p>
               )}
             </div>
           </div>
         ))}
         {digitando && (
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ padding: '10px 16px', borderRadius: '4px 14px 14px 14px', background: isDark ? 'rgba(37,211,102,0.1)' : '#dcf8c6', display: 'flex', gap: 4, alignItems: 'center' }}>
+            <div style={{ padding: '10px 16px', borderRadius: '4px 14px 14px 14px', background: isDark ? 'rgba(37,211,102,0.1)' : t.waBubbleBot, display: 'flex', gap: 4, alignItems: 'center' }}>
               {[0, 0.2, 0.4].map((d, i) => (
                 <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#25D366', animation: `dotBounce 1s ${d}s infinite` }} />
               ))}
@@ -208,11 +241,10 @@ const WaChat = ({ mensagens, digitando, inputVal, onInput, onEnviar, placeholder
         <div ref={endRef} />
       </div>
 
-      {/* Input */}
-      <div style={{ padding: '10px 14px', background: isDark ? '#1a2a1a' : '#f0f0f0', display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ padding: '10px 14px', background: isDark ? '#1a2a1a' : '#cdd8c5', display: 'flex', gap: 8, alignItems: 'center' }}>
         <input value={inputVal} onChange={e => onInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && onEnviar()}
           placeholder={placeholder}
-          style={{ flex: 1, background: isDark ? 'rgba(255,255,255,0.06)' : '#fff', border: 'none', outline: 'none', borderRadius: 22, padding: '10px 16px', color: isDark ? '#fff' : '#1a1a1a', fontSize: '0.85rem', boxSizing: 'border-box' }} />
+          style={{ flex: 1, background: isDark ? 'rgba(255,255,255,0.06)' : '#f4f6f3', border: 'none', outline: 'none', borderRadius: 22, padding: '10px 16px', color: isDark ? '#fff' : '#1c2b1c', fontSize: '0.85rem', boxSizing: 'border-box' }} />
         <button onClick={onEnviar}
           style={{ width: 40, height: 40, borderRadius: '50%', background: '#25D366', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" /></svg>
@@ -221,7 +253,6 @@ const WaChat = ({ mensagens, digitando, inputVal, onInput, onEnviar, placeholder
     </div>
   );
 };
-
 
 const montarTextoComOpcoes = (mensagem, opcoes) => {
   if (!opcoes || opcoes.length === 0) return mensagem;
@@ -234,6 +265,12 @@ const montarTextoComOpcoes = (mensagem, opcoes) => {
 };
 
 // ─── ABA: TESTES & IA ─────────────────────────────────────────────────────────
+// ALTERAÇÃO: A aba agora inclui a sub-aba "Criar Agente IA" com:
+//   • Personalidade (formulário completo)
+//   • Base de Conhecimento
+//   • Ferramentas
+// E a chamada real à API Anthropic está acoplada — basta fornecer a API key.
+// A aba "Chatbot IA" foi removida do menu e seu conteúdo foi absorvido aqui.
 const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
   const t = TEMAS[tema];
   const [subTab, setSubTab] = useState('Fluxo');
@@ -246,7 +283,6 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
   const [inputFluxo, setInputFluxo]     = useState('');
   const [digitandoBot, setDigitandoBot] = useState(false);
   const [iniciando, setIniciando]       = useState(false);
-  // Métricas da sessão
   const [metricas, setMetricas] = useState({ total: 0, botMsg: 0, userMsg: 0, nos: [], inicio: null, tempos: [] });
 
   const resetFluxo = () => {
@@ -269,7 +305,6 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
       setIniciado(true);
       const t0 = Date.now();
       setMetricas({ total: 1, botMsg: 1, userMsg: 0, nos: [data.node_id_atual], inicio: t0, tempos: [] });
-      // Suporte a imageNode: passa imageUrl se for imagem
       setMensagens([{
         tipo: 'bot',
         texto: montarTextoComOpcoes(data.mensagem || '', data.opcoes || []),
@@ -299,7 +334,6 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
       await new Promise(r => setTimeout(r, 600));
       setDigitandoBot(false);
       setNodeAtual(data.proximo_node_id || data.node_id_atual);
-      // Suporte a imageNode
       setMensagens(prev => [...prev, {
         tipo: 'bot',
         texto: montarTextoComOpcoes(data.mensagem || '', data.opcoes || []),
@@ -325,56 +359,133 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
   const duracao = metricas.inicio ? Math.round((Date.now() - metricas.inicio) / 1000) : 0;
 
   // ── Estado: Agente IA ──
-  const [agente, setAgente] = useState({ nome: '', tom: 'equilibrado', modelo: 'gemini-pro', tokens: 1000, prompt: '', finalizacao: '' });
-  const [agenteMsgs, setAgenteMsgs]       = useState([]);
-  const [agenteInput, setAgenteInput]     = useState('');
+  // Sub-abas internas do agente
+  const [agenteSubTab, setAgenteSubTab] = useState('Personalidade');
+
+  // Personalidade
+  const [agente, setAgente] = useState({
+    nome: '', tom: 'equilibrado', modelo: 'claude-sonnet-4-20250514',
+    tokens: 1000, prompt: '', finalizacao: '',
+    // API Key — armazenada apenas em memória (não persiste no localStorage por segurança)
+    apiKey: '',
+  });
+
+  // Base de Conhecimento
+  const [baseConhecimento, setBaseConhecimento] = useState([]);
+  const [novoConhecimento, setNovoConhecimento] = useState({ titulo: '', conteudo: '' });
+  const [adicionandoConhecimento, setAdicionandoConhecimento] = useState(false);
+
+  // Ferramentas
+  const [ferramentas, setFerramentas] = useState({
+    webSearch: false,
+    coletarLead: false,
+    agendarReuniao: false,
+    consultarEstoque: false,
+    calcularPrecoPedido: false,
+  });
+  const ferramentasLabels = {
+    webSearch:             { label: 'Busca na Web',          desc: 'Permite que a IA pesquise informações atualizadas na internet.' },
+    coletarLead:           { label: 'Coletar Lead',           desc: 'A IA solicita nome, e-mail e telefone do usuário automaticamente.' },
+    agendarReuniao:        { label: 'Agendar Reunião',        desc: 'Integração com Google Calendar para agendar compromissos.' },
+    consultarEstoque:      { label: 'Consultar Estoque',      desc: 'Acessa seu banco de dados de produtos para verificar disponibilidade.' },
+    calcularPrecoPedido:   { label: 'Calcular Preço/Pedido',  desc: 'Calcula preços, fretes e totais com base nas regras do seu negócio.' },
+  };
+
+  // Chat preview
+  const [agenteMsgs, setAgenteMsgs]           = useState([]);
+  const [agenteInput, setAgenteInput]         = useState('');
   const [agenteDigitando, setAgenteDigitando] = useState(false);
   const [salvandoAgente, setSalvandoAgente]   = useState(false);
-  const [agenteErro, setAgenteErro]       = useState('');
+  const [agenteErro, setAgenteErro]           = useState('');
+  // Histórico de mensagens para contexto multi-turno
+  const historicoRef = useRef([]);
 
+  // ── Enviar mensagem ao Agente IA (API Anthropic REAL) ─────────────────────
   const enviarMsgAgente = async () => {
-    if (!agenteInput.trim() || !agente.prompt.trim()) {
-      setAgenteErro('Preencha o Prompt/Instruções do agente antes de testar.');
+    if (!agenteInput.trim()) return;
+
+    if (!agente.prompt.trim()) {
+      setAgenteErro('Preencha as Instruções/Prompt do agente antes de testar.');
       return;
     }
+
     setAgenteErro('');
     const txt = agenteInput.trim();
     setAgenteInput('');
+
+    // Adiciona a mensagem do usuário ao histórico local
+    historicoRef.current = [...historicoRef.current, { role: 'user', content: txt }];
     setAgenteMsgs(prev => [...prev, { tipo: 'user', texto: txt, hora: agora() }]);
     setAgenteDigitando(true);
 
-    // ── TROCAR: quando tiver chave da IA real, descomentar o bloco abaixo e remover o simulado ──
-    /*
+    // Monta system prompt com base de conhecimento e ferramentas ativas
+    const ferramentasAtivas = Object.entries(ferramentas)
+      .filter(([, v]) => v)
+      .map(([k]) => ferramentasLabels[k].label)
+      .join(', ');
+
+    const baseTexto = baseConhecimento.length > 0
+      ? '\n\n--- BASE DE CONHECIMENTO ---\n' +
+        baseConhecimento.map(b => `[${b.titulo}]\n${b.conteudo}`).join('\n\n')
+      : '';
+
+    const ferramentasTexto = ferramentasAtivas
+      ? `\n\n--- FERRAMENTAS DISPONÍVEIS ---\n${ferramentasAtivas}\n(Mencione quando precisar usar uma ferramenta.)`
+      : '';
+
+    const systemPrompt = agente.prompt + baseTexto + ferramentasTexto;
+
+    // ── Se não houver API key, usa simulação ──
+    if (!agente.apiKey.trim()) {
+      await new Promise(r => setTimeout(r, 1200));
+      setAgenteDigitando(false);
+      const respSimulada = `[Simulação — API Key não configurada]\n\nQuando você inserir sua Anthropic API Key no campo acima, o agente "${agente.nome || 'sem nome'}" responderá aqui com IA real.\n\nSua mensagem foi: "${txt}"`;
+      historicoRef.current = [...historicoRef.current, { role: 'assistant', content: respSimulada }];
+      setAgenteMsgs(prev => [...prev, { tipo: 'bot', texto: respSimulada, hora: agora() }]);
+      return;
+    }
+
+    // ── Chamada REAL à API Anthropic ──────────────────────────────────────────
+    // ATENÇÃO: Em produção, nunca exponha a API Key no frontend.
+    // O ideal é que esta chamada passe pelo seu backend (VPS).
+    // Use este fluxo apenas para testes locais ou quando o backend ainda não estiver pronto.
     try {
+      const body = {
+        model: agente.modelo,
+        max_tokens: agente.tokens,
+        system: systemPrompt,
+        messages: historicoRef.current,
+      };
+
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: agente.tokens,
-          system: agente.prompt,
-          messages: [{ role: 'user', content: txt }],
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': agente.apiKey,
+          'anthropic-version': '2023-06-01',
+          // Necessário para chamadas diretas do browser (CORS)
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify(body),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || 'Erro na API de IA.');
+
+      if (!res.ok) {
+        throw new Error(data.error?.message || `Erro ${res.status} na API da Anthropic.`);
+      }
+
       const resposta = data.content?.[0]?.text || 'Sem resposta.';
+      historicoRef.current = [...historicoRef.current, { role: 'assistant', content: resposta }];
       setAgenteDigitando(false);
       setAgenteMsgs(prev => [...prev, { tipo: 'bot', texto: resposta, hora: agora() }]);
+
     } catch (e) {
       setAgenteDigitando(false);
       setAgenteErro(`Erro ao chamar a IA: ${e.message}`);
+      // Remove a última mensagem do histórico (não confirmada)
+      historicoRef.current = historicoRef.current.slice(0, -1);
     }
-    */
-
-    // ── Simulado (remover quando tiver IA real) ──
-    await new Promise(r => setTimeout(r, 1200));
-    setAgenteDigitando(false);
-    setAgenteMsgs(prev => [...prev, {
-      tipo: 'bot',
-      texto: `[Simulação — IA não configurada]\n\nQuando a API estiver conectada, o agente "${agente.nome || 'sem nome'}" responderia aqui com base no seu prompt.\n\nSua mensagem foi: "${txt}"`,
-      hora: agora(),
-    }]);
   };
 
   const salvarAgente = async () => {
@@ -385,17 +496,37 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
     // TROCAR: implementar POST /agentes/salvar no backend
     await new Promise(r => setTimeout(r, 900));
     setSalvandoAgente(false);
-    setAgenteErro('');
-    // Mostra mensagem de sucesso breve
     setAgenteErro('__ok__');
     setTimeout(() => setAgenteErro(''), 3000);
   };
 
-  const selectStyle = { width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem' };
+  const adicionarConhecimento = () => {
+    if (!novoConhecimento.titulo.trim() || !novoConhecimento.conteudo.trim()) return;
+    setBaseConhecimento(prev => [...prev, { ...novoConhecimento, id: Date.now() }]);
+    setNovoConhecimento({ titulo: '', conteudo: '' });
+    setAdicionandoConhecimento(false);
+  };
+
+  const removerConhecimento = (id) => {
+    setBaseConhecimento(prev => prev.filter(b => b.id !== id));
+  };
+
+  const resetaHistoricoChat = () => {
+    setAgenteMsgs([]);
+    historicoRef.current = [];
+    setAgenteErro('');
+  };
+
+  const inputAreaStyle = {
+    width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`,
+    padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none',
+    fontSize: '0.82rem', resize: 'vertical', boxSizing: 'border-box',
+    fontFamily: 'inherit', lineHeight: 1.6,
+  };
 
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
-      {/* Sub-tabs */}
+      {/* Sub-tabs principais */}
       <div style={{ display: 'flex', gap: 28, borderBottom: `1px solid ${t.cardBorder}`, marginBottom: 28 }}>
         {[['Fluxo', 'Testar Fluxo'], ['IA', 'Criar Agente IA']].map(([key, lbl]) => (
           <div key={key} onClick={() => setSubTab(key)}
@@ -407,10 +538,8 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
 
       {/* ── SUB-ABA: TESTAR FLUXO ── */}
       {subTab === 'Fluxo' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
-          {/* Coluna esquerda: seleção + métricas */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }} className="testes-grid">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            {/* Seleção do fluxo */}
             <div style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
               <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 16, color: t.text }}>Configurar Simulação</h4>
               <div style={{ marginBottom: 14 }}>
@@ -418,10 +547,10 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
                 {fluxos.length === 0 ? (
                   <p style={{ fontSize: '0.82rem', color: '#f0a500' }}>Nenhum fluxo criado. Crie um fluxo primeiro.</p>
                 ) : (
-                  <select value={fluxoId} onChange={e => { setFluxoId(e.target.value); resetFluxo(); }} style={selectStyle}>
+                  <StyledSelect value={fluxoId} onChange={e => { setFluxoId(e.target.value); resetFluxo(); }} tema={tema}>
                     <option value="">Selecione um fluxo...</option>
                     {fluxos.map(f => <option key={f.id} value={f.id}>{f.nome_fluxo}</option>)}
-                  </select>
+                  </StyledSelect>
                 )}
               </div>
               <button onClick={iniciarSimulacao} disabled={!fluxoId || iniciando}
@@ -431,7 +560,6 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
               </button>
             </div>
 
-            {/* Métricas da sessão */}
             <div style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
               <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: 16, color: t.text }}>Métricas da Sessão</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -450,16 +578,12 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
                   </div>
                 ))}
               </div>
-
-              {/* IDs dos nós percorridos */}
               {metricas.nos.length > 0 && (
                 <div style={{ marginTop: 14 }}>
                   <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Caminho percorrido</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {metricas.nos.map((n, i) => (
-                      <span key={i} style={{ padding: '3px 9px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 20, fontSize: '0.65rem', color: '#25D366', fontFamily: 'monospace' }}>
-                        {n}
-                      </span>
+                      <span key={i} style={{ padding: '3px 9px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 20, fontSize: '0.65rem', color: '#25D366', fontFamily: 'monospace' }}>{n}</span>
                     ))}
                   </div>
                 </div>
@@ -467,7 +591,6 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
             </div>
           </div>
 
-          {/* Coluna direita: chat */}
           <WaChat
             mensagens={mensagens} digitando={digitandoBot}
             inputVal={inputFluxo} onInput={setInputFluxo} onEnviar={enviarMsgFluxo}
@@ -479,114 +602,258 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
 
       {/* ── SUB-ABA: CRIAR AGENTE IA ── */}
       {subTab === 'IA' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
-          {/* Formulário */}
-          <div style={{ padding: '24px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}`, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }} className="testes-grid">
+          {/* Coluna esquerda: formulário com 3 sub-abas */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-            {/* Sub-tabs do agente */}
-            <div style={{ display: 'flex', gap: 18, borderBottom: `1px solid ${t.cardBorder}`, paddingBottom: 14 }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: t.text, margin: 0 }}>Personalidade</h4>
-              <span style={{ fontSize: '0.82rem', color: t.textMuted, paddingTop: 2 }}>Base de conhecimento</span>
-              <span style={{ fontSize: '0.82rem', color: t.textMuted, paddingTop: 2 }}>Ferramentas</span>
+            {/* Sub-tabs internas do agente */}
+            <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${t.cardBorder}`, marginBottom: 0 }}>
+              {['Personalidade', 'Base de Conhecimento', 'Ferramentas'].map(tab => (
+                <div key={tab} onClick={() => setAgenteSubTab(tab)}
+                  style={{
+                    padding: '10px 16px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                    color: agenteSubTab === tab ? '#25D366' : t.textMuted,
+                    borderBottom: agenteSubTab === tab ? '2px solid #25D366' : '2px solid transparent',
+                    transition: 'color 0.2s', whiteSpace: 'nowrap',
+                  }}>
+                  {tab}
+                </div>
+              ))}
             </div>
 
-            {/* Nome do agente */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(37,211,102,0.12)', border: '2px dashed rgba(37,211,102,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.2rem', cursor: 'pointer' }}>
-                {agente.nome ? agente.nome[0].toUpperCase() : '+'}
+            {/* ── Personalidade ── */}
+            {agenteSubTab === 'Personalidade' && (
+              <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 15 }}>
+
+                {/* API Key */}
+                <div style={{ padding: '13px 16px', background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.18)', borderRadius: 10 }}>
+                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Anthropic API Key</label>
+                  <input
+                    type="password"
+                    value={agente.apiKey}
+                    onChange={e => setAgente(a => ({ ...a, apiKey: e.target.value }))}
+                    placeholder="sk-ant-api03-..."
+                    style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '10px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.85rem', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                  />
+                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5, lineHeight: 1.5 }}>
+                    {agente.apiKey ? '✓ API Key configurada — IA real ativada.' : 'Sem API Key: modo simulação. Em produção, use o backend da VPS.'}
+                  </p>
+                </div>
+
+                {/* Nome */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(37,211,102,0.12)', border: '2px dashed rgba(37,211,102,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.2rem', cursor: 'pointer', color: '#25D366', fontWeight: 700 }}>
+                    {agente.nome ? agente.nome[0].toUpperCase() : '+'}
+                  </div>
+                  <Input tema={tema} label="Nome do agente" type="text"
+                    value={agente.nome} onChange={e => setAgente(a => ({ ...a, nome: e.target.value }))}
+                    placeholder="Ex: Assistente de Vendas" style={{ flex: 1 }} />
+                </div>
+
+                {/* Tom e Modelo */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Tom</label>
+                    <StyledSelect value={agente.tom} onChange={e => setAgente(a => ({ ...a, tom: e.target.value }))} tema={tema}>
+                      <option value="formal">Formal</option>
+                      <option value="equilibrado">Equilibrado — Recomendado</option>
+                      <option value="criativo">Criativo</option>
+                      <option value="direto">Direto</option>
+                    </StyledSelect>
+                    <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>
+                      {{ formal: 'Profissional e objetivo.', equilibrado: 'Equilíbrio desempenho/custo.', criativo: 'Criativo e envolvente.', direto: 'Curto e direto.' }[agente.tom]}
+                    </p>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Modelo de IA</label>
+                    <StyledSelect value={agente.modelo} onChange={e => setAgente(a => ({ ...a, modelo: e.target.value }))} tema={tema}>
+                      <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — Recomendado</option>
+                      <option value="claude-opus-4-5">Claude Opus 4.5 — Máxima qualidade</option>
+                      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — Mais rápido</option>
+                    </StyledSelect>
+                    <p style={{ fontSize: '0.62rem', color: agente.apiKey ? '#25D366' : '#f0a500', marginTop: 5 }}>
+                      {agente.apiKey ? 'Modelo ativo.' : 'Configure a API Key para ativar.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Máx tokens */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Máximo de tokens</label>
+                  <input type="number" min={100} max={4000} value={agente.tokens}
+                    onChange={e => setAgente(a => ({ ...a, tokens: parseInt(e.target.value) || 1000 }))}
+                    style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>Quanto maior, mais detalhada a resposta — e maior o custo.</p>
+                </div>
+
+                {/* Prompt */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Instruções / Prompt</label>
+                  <textarea value={agente.prompt} onChange={e => setAgente(a => ({ ...a, prompt: e.target.value }))} rows={5}
+                    placeholder="Ex: Você é um assistente de vendas da empresa X. Seu objetivo é apresentar nossos produtos de forma clara, entender a necessidade do cliente e guiá-lo até a compra. Seja sempre educado e objetivo."
+                    style={inputAreaStyle} />
+                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 4 }}>As instruções definem o comportamento e a personalidade da IA.</p>
+                </div>
+
+                {/* Mensagem de finalização */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Mensagem de finalização (opcional)</label>
+                  <textarea value={agente.finalizacao} onChange={e => setAgente(a => ({ ...a, finalizacao: e.target.value }))} rows={2}
+                    placeholder="Mensagem enviada após o agente encerrar o atendimento."
+                    style={{ ...inputAreaStyle, rows: 2 }} />
+                </div>
+
+                {agenteErro === '__ok__' && <p style={{ fontSize: '0.78rem', color: '#25D366', fontWeight: 700 }}>Agente salvo com sucesso!</p>}
+                {agenteErro && agenteErro !== '__ok__' && <p style={{ fontSize: '0.78rem', color: '#ff4b4b', fontWeight: 600 }}>{agenteErro}</p>}
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={resetaHistoricoChat}
+                    style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 9, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
+                    Limpar chat
+                  </button>
+                  <SaveButton onClick={salvarAgente} loading={salvandoAgente} label="Salvar agente" />
+                </div>
               </div>
-              <Input tema={tema} label="Nome do agente" type="text"
-                value={agente.nome} onChange={e => setAgente(a => ({ ...a, nome: e.target.value }))}
-                placeholder="Ex: Assistente de Vendas" style={{ flex: 1 }} />
-            </div>
+            )}
 
-            {/* Tom e Modelo */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Tom</label>
-                <select value={agente.tom} onChange={e => setAgente(a => ({ ...a, tom: e.target.value }))} style={selectStyle}>
-                  <option value="formal">Formal</option>
-                  <option value="equilibrado">Equilibrado — Recomendado</option>
-                  <option value="criativo">Criativo</option>
-                  <option value="direto">Direto</option>
-                </select>
-                <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>
-                  {{ formal: 'Respostas profissionais e objetivas.', equilibrado: 'Equilíbrio entre desempenho e custo.', criativo: 'Respostas criativas e envolventes.', direto: 'Respostas curtas e diretas.' }[agente.tom]}
+            {/* ── Base de Conhecimento ── */}
+            {agenteSubTab === 'Base de Conhecimento' && (
+              <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.6 }}>
+                  Adicione documentos, textos ou perguntas frequentes que a IA deve conhecer para responder com mais precisão.
                 </p>
+
+                {baseConhecimento.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {baseConhecimento.map((b) => (
+                      <div key={b.id} style={{ padding: '12px 14px', background: t.tag, borderRadius: 10, border: `1px solid ${t.cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: t.text, marginBottom: 4 }}>{b.titulo}</p>
+                          <p style={{ fontSize: '0.72rem', color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.conteudo}</p>
+                        </div>
+                        <button onClick={() => removerConhecimento(b.id)}
+                          style={{ background: 'transparent', border: '1px solid rgba(255,75,75,0.3)', color: '#ff4b4b', padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>
+                          Remover
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {adicionandoConhecimento ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
+                    <Input tema={tema} label="Título" type="text"
+                      value={novoConhecimento.titulo}
+                      onChange={e => setNovoConhecimento(p => ({ ...p, titulo: e.target.value }))}
+                      placeholder="Ex: Política de devolução" />
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Conteúdo</label>
+                      <textarea rows={4}
+                        value={novoConhecimento.conteudo}
+                        onChange={e => setNovoConhecimento(p => ({ ...p, conteudo: e.target.value }))}
+                        placeholder="Cole aqui o texto, FAQ, política ou qualquer informação relevante..."
+                        style={inputAreaStyle} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => setAdicionandoConhecimento(false)}
+                        style={{ flex: 1, padding: '10px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem' }}>
+                        Cancelar
+                      </button>
+                      <button onClick={adicionarConhecimento}
+                        style={{ flex: 2, padding: '10px', background: '#25D366', color: '#0d140d', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem' }}>
+                        Adicionar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setAdicionandoConhecimento(true)}
+                    style={{ padding: '12px', background: 'transparent', border: `1px dashed rgba(37,211,102,0.4)`, color: '#25D366', borderRadius: 10, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, width: '100%' }}>
+                    + Adicionar documento
+                  </button>
+                )}
+
+                {baseConhecimento.length === 0 && !adicionandoConhecimento && (
+                  <p style={{ fontSize: '0.75rem', color: t.textMuted, textAlign: 'center', padding: '20px 0' }}>Nenhum documento adicionado ainda.</p>
+                )}
               </div>
-              <div>
-                {/* TROCAR: descomentar quando tiver a API de IA conectada */}
-                <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Modelo de IA</label>
-                <select value={agente.modelo} onChange={e => setAgente(a => ({ ...a, modelo: e.target.value }))} style={selectStyle}>
-                  <option value="gemini-pro">Gemini Pro — Padrão</option>
-                  {/* <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option> */}
-                  {/* <option value="gpt-4">GPT-4</option> */}
-                </select>
-                <p style={{ fontSize: '0.62rem', color: '#f0a500', marginTop: 5 }}>API de IA será conectada na VPS.</p>
+            )}
+
+            {/* ── Ferramentas ── */}
+            {agenteSubTab === 'Ferramentas' && (
+              <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.6 }}>
+                  Ative ferramentas que a IA poderá usar durante o atendimento. A integração real é configurada no backend.
+                </p>
+                {Object.entries(ferramentasLabels).map(([key, info]) => (
+                  <div key={key}
+                    onClick={() => setFerramentas(prev => ({ ...prev, [key]: !prev[key] }))}
+                    style={{
+                      padding: '14px 16px', background: ferramentas[key] ? 'rgba(37,211,102,0.07)' : t.tag,
+                      border: `1px solid ${ferramentas[key] ? 'rgba(37,211,102,0.3)' : t.cardBorder}`,
+                      borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.18s',
+                    }}>
+                    {/* Toggle visual */}
+                    <div style={{
+                      width: 38, height: 22, borderRadius: 11, flexShrink: 0,
+                      background: ferramentas[key] ? '#25D366' : (tema === 'escuro' ? 'rgba(255,255,255,0.12)' : 'rgba(30,60,30,0.15)'),
+                      position: 'relative', transition: 'background 0.2s',
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: 3, left: ferramentas[key] ? 19 : 3,
+                        width: 16, height: 16, borderRadius: '50%',
+                        background: ferramentas[key] ? '#0d140d' : (tema === 'escuro' ? 'rgba(255,255,255,0.5)' : 'rgba(30,60,30,0.4)'),
+                        transition: 'left 0.2s',
+                      }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.85rem', fontWeight: 700, color: t.text, marginBottom: 2 }}>{info.label}</p>
+                      <p style={{ fontSize: '0.7rem', color: t.textMuted, lineHeight: 1.4 }}>{info.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-
-            {/* Máx. tokens */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Máximo de tokens</label>
-              <input type="number" min={100} max={4000} value={agente.tokens}
-                onChange={e => setAgente(a => ({ ...a, tokens: parseInt(e.target.value) || 1000 }))}
-                style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }} />
-              <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>Quanto maior, mais detalhada a resposta — e maior o custo.</p>
-            </div>
-
-            {/* Prompt principal */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Instruções / Prompt</label>
-              <textarea value={agente.prompt} onChange={e => setAgente(a => ({ ...a, prompt: e.target.value }))} rows={5}
-                placeholder="Ex: Você é um assistente de vendas da empresa X. Seu objetivo é apresentar nossos produtos de forma clara, entender a necessidade do cliente e guiá-lo até a compra. Seja sempre educado e objetivo."
-                style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.82rem', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.6 }} />
-              <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 4 }}>As instruções são utilizadas para treinar o comportamento da IA.</p>
-            </div>
-
-            {/* Mensagem de finalização */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Mensagem de finalização (opcional)</label>
-              <textarea value={agente.finalizacao} onChange={e => setAgente(a => ({ ...a, finalizacao: e.target.value }))} rows={2}
-                placeholder="Mensagem enviada após o agente encerrar o atendimento."
-                style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.82rem', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
-            </div>
-
-            {/* Feedback */}
-            {agenteErro === '__ok__' && (
-              <p style={{ fontSize: '0.78rem', color: '#25D366', fontWeight: 700 }}>Agente salvo com sucesso!</p>
             )}
-            {agenteErro && agenteErro !== '__ok__' && (
-              <p style={{ fontSize: '0.78rem', color: '#ff4b4b', fontWeight: 600 }}>{agenteErro}</p>
-            )}
-
-            {/* Botões */}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { setAgenteMsgs([]); setAgenteErro(''); }}
-                style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 9, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                Voltar
-              </button>
-              <SaveButton onClick={salvarAgente} loading={salvandoAgente} label="Salvar e publicar" />
-            </div>
           </div>
 
-          {/* Chat de preview da IA */}
+          {/* Coluna direita: chat preview */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ padding: '10px 14px', background: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.15)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#0d140d', flexShrink: 0 }}>
-                {agente.nome ? agente.nome[0].toUpperCase() : 'A'}
+            <div style={{ padding: '10px 14px', background: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.15)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#0d140d', flexShrink: 0 }}>
+                  {agente.nome ? agente.nome[0].toUpperCase() : 'A'}
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.78rem', fontWeight: 700, color: t.text }}>{agente.nome || 'Agente sem nome'}</p>
+                  <p style={{ fontSize: '0.62rem', color: agente.apiKey ? '#25D366' : t.textMuted }}>
+                    {agente.apiKey ? `IA real — ${agente.modelo}` : 'Modo simulação'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p style={{ fontSize: '0.78rem', fontWeight: 700, color: t.text }}>{agente.nome || 'Agente sem nome'}</p>
-                <p style={{ fontSize: '0.62rem', color: t.textMuted }}>Preview — {agente.modelo}</p>
+              {/* Indicador de base de conhecimento e ferramentas */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {baseConhecimento.length > 0 && (
+                  <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: 20, background: 'rgba(37,211,102,0.1)', color: '#25D366', fontWeight: 700 }}>
+                    {baseConhecimento.length} docs
+                  </span>
+                )}
+                {Object.values(ferramentas).some(Boolean) && (
+                  <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: 20, background: 'rgba(37,211,102,0.1)', color: '#25D366', fontWeight: 700 }}>
+                    {Object.values(ferramentas).filter(Boolean).length} tools
+                  </span>
+                )}
               </div>
             </div>
             <WaChat
               mensagens={agenteMsgs} digitando={agenteDigitando}
               inputVal={agenteInput} onInput={setAgenteInput} onEnviar={enviarMsgAgente}
-              placeholder="Teste seu agente aqui..."
-              tema={tema} altura={460} onReset={() => setAgenteMsgs([])}
+              placeholder={agente.prompt.trim() ? 'Teste seu agente aqui...' : 'Configure o prompt primeiro'}
+              tema={tema} altura={460} onReset={resetaHistoricoChat}
             />
+            {agenteErro && agenteErro !== '__ok__' && (
+              <p style={{ fontSize: '0.75rem', color: '#ff4b4b', fontWeight: 600, padding: '8px 12px', background: 'rgba(255,75,75,0.06)', borderRadius: 8, border: '1px solid rgba(255,75,75,0.2)' }}>
+                {agenteErro}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -599,15 +866,18 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
   const navigate = useNavigate();
   const t = TEMAS[tema];
   const limite = PLANO_LIMITES[plano]?.instancias || 1;
-  const [instancias, setInstancias]     = useState([]);
-  const [carregando, setCarregando]     = useState(true);
-  const [criando, setCriando]           = useState(false);
+  const [instancias, setInstancias]       = useState([]);
+  const [carregando, setCarregando]       = useState(true);
+  const [criando, setCriando]             = useState(false);
   const [nomeInstancia, setNomeInstancia] = useState('');
   const [fluxoVinculado, setFluxoVinculado] = useState('');
-  const [mostrarForm, setMostrarForm]   = useState(false);
-  const [aguardandoQR, setAguardandoQR] = useState(false);
+  const [mostrarForm, setMostrarForm]     = useState(false);
   const [instanciaAtiva, setInstanciaAtiva] = useState(null);
-  const [erroLimite, setErroLimite]     = useState('');
+  const [erroLimite, setErroLimite]       = useState('');
+  const [qrCodes, setQrCodes]             = useState({});      // { instanciaId: base64 }
+  const [loadingQR, setLoadingQR]         = useState({});      // { instanciaId: bool }
+  const [erroQR, setErroQR]               = useState({});      // { instanciaId: string }
+  const pollingRef = useRef({});                                // timers de polling por instância
   const atingiuLimite = instancias.length >= limite;
 
   const carregarInstancias = useCallback(async () => {
@@ -624,11 +894,21 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
 
   useEffect(() => { carregarInstancias(); }, [carregarInstancias]);
 
+  // Para polling ao desmontar
+  useEffect(() => {
+    return () => {
+      Object.values(pollingRef.current).forEach(clearInterval);
+    };
+  }, []);
+
   const criarInstancia = async () => {
     if (!nomeInstancia.trim() || !fluxoVinculado) return;
     setCriando(true); setErroLimite('');
     try {
-      const res  = await authFetch(`${API_URL}/instancias/criar`, { method: 'POST', body: JSON.stringify({ usuario_id: usuarioId, nome: nomeInstancia, fluxo_id: parseInt(fluxoVinculado) }) });
+      const res = await authFetch(`${API_URL}/instancias/criar`, {
+        method: 'POST',
+        body: JSON.stringify({ usuario_id: usuarioId, nome: nomeInstancia, fluxo_id: parseInt(fluxoVinculado) }),
+      });
       const data = await res.json();
       if (!res.ok) { setErroLimite(data.detail || 'Erro ao criar instância.'); return; }
       await carregarInstancias();
@@ -639,23 +919,66 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
 
   const excluirInstancia = async (id) => {
     if (!window.confirm('Excluir esta instância?')) return;
+    // Para polling se existir
+    if (pollingRef.current[id]) { clearInterval(pollingRef.current[id]); delete pollingRef.current[id]; }
     try {
       await authFetch(`${API_URL}/instancias/${id}/${usuarioId}`, { method: 'DELETE' });
       setInstancias(prev => prev.filter(i => i.id !== id));
       if (instanciaAtiva?.id === id) setInstanciaAtiva(null);
+      setQrCodes(prev => { const n = { ...prev }; delete n[id]; return n; });
     } catch { alert('Erro ao excluir.'); }
+  };
+
+  const buscarQRCode = async (inst) => {
+    const id = inst.id;
+    setInstanciaAtiva(inst);
+    setLoadingQR(prev => ({ ...prev, [id]: true }));
+    setErroQR(prev => ({ ...prev, [id]: '' }));
+    setQrCodes(prev => ({ ...prev, [id]: null }));
+
+    try {
+      const res = await authFetch(`${API_URL}/instancias/${id}/qrcode/${usuarioId}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErroQR(prev => ({ ...prev, [id]: data.detail || 'Erro ao buscar QR Code.' }));
+        return;
+      }
+
+      setQrCodes(prev => ({ ...prev, [id]: data.qrcode }));
+
+      // Inicia polling para detectar quando conectar (a cada 3s por até 2min)
+      if (pollingRef.current[id]) clearInterval(pollingRef.current[id]);
+      let tentativas = 0;
+      pollingRef.current[id] = setInterval(async () => {
+        tentativas++;
+        if (tentativas > 40) { clearInterval(pollingRef.current[id]); return; } // 2 min
+        try {
+          const sr = await authFetch(`${API_URL}/instancias/${id}/status-evolution/${usuarioId}`);
+          const sd = await sr.json();
+          if (sd.status === 'conectado') {
+            clearInterval(pollingRef.current[id]);
+            setInstancias(prev => prev.map(i => i.id === id ? { ...i, status: 'conectado' } : i));
+            setQrCodes(prev => ({ ...prev, [id]: null }));
+            setInstanciaAtiva(null);
+          }
+        } catch {}
+      }, 3000);
+
+    } catch {
+      setErroQR(prev => ({ ...prev, [id]: 'Erro de conexão com o servidor.' }));
+    } finally {
+      setLoadingQR(prev => ({ ...prev, [id]: false }));
+    }
   };
 
   const statusColor = s => s === 'conectado' ? '#25D366' : s === 'aguardando' ? '#f0a500' : '#ff4b4b';
   const statusLabel = s => s === 'conectado' ? 'Conectado' : s === 'aguardando' ? 'Aguardando QR' : 'Desconectado';
-  const sel = { width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem' };
 
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
-      <div style={{ background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.22)', borderRadius: 10, padding: '13px 17px', marginBottom: 18 }}>
-        <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f0a500', marginBottom: 2 }}>Conexão com VPS necessária</p>
-        <p style={{ fontSize: '0.7rem', color: t.textMuted }}>O QR Code real estará disponível após configurar a Evolution API na sua VPS.</p>
-      </div>
+
+      {/* Banner de plano */}
       <div style={{ background: 'rgba(37,211,102,0.04)', border: '1px solid rgba(37,211,102,0.14)', borderRadius: 10, padding: '13px 18px', marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ fontSize: '0.8rem', color: t.textMuted }}>
           <strong style={{ color: '#25D366' }}>{instancias.length}</strong> de <strong style={{ color: t.text }}>{limite === 999 ? 'ilimitadas' : limite}</strong> instâncias — Plano <strong style={{ color: '#25D366' }}>{PLANO_NOME[plano]}</strong>
@@ -664,6 +987,8 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
           <button onClick={() => navigate('/assinar')} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '7px 16px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.7rem' }}>FAZER UPGRADE</button>
         )}
       </div>
+
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
         <p style={{ fontSize: '0.72rem', color: t.textMuted }}>{instancias.length} instância(s)</p>
         <button onClick={() => { if (atingiuLimite) { setErroLimite(`Limite de ${limite} instância(s) atingido.`); return; } setMostrarForm(v => !v); setErroLimite(''); }}
@@ -671,34 +996,43 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
           {atingiuLimite ? 'LIMITE ATINGIDO' : mostrarForm ? 'CANCELAR' : '+ NOVA INSTÂNCIA'}
         </button>
       </div>
+
+      {/* Erro de limite */}
       <AnimatePresence>
         {erroLimite && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ padding: '12px 16px', background: 'rgba(255,75,75,0.07)', border: '1px solid rgba(255,75,75,0.22)', borderRadius: 9, marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{ padding: '12px 16px', background: 'rgba(255,75,75,0.07)', border: '1px solid rgba(255,75,75,0.22)', borderRadius: 9, marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <span style={{ fontSize: '0.8rem', color: '#ff4b4b' }}>{erroLimite}</span>
             <button onClick={() => navigate('/assinar')} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '7px 14px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>VER PLANOS</button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Formulário nova instância */}
       <AnimatePresence>
         {mostrarForm && !atingiuLimite && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}`, marginBottom: 22 }}>
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}`, marginBottom: 22 }}>
             <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 18, color: t.text }}>Nova Instância WhatsApp</h4>
             <div style={{ display: 'grid', gap: 13, marginBottom: 18 }}>
               <Input tema={tema} label="Nome da instância" type="text" value={nomeInstancia} onChange={e => setNomeInstancia(e.target.value)} placeholder="Ex: Atendimento Principal" />
               <div>
                 <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Fluxo vinculado</label>
-                <select value={fluxoVinculado} onChange={e => setFluxoVinculado(e.target.value)} style={sel}>
+                <StyledSelect value={fluxoVinculado} onChange={e => setFluxoVinculado(e.target.value)} tema={tema}>
                   <option value="">Selecione um fluxo...</option>
                   {fluxos.map(f => <option key={f.id} value={f.id}>{f.nome_fluxo}</option>)}
-                </select>
+                </StyledSelect>
               </div>
             </div>
-            <button onClick={criarInstancia} disabled={criando} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '11px 22px', borderRadius: 8, fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: criando ? 0.6 : 1 }}>
+            <button onClick={criarInstancia} disabled={criando}
+              style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '11px 22px', borderRadius: 8, fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: criando ? 0.6 : 1 }}>
               {criando ? 'CRIANDO...' : 'CRIAR INSTÂNCIA'}
             </button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Lista de instâncias */}
       {carregando ? <p style={{ color: t.textMuted }}>Carregando...</p>
         : instancias.length === 0 ? (
           <div style={{ padding: 50, textAlign: 'center', border: `1px dashed ${t.cardBorder}`, borderRadius: 14 }}>
@@ -709,6 +1043,8 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
           <div style={{ display: 'grid', gap: 12 }}>
             {instancias.map(inst => (
               <div key={inst.id} style={{ padding: '18px 22px', borderRadius: 12, border: `1px solid ${t.cardBorder}`, background: t.card }}>
+
+                {/* Header da instância */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                     <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(37,211,102,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#25D366', fontSize: '0.85rem', flexShrink: 0 }}>W</div>
@@ -718,88 +1054,95 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    {/* Status */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(inst.status), display: 'inline-block' }} />
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(inst.status), display: 'inline-block', boxShadow: inst.status === 'conectado' ? '0 0 6px #25D366' : 'none' }} />
                       <span style={{ fontSize: '0.7rem', fontWeight: 700, color: statusColor(inst.status) }}>{statusLabel(inst.status)}</span>
                     </div>
-                    <button onClick={() => { setInstanciaAtiva(inst); setAguardandoQR(true); setTimeout(() => setAguardandoQR(false), 1500); }}
-                      style={{ background: inst.status === 'conectado' ? 'transparent' : '#25D366', color: inst.status === 'conectado' ? '#25D366' : '#0d140d', border: inst.status === 'conectado' ? '1px solid #25D366' : 'none', padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700 }}>
-                      {inst.status === 'conectado' ? 'RECONECTAR' : 'CONECTAR'}
+                    {/* Botão conectar/reconectar */}
+                    <button
+                      onClick={() => buscarQRCode(inst)}
+                      disabled={loadingQR[inst.id]}
+                      style={{ background: inst.status === 'conectado' ? 'transparent' : '#25D366', color: inst.status === 'conectado' ? '#25D366' : '#0d140d', border: inst.status === 'conectado' ? '1px solid #25D366' : 'none', padding: '7px 14px', borderRadius: 6, cursor: loadingQR[inst.id] ? 'not-allowed' : 'pointer', fontSize: '0.68rem', fontWeight: 700, opacity: loadingQR[inst.id] ? 0.6 : 1 }}>
+                      {loadingQR[inst.id] ? 'Carregando...' : inst.status === 'conectado' ? 'RECONECTAR' : 'CONECTAR'}
                     </button>
-                    <button onClick={() => excluirInstancia(inst.id)} style={{ background: 'transparent', border: '1px solid #ff4b4b', color: '#ff4b4b', padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700 }}>EXCLUIR</button>
+                    <button onClick={() => excluirInstancia(inst.id)}
+                      style={{ background: 'transparent', border: '1px solid #ff4b4b', color: '#ff4b4b', padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700 }}>
+                      EXCLUIR
+                    </button>
                   </div>
                 </div>
+
+                {/* Painel do QR Code */}
                 <AnimatePresence>
                   {instanciaAtiva?.id === inst.id && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ marginTop: 18, padding: '22px', background: 'rgba(0,0,0,0.15)', borderRadius: 10, textAlign: 'center' }}>
-                      {aguardandoQR ? (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{ marginTop: 18, padding: '22px', background: 'rgba(0,0,0,0.15)', borderRadius: 10, textAlign: 'center' }}>
+
+                      {/* Carregando QR */}
+                      {loadingQR[inst.id] && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                           <span style={{ width: 32, height: 32, border: '3px solid rgba(37,211,102,0.2)', borderTop: '3px solid #25D366', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
                           <p style={{ color: t.textMuted, fontSize: '0.82rem' }}>Gerando QR Code...</p>
                         </div>
-                      ) : (
+                      )}
+
+                      {/* Erro no QR */}
+                      {erroQR[inst.id] && !loadingQR[inst.id] && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                          <p style={{ color: '#ff4b4b', fontSize: '0.82rem', fontWeight: 600 }}>{erroQR[inst.id]}</p>
+                          <button onClick={() => buscarQRCode(inst)}
+                            style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '8px 18px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.75rem' }}>
+                            Tentar novamente
+                          </button>
+                        </div>
+                      )}
+
+                      {/* QR Code real */}
+                      {qrCodes[inst.id] && !loadingQR[inst.id] && (
                         <>
-                          {/* TROCAR: aqui virá o <img src={qrCodeBase64} /> da Evolution API */}
-                          <div style={{ width: 180, height: 180, margin: '0 auto 14px', background: 'white', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6 }}>
-                            <p style={{ color: '#0d140d', fontSize: '0.65rem', fontWeight: 700, textAlign: 'center', padding: '0 8px' }}>QR Code disponível após configurar a VPS</p>
+                          <p style={{ fontSize: '0.75rem', color: t.textMuted, marginBottom: 14 }}>
+                            Escaneie com o WhatsApp → <strong>Dispositivos conectados</strong> → <strong>Conectar dispositivo</strong>
+                          </p>
+                          <div style={{ display: 'inline-block', background: 'white', padding: 12, borderRadius: 12, marginBottom: 14 }}>
+                            <img
+                              src={qrCodes[inst.id]}
+                              alt="QR Code WhatsApp"
+                              style={{ width: 200, height: 200, display: 'block' }}
+                            />
                           </div>
-                          <p style={{ fontSize: '0.78rem', color: t.textMuted }}>WhatsApp → Dispositivos conectados → Conectar dispositivo</p>
+                          <p style={{ fontSize: '0.7rem', color: t.textMuted }}>
+                            O QR Code expira em ~45 segundos. Se expirar, clique em <strong>RECONECTAR</strong>.
+                          </p>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f0a500', animation: 'dotBounce 1s 0s infinite' }} />
+                            <span style={{ fontSize: '0.7rem', color: '#f0a500', fontWeight: 600 }}>Aguardando conexão...</span>
+                          </div>
                         </>
+                      )}
+
+                      {/* Botão fechar */}
+                      {!loadingQR[inst.id] && (
+                        <button
+                          onClick={() => {
+                            setInstanciaAtiva(null);
+                            if (pollingRef.current[inst.id]) { clearInterval(pollingRef.current[inst.id]); delete pollingRef.current[inst.id]; }
+                          }}
+                          style={{ marginTop: 14, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, padding: '6px 14px', borderRadius: 7, cursor: 'pointer', fontSize: '0.72rem' }}>
+                          Fechar
+                        </button>
                       )}
                     </motion.div>
                   )}
                 </AnimatePresence>
+
               </div>
             ))}
           </div>
         )}
-    </motion.div>
-  );
-};
-
-// ─── ABA: CHATBOT IA ──────────────────────────────────────────────────────────
-const ChatbotIA = ({ fluxos, plano, navigate, tema }) => {
-  const t = TEMAS[tema];
-  const [fluxoSelecionado, setFluxoSelecionado] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState('');
-
-  if (!PLANO_LIMITES[plano]?.ia) return <BloqueadoBanner recurso="Chatbot IA" planoAtual={plano} navigate={navigate} tema={tema} />;
-
-  const salvar = async () => {
-    if (!fluxoSelecionado || !prompt.trim()) return;
-    setLoading(true);
-    // TROCAR: POST /chatbot-ia/salvar
-    await new Promise(r => setTimeout(r, 800));
-    setLoading(false);
-    setMsg('Configurações salvas.');
-    setTimeout(() => setMsg(''), 3000);
-  };
-
-  return (
-    <motion.div {...fadeUp} style={{ paddingTop: 36, maxWidth: 680 }}>
-      <div style={{ padding: '28px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}`, marginBottom: 18 }}>
-        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 6, color: t.text }}>Instruções do Bot de IA</h4>
-        <p style={{ fontSize: '0.76rem', color: t.textMuted, marginBottom: 22, lineHeight: 1.6 }}>Configure como a IA deve responder quando o cliente enviar algo fora do fluxo.</p>
-        <div style={{ display: 'grid', gap: 14 }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Fluxo vinculado</label>
-            <select value={fluxoSelecionado} onChange={e => setFluxoSelecionado(e.target.value)} style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem' }}>
-              <option value="">Selecione um fluxo...</option>
-              {fluxos.map(f => <option key={f.id} value={f.id}>{f.nome_fluxo}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Prompt de fallback</label>
-            <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={5}
-              placeholder="Ex: Você é um assistente da empresa X. Quando o cliente enviar algo fora do menu, responda de forma educada..."
-              style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.83rem', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
-          </div>
-        </div>
-      </div>
-      {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#25D366', marginBottom: 12 }}>{msg}</p>}
-      <SaveButton onClick={salvar} loading={loading} label="SALVAR CONFIGURAÇÕES" />
     </motion.div>
   );
 };
@@ -811,15 +1154,15 @@ const DisparosTab = ({ plano, navigate, tema }) => {
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  const [instancias, setInstancias]     = useState([]);
-  const [instanciaId, setInstanciaId]   = useState('');
-  const [mensagem, setMensagem]         = useState('');
-  const [contatosRaw, setContatosRaw]   = useState('');
-  const [enviando, setEnviando]         = useState(false);
-  const [resultado, setResultado]       = useState(null);
-  const [historico, setHistorico]       = useState([]);
-  const [loadingH, setLoadingH]         = useState(false);
-  const [statusHoje, setStatusHoje]     = useState(null);
+  const [instancias, setInstancias]   = useState([]);
+  const [instanciaId, setInstanciaId] = useState('');
+  const [mensagem, setMensagem]       = useState('');
+  const [contatosRaw, setContatosRaw] = useState('');
+  const [enviando, setEnviando]       = useState(false);
+  const [resultado, setResultado]     = useState(null);
+  const [historico, setHistorico]     = useState([]);
+  const [loadingH, setLoadingH]       = useState(false);
+  const [statusHoje, setStatusHoje]   = useState(null);
 
   useEffect(() => { carregarInstancias(); carregarHistorico(); carregarStatusHoje(); }, []);
 
@@ -856,7 +1199,6 @@ const DisparosTab = ({ plano, navigate, tema }) => {
   };
 
   const corStatus = s => ({ enviado: '#25D366', erro: '#ff4444', pendente: '#f0a500' }[s] || '#888');
-  const sel = { width: '100%', padding: '10px 13px', background: t.input, border: `1px solid ${t.inputBorder}`, borderRadius: 8, color: t.text, fontSize: '0.86rem', outline: 'none' };
 
   if (!PLANO_LIMITES[plano]?.disparos) return <BloqueadoBanner recurso="Disparos em Massa" planoAtual={plano} navigate={navigate} tema={tema} />;
 
@@ -878,9 +1220,25 @@ const DisparosTab = ({ plano, navigate, tema }) => {
       )}
       <div style={{ padding: '26px', background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 14, display: 'flex', flexDirection: 'column', gap: 18 }}>
         <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: t.text }}>Novo Disparo</h4>
-        <div><label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Instância WhatsApp</label>{instancias.length === 0 ? <p style={{ fontSize: '0.82rem', color: '#ff4444' }}>Nenhuma instância encontrada.</p> : <select value={instanciaId} onChange={e => setInstanciaId(e.target.value)} style={sel}>{instancias.map(i => <option key={i.id} value={String(i.id)}>{i.nome} — {i.numero || 'sem número'}</option>)}</select>}</div>
-        <div><label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Mensagem</label><textarea value={mensagem} onChange={e => setMensagem(e.target.value)} placeholder="Mensagem que será enviada..." rows={4} style={{ width: '100%', padding: '11px 13px', background: t.input, border: `1px solid ${t.inputBorder}`, borderRadius: 8, color: t.text, fontSize: '0.86rem', resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} /><p style={{ fontSize: '0.7rem', color: t.textMuted, marginTop: 3 }}>{mensagem.length} caracteres</p></div>
-        <div><label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Contatos — um por linha</label><textarea value={contatosRaw} onChange={e => setContatosRaw(e.target.value)} placeholder={'5511999999999\n5521888888888'} rows={5} style={{ width: '100%', padding: '11px 13px', background: t.input, border: `1px solid ${t.inputBorder}`, borderRadius: 8, color: t.text, fontSize: '0.83rem', resize: 'vertical', outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box' }} />{contatosParsados.length > 0 && <p style={{ fontSize: '0.7rem', color: '#25D366', marginTop: 3 }}>{contatosParsados.length} contato(s) válido(s)</p>}</div>
+        <div>
+          <label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Instância WhatsApp</label>
+          {instancias.length === 0
+            ? <p style={{ fontSize: '0.82rem', color: '#ff4444' }}>Nenhuma instância encontrada.</p>
+            : <StyledSelect value={instanciaId} onChange={e => setInstanciaId(e.target.value)} tema={tema}>
+                {instancias.map(i => <option key={i.id} value={String(i.id)}>{i.nome} — {i.numero || 'sem número'}</option>)}
+              </StyledSelect>
+          }
+        </div>
+        <div>
+          <label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Mensagem</label>
+          <textarea value={mensagem} onChange={e => setMensagem(e.target.value)} placeholder="Mensagem que será enviada..." rows={4} style={{ width: '100%', padding: '11px 13px', background: t.input, border: `1px solid ${t.inputBorder}`, borderRadius: 8, color: t.text, fontSize: '0.86rem', resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+          <p style={{ fontSize: '0.7rem', color: t.textMuted, marginTop: 3 }}>{mensagem.length} caracteres</p>
+        </div>
+        <div>
+          <label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Contatos — um por linha</label>
+          <textarea value={contatosRaw} onChange={e => setContatosRaw(e.target.value)} placeholder={'5511999999999\n5521888888888'} rows={5} style={{ width: '100%', padding: '11px 13px', background: t.input, border: `1px solid ${t.inputBorder}`, borderRadius: 8, color: t.text, fontSize: '0.83rem', resize: 'vertical', outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box' }} />
+          {contatosParsados.length > 0 && <p style={{ fontSize: '0.7rem', color: '#25D366', marginTop: 3 }}>{contatosParsados.length} contato(s) válido(s)</p>}
+        </div>
         {resultado && <div style={{ padding: '11px 14px', borderRadius: 8, fontSize: '0.83rem', whiteSpace: 'pre-line', background: resultado.tipo === 'sucesso' ? 'rgba(37,211,102,0.09)' : 'rgba(255,68,68,0.09)', border: `1px solid ${resultado.tipo === 'sucesso' ? 'rgba(37,211,102,0.28)' : 'rgba(255,68,68,0.28)'}`, color: resultado.tipo === 'sucesso' ? '#25D366' : '#ff6666' }}>{resultado.texto}</div>}
         <button onClick={handleEnviar} disabled={enviando} style={{ padding: '12px 24px', background: enviando ? 'rgba(37,211,102,0.3)' : '#25D366', border: 'none', borderRadius: 10, color: enviando ? '#25D366' : '#0d140d', fontWeight: 800, fontSize: '0.88rem', cursor: enviando ? 'not-allowed' : 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
           {enviando && <span style={{ width: 13, height: 13, border: '2px solid rgba(13,20,13,0.3)', borderTopColor: '#0d140d', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />}
@@ -1036,7 +1394,6 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                     </div>
                   ))}
                 </div>
-                {/* Nota sobre recobrança automática */}
                 <div style={{ padding: '11px 13px', background: t.tag, borderRadius: 8, marginBottom: 20, border: `1px solid ${t.cardBorder}` }}>
                   <p style={{ fontSize: '0.72rem', color: t.textMuted, lineHeight: 1.6 }}>
                     {assinatura.status === 'ativo' ? 'Renovação automática pelo Mercado Pago. Ao cancelar, o acesso continua até o fim do período já pago.' : assinatura.status === 'cancelado' ? 'Assinatura cancelada. Após o vencimento seu plano retorna para Starter automaticamente.' : 'Trial ativo. Após o vencimento seu plano retorna para Starter.'}
@@ -1061,25 +1418,138 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
         </motion.div>
       )}
 
+      {/* ── Tema Visual — REDESENHADO ── */}
       {subTab === 'Visual' && (
-        <motion.div {...fadeUp} style={{ maxWidth: 560 }}>
+        <motion.div {...fadeUp} style={{ maxWidth: 620 }}>
           <div style={card}>
             <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 6, color: t.text }}>Aparência</h4>
-            <p style={{ fontSize: '0.78rem', color: t.textMuted, marginBottom: 24, lineHeight: 1.6 }}>Escolha o tema visual do painel. A preferência é salva localmente.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              {Object.keys(TEMAS).map(chave => {
-                const ativo = tema === chave; const prev = TEMAS[chave];
+            <p style={{ fontSize: '0.78rem', color: t.textMuted, marginBottom: 28, lineHeight: 1.6 }}>
+              Escolha o tema visual do painel. A preferência é salva localmente no navegador.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+              {/* ── Card Tema Escuro ── */}
+              {(() => {
+                const ativo = tema === 'escuro';
+                const p = TEMAS.escuro;
                 return (
-                  <motion.div key={chave} whileHover={{ scale: 1.02 }} onClick={() => { setTema(chave); localStorage.setItem('zapchat_tema', chave); }}
-                    style={{ padding: 18, borderRadius: 12, border: `2px solid ${ativo ? '#25D366' : prev.cardBorder}`, background: prev.bg, cursor: 'pointer', transition: 'border 0.2s' }}>
-                    <div style={{ height: 48, borderRadius: 8, background: prev.sidebar, border: `1px solid ${prev.cardBorder}`, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '0.6rem', fontWeight: 800, color: prev.text }}>ZAP<span style={{ color: '#25D366' }}>CHAT</span></span>
+                  <motion.div
+                    key="escuro"
+                    whileHover={{ scale: 1.015 }}
+                    onClick={() => { setTema('escuro'); localStorage.setItem('zapchat_tema', 'escuro'); }}
+                    style={{ borderRadius: 16, border: `2px solid ${ativo ? '#25D366' : p.cardBorder}`, background: p.bg, cursor: 'pointer', overflow: 'hidden', transition: 'border-color 0.2s', boxShadow: ativo ? '0 0 0 4px rgba(37,211,102,0.1)' : 'none' }}
+                  >
+                    {/* Mini preview da sidebar + conteúdo */}
+                    <div style={{ display: 'flex', height: 110 }}>
+                      {/* Sidebar mini */}
+                      <div style={{ width: 44, background: p.sidebar, borderRight: `1px solid ${p.cardBorder}`, padding: '10px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        <div style={{ fontSize: '0.48rem', fontWeight: 900, color: p.text, marginBottom: 6 }}>Z<span style={{ color: '#25D366' }}>C</span></div>
+                        {[1, 2, 3, 4].map(i => (
+                          <div key={i} style={{ height: 6, borderRadius: 3, background: i === 1 ? 'rgba(37,211,102,0.5)' : p.cardBorder, width: i === 1 ? '90%' : `${60 + i * 5}%` }} />
+                        ))}
+                      </div>
+                      {/* Conteúdo mini */}
+                      <div style={{ flex: 1, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                          {[1, 2, 3, 4].map(i => (
+                            <div key={i} style={{ height: 22, borderRadius: 6, background: p.card, border: `1px solid ${p.cardBorder}` }} />
+                          ))}
+                        </div>
+                        <div style={{ height: 1, background: p.cardBorder, marginTop: 2 }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {[1, 2].map(i => (
+                            <div key={i} style={{ height: 16, borderRadius: 5, background: p.card, border: `1px solid ${p.cardBorder}` }} />
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <p style={{ fontSize: '0.78rem', fontWeight: 700, color: prev.text, marginBottom: 2 }}>{chave === 'escuro' ? 'Tema Escuro' : 'Tema Claro'}</p>
-                    {ativo && <p style={{ fontSize: '0.65rem', color: '#25D366', fontWeight: 600 }}>Ativo</p>}
+                    {/* Label */}
+                    <div style={{ padding: '10px 14px', borderTop: `1px solid ${p.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <p style={{ fontSize: '0.78rem', fontWeight: 700, color: p.text }}>Tema Escuro</p>
+                        <p style={{ fontSize: '0.62rem', color: p.textMuted }}>Fundo #080c08</p>
+                      </div>
+                      {ativo && (
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#0d140d" strokeWidth="2" strokeLinecap="round" /></svg>
+                        </div>
+                      )}
+                    </div>
                   </motion.div>
                 );
-              })}
+              })()}
+
+              {/* ── Card Tema Claro ── */}
+              {(() => {
+                const ativo = tema === 'claro';
+                const p = TEMAS.claro;
+                return (
+                  <motion.div
+                    key="claro"
+                    whileHover={{ scale: 1.015 }}
+                    onClick={() => { setTema('claro'); localStorage.setItem('zapchat_tema', 'claro'); }}
+                    style={{ borderRadius: 16, border: `2px solid ${ativo ? '#25D366' : p.cardBorder}`, background: p.bg, cursor: 'pointer', overflow: 'hidden', transition: 'border-color 0.2s', boxShadow: ativo ? '0 0 0 4px rgba(37,211,102,0.12)' : 'none' }}
+                  >
+                    {/* Mini preview */}
+                    <div style={{ display: 'flex', height: 110 }}>
+                      {/* Sidebar mini */}
+                      <div style={{ width: 44, background: p.sidebar, borderRight: `1px solid ${p.cardBorder}`, padding: '10px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        <div style={{ fontSize: '0.48rem', fontWeight: 900, color: p.text, marginBottom: 6 }}>Z<span style={{ color: '#25D366' }}>C</span></div>
+                        {[1, 2, 3, 4].map(i => (
+                          <div key={i} style={{ height: 6, borderRadius: 3, background: i === 1 ? 'rgba(37,211,102,0.45)' : p.cardBorder, width: i === 1 ? '90%' : `${60 + i * 5}%` }} />
+                        ))}
+                      </div>
+                      {/* Conteúdo mini */}
+                      <div style={{ flex: 1, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                          {[1, 2, 3, 4].map(i => (
+                            <div key={i} style={{ height: 22, borderRadius: 6, background: p.card, border: `1px solid ${p.cardBorder}`, boxShadow: '0 1px 3px rgba(30,60,30,0.06)' }} />
+                          ))}
+                        </div>
+                        <div style={{ height: 1, background: p.cardBorder, marginTop: 2 }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {[1, 2].map(i => (
+                            <div key={i} style={{ height: 16, borderRadius: 5, background: p.card, border: `1px solid ${p.cardBorder}`, boxShadow: '0 1px 2px rgba(30,60,30,0.05)' }} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Label */}
+                    <div style={{ padding: '10px 14px', borderTop: `1px solid ${p.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: p.sidebar }}>
+                      <div>
+                        <p style={{ fontSize: '0.78rem', fontWeight: 700, color: p.text }}>Tema Claro</p>
+                        <p style={{ fontSize: '0.62rem', color: p.textMuted }}>Verde natural • Suave</p>
+                      </div>
+                      {ativo && (
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#0d140d" strokeWidth="2" strokeLinecap="round" /></svg>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </div>
+
+            {/* Paleta de cores do tema ativo */}
+            <div style={{ marginTop: 24, padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
+              <p style={{ fontSize: '0.65rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
+                Paleta do tema {tema === 'escuro' ? 'Escuro' : 'Claro'}
+              </p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[
+                  { nome: 'Fundo', cor: TEMAS[tema].bg },
+                  { nome: 'Sidebar', cor: TEMAS[tema].sidebar },
+                  { nome: 'Card', cor: tema === 'escuro' ? '#161e16' : TEMAS[tema].card },
+                  { nome: 'Texto', cor: TEMAS[tema].text },
+                  { nome: 'Acento', cor: '#25D366' },
+                ].map(({ nome, cor }) => (
+                  <div key={nome} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 5, background: cor, border: `1px solid ${t.cardBorder}`, flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.65rem', color: t.textMuted }}>{nome}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -1088,27 +1558,6 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ZAPCHAT — TemplatesTab
-// Arquivo: frontend/src/pages/Dashboard.js  (trecho para adicionar)
-//
-// INSTRUÇÕES DE INTEGRAÇÃO:
-//
-// 1. Cole o componente TemplatesTab em algum lugar antes do componente Dashboard
-//    (por exemplo, logo após o componente ChatbotIA)
-//
-// 2. Em menuItems, adicione uma entrada entre 'Chatbot IA' e 'Testes':
-//    { key: 'Templates', label: 'Templates', bloqueado: false },
-//
-// 3. Em renderContent(), adicione um case no switch:
-//    case 'Templates': return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
-//
-// 4. No main.py do backend, registre o router:
-//    from app.routes.template_routes import router as template_router
-//    app.include_router(template_router)
-//
-// ─────────────────────────────────────────────────────────────────────────────
-
 // ─── ABA: TEMPLATES ───────────────────────────────────────────────────────────
 const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
   const t = TEMAS[tema];
@@ -1116,31 +1565,22 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
   const [templates, setTemplates]           = useState([]);
   const [carregando, setCarregando]         = useState(true);
   const [categoriaAtiva, setCategoriaAtiva] = useState('todas');
-  const [preview, setPreview]               = useState(null);   // template selecionado para modal
+  const [preview, setPreview]               = useState(null);
   const [nomeFluxo, setNomeFluxo]           = useState('');
   const [criando, setCriando]               = useState(false);
   const [erroModal, setErroModal]           = useState('');
   const [successId, setSuccessId]           = useState(null);
 
-  // ── Carregar templates da API ──
   useEffect(() => {
     const carregar = async () => {
       setCarregando(true);
       try {
-        // 1. A URL deve ser EXATAMENTE a que funcionou no Docs
-        const res = await authFetch(`${API_URL}/templates`); 
-        
+        const res = await authFetch(`${API_URL}/templates`);
         if (res.status === 401) { navigate('/login'); return; }
-        
         const data = await res.json();
-
-        // Compatível tanto com a resposta antiga (array direto) quanto com a resposta atual do backend
-        // (objeto com a chave "templates").
         const novaLista = Array.isArray(data) ? data : (Array.isArray(data.templates) ? data.templates : []);
         setTemplates(novaLista);
-
       } catch (error) {
-        console.error("Erro ao carregar templates:", error);
         setTemplates([]);
       } finally {
         setCarregando(false);
@@ -1149,467 +1589,139 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
     carregar();
   }, [navigate]);
 
-  // ── Categorias únicas extraídas dos templates ──
   const categorias = ['todas', ...new Set(templates.map(t => t.categoria))];
+  const templatesFiltrados = categoriaAtiva === 'todas' ? templates : templates.filter(t => t.categoria === categoriaAtiva);
+  const labelCategoria = { todas: 'Todos', saude: 'Saúde', ecommerce: 'E-commerce', alimentacao: 'Alimentação', servicos: 'Serviços' };
 
-  const templatesFiltrados = categoriaAtiva === 'todas'
-    ? templates
-    : templates.filter(t => t.categoria === categoriaAtiva);
-
-  // ── Labels de categoria legíveis ──
-  const labelCategoria = {
-    todas:       'Todos',
-    saude:       'Saúde',
-    ecommerce:   'E-commerce',
-    alimentacao: 'Alimentação',
-    servicos:    'Serviços',
-  };
-
-  // ── Abrir modal de preview ──
   const abrirPreview = (template) => {
-    if (!template.disponivel) {
-      navigate('/assinar');
-      return;
-    }
-    setPreview(template);
-    setNomeFluxo(template.nome);
-    setErroModal('');
+    if (!template.disponivel) { navigate('/assinar'); return; }
+    setPreview(template); setNomeFluxo(template.nome); setErroModal('');
   };
+  const fecharPreview = () => { setPreview(null); setNomeFluxo(''); setErroModal(''); };
 
-  const fecharPreview = () => {
-    setPreview(null);
-    setNomeFluxo('');
-    setErroModal('');
-  };
-
-  // ── Usar template → criar fluxo ──
   const usarTemplate = async () => {
-    if (!nomeFluxo.trim()) {
-      setErroModal('Dê um nome para o fluxo antes de continuar.');
-      return;
-    }
-    setCriando(true);
-    setErroModal('');
+    if (!nomeFluxo.trim()) { setErroModal('Dê um nome para o fluxo antes de continuar.'); return; }
+    setCriando(true); setErroModal('');
     try {
-      const res = await authFetch(`${API_URL}/templates/usar`, {
-        method: 'POST',
-        body: JSON.stringify({
-          template_id: preview.id,
-          usuario_id: usuarioId,
-          nome_fluxo: nomeFluxo.trim(),
-        }),
-      });
+      const res = await authFetch(`${API_URL}/templates/usar`, { method: 'POST', body: JSON.stringify({ template_id: preview.id, usuario_id: usuarioId, nome_fluxo: nomeFluxo.trim() }) });
       const data = await res.json();
-      if (!res.ok) {
-        setErroModal(data.detail || 'Erro ao criar fluxo.');
-        return;
-      }
-      setSuccessId(data.id);
-      fecharPreview();
-      // Redireciona direto ao editor com o novo fluxo
+      if (!res.ok) { setErroModal(data.detail || 'Erro ao criar fluxo.'); return; }
+      setSuccessId(data.id); fecharPreview();
       setTimeout(() => navigate(`/editor/${data.id}`), 400);
-    } catch {
-      setErroModal('Erro de conexão. Tente novamente.');
-    } finally {
-      setCriando(false);
-    }
+    } catch { setErroModal('Erro de conexão. Tente novamente.'); }
+    finally { setCriando(false); }
   };
 
-  // ── Nós do preview (parse do fluxo_json, se disponível) ──
   const nosPreview = preview?.fluxo_json
-    ? (() => {
-        try {
-          const parsed = typeof preview.fluxo_json === 'string'
-            ? JSON.parse(preview.fluxo_json)
-            : preview.fluxo_json;
-          return parsed.nodes || [];
-        } catch { return []; }
-      })()
+    ? (() => { try { const p = typeof preview.fluxo_json === 'string' ? JSON.parse(preview.fluxo_json) : preview.fluxo_json; return p.nodes || []; } catch { return []; } })()
     : [];
 
-  // ─── ESTILOS INTERNOS ─────────────────────────────────────
-  const cardStyle = (disponivel) => ({
-    background: t.card,
-    border: `1px solid ${t.cardBorder}`,
-    borderRadius: 16,
-    padding: '24px',
-    cursor: 'pointer',
-    transition: 'transform 0.18s, border-color 0.18s, box-shadow 0.18s',
-    opacity: disponivel ? 1 : 0.6,
-    position: 'relative',
-    overflow: 'hidden',
-  });
+  const cardStyle = (disponivel) => ({ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, padding: '24px', cursor: 'pointer', transition: 'transform 0.18s, border-color 0.18s, box-shadow 0.18s', opacity: disponivel ? 1 : 0.6, position: 'relative', overflow: 'hidden' });
+  const tagStyle = (cor) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: '0.62rem', fontWeight: 800, background: `${cor}18`, color: cor, border: `1px solid ${cor}40`, textTransform: 'uppercase', letterSpacing: '0.5px' });
+  const overlayStyle = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' };
+  const modalStyle = { background: t.sidebar, border: `1px solid ${t.cardBorder}`, borderRadius: 20, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: '32px', position: 'relative' };
 
-  const tagStyle = (cor) => ({
-    display: 'inline-block',
-    padding: '3px 10px',
-    borderRadius: 20,
-    fontSize: '0.62rem',
-    fontWeight: 800,
-    background: `${cor}18`,
-    color: cor,
-    border: `1px solid ${cor}40`,
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  });
-
-  const overlayStyle = {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.65)',
-    zIndex: 200,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-  };
-
-  const getTemplateIcon = (icone, nome) => {
-    if (!icone) return nome ? nome[0].toUpperCase() : 'T';
-    if (/^[a-zA-Z0-9]$/.test(icone)) return icone;
-    // Emojis/professionl: usa primeira letra do nome
-    return nome ? nome[0].toUpperCase() : 'T';
-  };
-
-  const modalStyle = {
-    background: t.sidebar,
-    border: `1px solid ${t.cardBorder}`,
-    borderRadius: 20,
-    width: '100%',
-    maxWidth: 620,
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    padding: '32px',
-    position: 'relative',
-  };
-
-  // ─────────────────────────────────────────────────────────
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
-
-      {/* Cabeçalho */}
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.7, maxWidth: 560 }}>
-          Escolha um template pronto e comece a atender seus clientes em minutos.
-          O fluxo será criado automaticamente no editor para você personalizar.
+          Escolha um template pronto e comece a atender seus clientes em minutos. O fluxo será criado automaticamente no editor para você personalizar.
         </p>
       </div>
-
-      {/* Filtros de categoria */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
         {categorias.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategoriaAtiva(cat)}
-            style={{
-              padding: '7px 16px',
-              borderRadius: 20,
-              border: `1px solid ${categoriaAtiva === cat ? '#25D366' : t.cardBorder}`,
-              background: categoriaAtiva === cat ? 'rgba(37,211,102,0.1)' : 'transparent',
-              color: categoriaAtiva === cat ? '#25D366' : t.textMuted,
-              fontWeight: categoriaAtiva === cat ? 700 : 500,
-              cursor: 'pointer',
-              fontSize: '0.78rem',
-              transition: 'all 0.15s',
-            }}
-          >
+          <button key={cat} onClick={() => setCategoriaAtiva(cat)}
+            style={{ padding: '7px 16px', borderRadius: 20, border: `1px solid ${categoriaAtiva === cat ? '#25D366' : t.cardBorder}`, background: categoriaAtiva === cat ? 'rgba(37,211,102,0.1)' : 'transparent', color: categoriaAtiva === cat ? '#25D366' : t.textMuted, fontWeight: categoriaAtiva === cat ? 700 : 500, cursor: 'pointer', fontSize: '0.78rem', transition: 'all 0.15s' }}>
             {labelCategoria[cat] || cat}
           </button>
         ))}
       </div>
-
-      {/* Grid de cards */}
       {carregando ? (
-        <div style={{ padding: '60px 0', textAlign: 'center', color: t.textMuted, fontSize: '0.85rem' }}>
-          Carregando templates...
-        </div>
+        <div style={{ padding: '60px 0', textAlign: 'center', color: t.textMuted, fontSize: '0.85rem' }}>Carregando templates...</div>
       ) : templatesFiltrados.length === 0 ? (
-        <div style={{ padding: '60px 0', textAlign: 'center', color: t.textMuted }}>
-          Nenhum template nesta categoria.
-        </div>
+        <div style={{ padding: '60px 0', textAlign: 'center', color: t.textMuted }}>Nenhum template nesta categoria.</div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-          gap: 18,
-        }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 18 }}>
           {templatesFiltrados.map(tmpl => (
-            <motion.div
-              key={tmpl.id}
-              style={cardStyle(tmpl.disponivel)}
+            <motion.div key={tmpl.id} style={cardStyle(tmpl.disponivel)}
               whileHover={tmpl.disponivel ? { y: -4, borderColor: tmpl.cor_destaque, boxShadow: `0 8px 28px ${tmpl.cor_destaque}22` } : {}}
-              onClick={() => abrirPreview(tmpl)}
-            >
-              {/* Barra de cor no topo */}
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0,
-                height: 3, background: tmpl.cor_destaque, borderRadius: '16px 16px 0 0',
-              }} />
-
-              {/* Badge de plano (se não for starter) */}
+              onClick={() => abrirPreview(tmpl)}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: tmpl.cor_destaque, borderRadius: '16px 16px 0 0' }} />
               {tmpl.plano_minimo !== 'starter' && (
-                <div style={{
-                  position: 'absolute', top: 14, right: 14,
-                  background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)',
-                  borderRadius: 20, padding: '2px 9px',
-                  fontSize: '0.58rem', fontWeight: 800, color: '#25D366', textTransform: 'uppercase',
-                }}>
-                  {tmpl.plano_minimo.toUpperCase()}
-                </div>
+                <div style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 20, padding: '2px 9px', fontSize: '0.58rem', fontWeight: 800, color: '#25D366', textTransform: 'uppercase' }}>{tmpl.plano_minimo.toUpperCase()}</div>
               )}
-
-              {/* Badge bloqueado */}
               {!tmpl.disponivel && (
-                <div style={{
-                  position: 'absolute', top: 14, right: 14,
-                  background: 'rgba(255,75,75,0.12)', border: '1px solid rgba(255,75,75,0.3)',
-                  borderRadius: 20, padding: '2px 9px',
-                  fontSize: '0.58rem', fontWeight: 800, color: '#ff4b4b',
-                }}>
-                  BLOQUEADO
+                <div style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,75,75,0.12)', border: '1px solid rgba(255,75,75,0.3)', borderRadius: 20, padding: '2px 9px', fontSize: '0.58rem', fontWeight: 800, color: '#ff4b4b' }}>BLOQUEADO</div>
+              )}
+              {tmpl.imagem_url ? (
+                <div style={{ width: '100%', height: 140, borderRadius: 10, background: `linear-gradient(135deg, ${tmpl.cor_destaque}15 0%, ${tmpl.cor_destaque}08 100%)`, border: `1px solid ${tmpl.cor_destaque}30`, marginBottom: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={tmpl.imagem_url} alt={tmpl.imagem_descricao || tmpl.nome} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: !tmpl.disponivel ? 'brightness(0.5) grayscale(0.3)' : 'brightness(1)' }} />
+                </div>
+              ) : (
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: `${tmpl.cor_destaque}18`, border: `1px solid ${tmpl.cor_destaque}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.05rem', marginBottom: 16, color: tmpl.cor_destaque, fontWeight: 700 }}>
+                  {tmpl.icone || (tmpl.nome ? tmpl.nome[0].toUpperCase() : 'T')}
                 </div>
               )}
-
-              {/* Imagem do template (se disponível) */}
-              {tmpl.imagem_url && (
-                <div style={{
-                  width: '100%', height: 140, borderRadius: 10,
-                  background: `linear-gradient(135deg, ${tmpl.cor_destaque}15 0%, ${tmpl.cor_destaque}08 100%)`,
-                  border: `1px solid ${tmpl.cor_destaque}30`,
-                  marginBottom: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <img 
-                    src={tmpl.imagem_url} 
-                    alt={tmpl.imagem_descricao || tmpl.nome}
-                    style={{
-                      width: '100%', height: '100%', objectFit: 'cover',
-                      filter: !tmpl.disponivel ? 'brightness(0.5) grayscale(0.3)' : 'brightness(1)',
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Ícone (fallback se não tiver imagem) */}
-              {!tmpl.imagem_url && (
-                <div style={{
-                  width: 48, height: 48, borderRadius: 14,
-                  background: `${tmpl.cor_destaque}18`,
-                  border: `1px solid ${tmpl.cor_destaque}30`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.05rem', marginBottom: 16, color: tmpl.cor_destaque,
-                  fontWeight: 700,
-                }}>
-                  {getTemplateIcon(tmpl.icone, tmpl.nome)}
-                </div>
-              )}
-
-              {/* Nome */}
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: t.text, marginBottom: 8 }}>
-                {tmpl.nome}
-              </h4>
-
-              {/* Descrição */}
-              <p style={{ fontSize: '0.76rem', color: t.textMuted, lineHeight: 1.6, marginBottom: 16, minHeight: 48 }}>
-                {tmpl.descricao}
-              </p>
-
-              {/* Rodapé */}
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: t.text, marginBottom: 8 }}>{tmpl.nome}</h4>
+              <p style={{ fontSize: '0.76rem', color: t.textMuted, lineHeight: 1.6, marginBottom: 16, minHeight: 48 }}>{tmpl.descricao}</p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={tagStyle(tmpl.cor_destaque)}>
-                  {labelCategoria[tmpl.categoria] || tmpl.categoria}
-                </span>
-                <span style={{ fontSize: '0.72rem', color: tmpl.disponivel ? '#25D366' : t.textMuted, fontWeight: 600 }}>
-                  {tmpl.disponivel ? 'Ver preview →' : 'Fazer upgrade'}
-                </span>
+                <span style={tagStyle(tmpl.cor_destaque)}>{labelCategoria[tmpl.categoria] || tmpl.categoria}</span>
+                <span style={{ fontSize: '0.72rem', color: tmpl.disponivel ? '#25D366' : t.textMuted, fontWeight: 600 }}>{tmpl.disponivel ? 'Ver preview →' : 'Fazer upgrade'}</span>
               </div>
             </motion.div>
           ))}
         </div>
       )}
 
-      {/* ── MODAL DE PREVIEW ── */}
       <AnimatePresence>
         {preview && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={overlayStyle}
-            onClick={(e) => { if (e.target === e.currentTarget) fecharPreview(); }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              style={modalStyle}
-            >
-              {/* Barra de cor */}
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0,
-                height: 4, background: preview.cor_destaque, borderRadius: '20px 20px 0 0',
-              }} />
-
-              {/* Header do modal */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={overlayStyle} onClick={e => { if (e.target === e.currentTarget) fecharPreview(); }}>
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} style={modalStyle}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: preview.cor_destaque, borderRadius: '20px 20px 0 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 52, height: 52, borderRadius: 14,
-                    background: `${preview.cor_destaque}18`,
-                    border: `1px solid ${preview.cor_destaque}30`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.5rem', flexShrink: 0,
-                  }}>
-                    {preview.icone}
-                  </div>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: `${preview.cor_destaque}18`, border: `1px solid ${preview.cor_destaque}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>{preview.icone}</div>
                   <div>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: t.text, marginBottom: 4 }}>
-                      {preview.nome}
-                    </h3>
-                    <span style={tagStyle(preview.cor_destaque)}>
-                      {labelCategoria[preview.categoria] || preview.categoria}
-                    </span>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: t.text, marginBottom: 4 }}>{preview.nome}</h3>
+                    <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: '0.62rem', fontWeight: 800, background: `${preview.cor_destaque}18`, color: preview.cor_destaque, border: `1px solid ${preview.cor_destaque}40`, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{preview.categoria}</span>
                   </div>
                 </div>
-                <button
-                  onClick={fecharPreview}
-                  style={{ background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', color: t.textMuted, fontSize: '0.8rem' }}
-                >
-                  Fechar
-                </button>
+                <button onClick={fecharPreview} style={{ background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', color: t.textMuted, fontSize: '0.8rem' }}>Fechar</button>
               </div>
-
-              {/* Descrição */}
-              <p style={{ fontSize: '0.83rem', color: t.textMuted, lineHeight: 1.7, marginBottom: 24 }}>
-                {preview.descricao}
-              </p>
-
-              {/* Imagem do template no modal */}
+              <p style={{ fontSize: '0.83rem', color: t.textMuted, lineHeight: 1.7, marginBottom: 24 }}>{preview.descricao}</p>
               {preview.imagem_url && (
-                <div style={{
-                  width: '100%', height: 200, borderRadius: 12,
-                  background: `linear-gradient(135deg, ${preview.cor_destaque}15 0%, ${preview.cor_destaque}08 100%)`,
-                  border: `1px solid ${preview.cor_destaque}30`,
-                  marginBottom: 24, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <img 
-                    src={preview.imagem_url} 
-                    alt={preview.imagem_descricao || preview.nome}
-                    style={{
-                      width: '100%', height: '100%', objectFit: 'cover',
-                    }}
-                  />
+                <div style={{ width: '100%', height: 200, borderRadius: 12, background: `linear-gradient(135deg, ${preview.cor_destaque}15 0%, ${preview.cor_destaque}08 100%)`, border: `1px solid ${preview.cor_destaque}30`, marginBottom: 24, overflow: 'hidden' }}>
+                  <img src={preview.imagem_url} alt={preview.imagem_descricao || preview.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
               )}
-
-              {/* Preview dos nós do fluxo */}
               {nosPreview.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  <p style={{ fontSize: '0.68rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
-                    Estrutura do fluxo ({nosPreview.length} etapas)
-                  </p>
-                  <div style={{
-                    background: t.input, borderRadius: 12, border: `1px solid ${t.cardBorder}`,
-                    padding: '16px', maxHeight: 260, overflowY: 'auto',
-                    display: 'flex', flexDirection: 'column', gap: 8,
-                  }}>
+                  <p style={{ fontSize: '0.68rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>Estrutura do fluxo ({nosPreview.length} etapas)</p>
+                  <div style={{ background: t.input, borderRadius: 12, border: `1px solid ${t.cardBorder}`, padding: '16px', maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {nosPreview.map((no, idx) => (
                       <div key={no.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                        {/* Número do nó */}
-                        <div style={{
-                          width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                          background: idx === 0 ? '#25D366' : `${preview.cor_destaque}28`,
-                          border: `1px solid ${idx === 0 ? '#25D366' : preview.cor_destaque}50`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '0.6rem', fontWeight: 800,
-                          color: idx === 0 ? '#0d140d' : preview.cor_destaque,
-                        }}>
-                          {idx + 1}
-                        </div>
-                        {/* Texto da mensagem (truncado) */}
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: idx === 0 ? '#25D366' : `${preview.cor_destaque}28`, border: `1px solid ${idx === 0 ? '#25D366' : preview.cor_destaque}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: idx === 0 ? '#0d140d' : preview.cor_destaque }}>{idx + 1}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{
-                            fontSize: '0.74rem', color: t.text, lineHeight: 1.5,
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>
-                            {no.data?.label?.replace(/\n/g, ' ') || '(sem texto)'}
-                          </p>
-                          {no.data?.options?.length > 0 && (
-                            <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 2 }}>
-                              {no.data.options.length} opção(ões) de resposta
-                            </p>
-                          )}
+                          <p style={{ fontSize: '0.74rem', color: t.text, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{no.data?.label?.replace(/\n/g, ' ') || '(sem texto)'}</p>
+                          {no.data?.options?.length > 0 && <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 2 }}>{no.data.options.length} opção(ões) de resposta</p>}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Campo de nome do fluxo */}
               <div style={{ marginBottom: 18 }}>
-                <label style={{
-                  display: 'block', fontSize: '0.68rem', color: t.textMuted,
-                  marginBottom: 7, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px',
-                }}>
-                  Nome do fluxo
-                </label>
-                <input
-                  type="text"
-                  value={nomeFluxo}
-                  onChange={e => setNomeFluxo(e.target.value)}
-                  placeholder="Ex: Atendimento Clínica"
-                  style={{
-                    width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`,
-                    padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none',
-                    fontSize: '0.88rem', boxSizing: 'border-box',
-                  }}
-                />
-                <p style={{ fontSize: '0.65rem', color: t.textMuted, marginTop: 5 }}>
-                  Você poderá renomear o fluxo a qualquer momento no editor.
-                </p>
+                <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Nome do fluxo</label>
+                <input type="text" value={nomeFluxo} onChange={e => setNomeFluxo(e.target.value)} placeholder="Ex: Atendimento Clínica"
+                  style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }} />
+                <p style={{ fontSize: '0.65rem', color: t.textMuted, marginTop: 5 }}>Você poderá renomear o fluxo a qualquer momento no editor.</p>
               </div>
-
-              {/* Erro */}
-              {erroModal && (
-                <p style={{ fontSize: '0.78rem', color: '#ff4b4b', fontWeight: 600, marginBottom: 14 }}>
-                  {erroModal}
-                </p>
-              )}
-
-              {/* Botões */}
+              {erroModal && <p style={{ fontSize: '0.78rem', color: '#ff4b4b', fontWeight: 600, marginBottom: 14 }}>{erroModal}</p>}
               <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  onClick={fecharPreview}
-                  style={{
-                    flex: 1, padding: '12px', background: 'transparent',
-                    border: `1px solid ${t.cardBorder}`, color: t.textMuted,
-                    borderRadius: 10, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
-                  }}
-                >
-                  Cancelar
-                </button>
-                <motion.button
-                  onClick={usarTemplate}
-                  disabled={criando}
-                  whileHover={{ scale: criando ? 1 : 1.02 }}
-                  style={{
-                    flex: 2, padding: '12px',
-                    background: criando ? 'rgba(37,211,102,0.3)' : '#25D366',
-                    color: criando ? '#25D366' : '#0d140d',
-                    border: 'none', borderRadius: 10,
-                    fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer',
-                    fontSize: '0.85rem', display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', gap: 8, transition: 'background 0.2s',
-                  }}
-                >
-                  {criando && (
-                    <span style={{
-                      width: 13, height: 13,
-                      border: '2px solid rgba(13,20,13,0.3)', borderTop: '2px solid #0d140d',
-                      borderRadius: '50%', display: 'inline-block',
-                      animation: 'spin 0.8s linear infinite',
-                    }} />
-                  )}
+                <button onClick={fecharPreview} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 10, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Cancelar</button>
+                <motion.button onClick={usarTemplate} disabled={criando} whileHover={{ scale: criando ? 1 : 1.02 }}
+                  style={{ flex: 2, padding: '12px', background: criando ? 'rgba(37,211,102,0.3)' : '#25D366', color: criando ? '#25D366' : '#0d140d', border: 'none', borderRadius: 10, fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s' }}>
+                  {criando && <span style={{ width: 13, height: 13, border: '2px solid rgba(13,20,13,0.3)', borderTop: '2px solid #0d140d', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />}
                   {criando ? 'Criando fluxo...' : 'Usar este template'}
                 </motion.button>
               </div>
@@ -1620,41 +1732,6 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
     </motion.div>
   );
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DIFF: Alterações no componente Dashboard
-// ─────────────────────────────────────────────────────────────────────────────
-//
-// 1. Dentro do array menuItems, ADICIONE (entre 'Chatbot IA' e 'Testes'):
-//
-//   { key: 'Templates', label: 'Templates', bloqueado: false },
-//
-// Ficará assim:
-//
-//   const menuItems = [
-//     { key: 'Dashboard',     label: 'Dashboard',    bloqueado: false },
-//     { key: 'Instancias',    label: 'Fluxos',        bloqueado: false },
-//     { key: 'WhatsApp',      label: 'WhatsApp',      bloqueado: false },
-//     { key: 'Disparos',      label: 'Disparos',      bloqueado: !PLANO_LIMITES[plano]?.disparos },
-//     { key: 'Chatbot IA',    label: 'Chatbot IA',    bloqueado: !PLANO_LIMITES[plano]?.ia },
-//     { key: 'Templates',     label: 'Templates',     bloqueado: false },   // <-- ADICIONAR
-//     { key: 'Testes',        label: 'Testes & IA',   bloqueado: false },
-//     { key: 'Configuracoes', label: 'Configurações', bloqueado: false },
-//   ];
-//
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. Dentro do switch em renderContent(), ADICIONE (antes do default):
-//
-//   case 'Templates': return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
-//
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. No main.py, ADICIONE:
-//
-//   from app.routes.template_routes import router as template_router
-//   app.include_router(template_router)
-//
-// ─────────────────────────────────────────────────────────────────────────────
-
 
 // ─── ABA: INSTÂNCIAS (FLUXOS) ─────────────────────────────────────────────────
 const Instancias = ({ fluxos, carregando, onEditar, onExcluir, tema }) => {
@@ -1674,27 +1751,21 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
   const t = TEMAS[tema];
   const isDark = tema === 'escuro';
 
-  const [dados, setDados]       = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [erro, setErro]         = useState('');
+  const [dados, setDados]     = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro]       = useState('');
 
   useEffect(() => {
     const buscar = async () => {
-      setLoading(true);
-      setErro('');
+      setLoading(true); setErro('');
       try {
         const res = await authFetch(`${API_URL}/metricas/dashboard`);
         if (!res.ok) throw new Error('Falha ao carregar métricas.');
-        const json = await res.json();
-        setDados(json);
-      } catch (e) {
-        setErro(e.message);
-      } finally {
-        setLoading(false);
-      }
+        setDados(await res.json());
+      } catch (e) { setErro(e.message); }
+      finally { setLoading(false); }
     };
     buscar();
-    // Atualiza a cada 60 segundos
     const interval = setInterval(buscar, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -1706,49 +1777,29 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
     </div>
   );
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', color: t.textMuted, fontSize: '0.82rem' }}>
-      Carregando métricas...
-    </div>
-  );
-
-  if (erro) return (
-    <div style={{ padding: '20px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}`, color: t.textMuted, fontSize: '0.82rem', marginTop: 36, textAlign: 'center' }}>
-      {erro}
-    </div>
-  );
-
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', color: t.textMuted, fontSize: '0.82rem' }}>Carregando métricas...</div>;
+  if (erro) return <div style={{ padding: '20px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}`, color: t.textMuted, fontSize: '0.82rem', marginTop: 36, textAlign: 'center' }}>{erro}</div>;
   if (!dados) return null;
 
-  // Gráfico de barras — 24 horas
   const horas24 = dados.disparos_por_hora || [];
   const maxVol = Math.max(...horas24.map(h => h.total), 1);
-
-  // Fluxos mais usados vindos da API (já com percentual calculado no backend)
   const fluxosMaisUsados = dados.fluxos_mais_usados || [];
-
-  // IA
-  const tokensUsados  = dados.tokens_usados;
-  const tokensLimite  = dados.tokens_limite;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28, marginTop: 36 }}>
-      {/* Separador */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ flex: 1, height: 1, background: t.cardBorder }} />
         <span style={{ fontSize: '0.7rem', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '1px', whiteSpace: 'nowrap' }}>Métricas Detalhadas</span>
         <div style={{ flex: 1, height: 1, background: t.cardBorder }} />
       </div>
-
-      {/* Contadores gerais */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14 }}>
         {[
-          { l: 'Disparos hoje',     v: dados.disparos_hoje,     cor: '#25D366' },
-          { l: 'Total disparos',    v: dados.total_disparos,    cor: t.text    },
-          { l: 'Sessões ativas',    v: dados.sessoes_ativas,    cor: '#25D366' },
-          { l: 'Fluxos criados',    v: dados.total_fluxos,      cor: t.text    },
-          { l: 'Instâncias',        v: `${dados.instancias_conectadas}/${dados.instancias_total}`, cor: '#25D366' },
-          { l: 'Erros disparos',    v: dados.disparos_erros,    cor: dados.disparos_erros > 0 ? '#e05252' : t.textMuted },
+          { l: 'Disparos hoje', v: dados.disparos_hoje, cor: '#25D366' },
+          { l: 'Total disparos', v: dados.total_disparos, cor: t.text },
+          { l: 'Sessões ativas', v: dados.sessoes_ativas, cor: '#25D366' },
+          { l: 'Fluxos criados', v: dados.total_fluxos, cor: t.text },
+          { l: 'Instâncias', v: `${dados.instancias_conectadas}/${dados.instancias_total}`, cor: '#25D366' },
+          { l: 'Erros disparos', v: dados.disparos_erros, cor: dados.disparos_erros > 0 ? '#e05252' : t.textMuted },
         ].map((m, i) => (
           <div key={i} style={{ padding: '16px', background: t.card, borderRadius: 12, border: `1px solid ${t.cardBorder}`, textAlign: 'center' }}>
             <p style={{ fontSize: '0.6rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.5px' }}>{m.l}</p>
@@ -1756,10 +1807,8 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
           </div>
         ))}
       </div>
-
-      {/* Gráfico volume por hora */}
       <div style={{ padding: '24px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
-        {secao('Disparos por Hora', 'Volume das últimas 24 horas — dados reais do banco')}
+        {secao('Disparos por Hora', 'Volume das últimas 24 horas')}
         {horas24.every(h => h.total === 0) ? (
           <p style={{ color: t.textMuted, fontSize: '0.8rem', marginTop: 14 }}>Nenhum disparo nas últimas 24h.</p>
         ) : (
@@ -1776,12 +1825,7 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
               {(() => {
                 const picoHora = horas24.find(h => h.total === maxVol);
                 const totalHoje = horas24.reduce((a, b) => a + b.total, 0);
-                const media = Math.round(totalHoje / 24);
-                return [
-                  { l: 'Pico', v: picoHora ? `${picoHora.hora} (${maxVol})` : '—' },
-                  { l: 'Total 24h', v: totalHoje },
-                  { l: 'Média/hora', v: media },
-                ].map((m, i) => (
+                return [{ l: 'Pico', v: picoHora ? `${picoHora.hora} (${maxVol})` : '—' }, { l: 'Total 24h', v: totalHoje }, { l: 'Média/hora', v: Math.round(totalHoje / 24) }].map((m, i) => (
                   <div key={i} style={{ textAlign: 'center' }}>
                     <p style={{ fontSize: '0.62rem', color: t.textMuted, textTransform: 'uppercase', fontWeight: 700, marginBottom: 3 }}>{m.l}</p>
                     <p style={{ fontSize: '0.95rem', fontWeight: 800, color: t.text }}>{m.v}</p>
@@ -1792,15 +1836,10 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
           </>
         )}
       </div>
-
-      {/* Fluxos mais usados + Velocidade */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-        {/* Fluxos mais usados */}
         <div style={{ padding: '24px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
-          {secao('Fluxos Mais Usados', 'Ranking por sessões de bot ativas')}
-          {fluxosMaisUsados.length === 0 ? (
-            <p style={{ color: t.textMuted, fontSize: '0.82rem', marginTop: 14 }}>Nenhum dado disponível ainda.</p>
-          ) : (
+          {secao('Fluxos Mais Usados', 'Ranking por sessões')}
+          {fluxosMaisUsados.length === 0 ? <p style={{ color: t.textMuted, fontSize: '0.82rem', marginTop: 14 }}>Nenhum dado disponível.</p> : (
             <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {fluxosMaisUsados.map((f, i) => (
                 <div key={i}>
@@ -1816,15 +1855,13 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
             </div>
           )}
         </div>
-
-        {/* TMR / TMA — null até ter Evolution API */}
         <div style={{ padding: '24px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
           {secao('Velocidade de Atendimento', dados.tmr_segundos != null ? 'Dados reais' : 'Disponível após conectar WhatsApp')}
           <div style={{ marginTop: 14, display: 'grid', gap: 12 }}>
             {[
-              { label: 'TMR — Tempo Médio de Resposta',     value: dados.tmr_segundos != null ? fmtTempo(dados.tmr_segundos) : '—', desc: 'Da mensagem até o bot responder', cor: '#25D366' },
-              { label: 'TMA — Tempo Médio de Atendimento',  value: dados.tma_segundos != null ? fmtTempo(dados.tma_segundos) : '—', desc: 'Do início ao fim da conversa',    cor: '#25D366' },
-              { label: 'Taxa de resolução',                  value: dados.taxa_resolucao != null ? `${dados.taxa_resolucao}%` : '—', desc: 'Conversas encerradas pelo bot',  cor: '#f0a500' },
+              { label: 'TMR', value: dados.tmr_segundos != null ? fmtTempo(dados.tmr_segundos) : '—', desc: 'Tempo médio de resposta', cor: '#25D366' },
+              { label: 'TMA', value: dados.tma_segundos != null ? fmtTempo(dados.tma_segundos) : '—', desc: 'Tempo médio de atendimento', cor: '#25D366' },
+              { label: 'Taxa de resolução', value: dados.taxa_resolucao != null ? `${dados.taxa_resolucao}%` : '—', desc: 'Conversas encerradas pelo bot', cor: '#f0a500' },
             ].map((m, i) => (
               <div key={i} style={{ padding: '12px 14px', background: t.tag, borderRadius: 10, border: `1px solid ${t.cardBorder}` }}>
                 <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>{m.label}</p>
@@ -1835,42 +1872,21 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
           </div>
         </div>
       </div>
-
-      {/* Métricas de IA */}
       {PLANO_LIMITES[plano]?.ia ? (
         <div style={{ padding: '24px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
-          {secao('Métricas de IA', tokensUsados != null ? 'Dados reais de consumo' : 'Disponível após configurar agente IA')}
+          {secao('Métricas de IA', dados.tokens_usados != null ? 'Dados reais' : 'Disponível após configurar agente IA')}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 18 }}>
-            {/* Tokens */}
-            <div style={{ padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
-              <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Uso de Tokens</p>
-              {tokensUsados != null && tokensLimite != null ? (
-                <>
-                  <p style={{ fontSize: '1.5rem', fontWeight: 800, color: t.text, lineHeight: 1, marginBottom: 3 }}>
-                    {tokensUsados.toLocaleString('pt-BR')}
-                    <span style={{ fontSize: '0.7rem', color: t.textMuted, fontWeight: 400, marginLeft: 4 }}>/ {(tokensLimite / 1000).toFixed(0)}k</span>
-                  </p>
-                  <div style={{ height: 5, background: t.cardBorder, borderRadius: 99, overflow: 'hidden', marginTop: 8 }}>
-                    <div style={{ height: '100%', width: `${Math.min((tokensUsados / tokensLimite) * 100, 100)}%`, background: 'linear-gradient(90deg, #25D366, #1aad5e)', borderRadius: 99 }} />
-                  </div>
-                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>{((tokensUsados / tokensLimite) * 100).toFixed(1)}% da franquia usada</p>
-                </>
-              ) : (
-                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: t.textMuted, lineHeight: 1 }}>—</p>
-              )}
-            </div>
-            {/* Sessões totais */}
-            <div style={{ padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
-              <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Sessões de Bot</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#25D366', lineHeight: 1, marginBottom: 3 }}>{dados.sessoes_ativas}</p>
-              <p style={{ fontSize: '0.7rem', color: t.textMuted }}>ativas nos últimos 30min</p>
-            </div>
-            {/* Disparos com erro */}
-            <div style={{ padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
-              <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Disparos com Erro</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 800, color: dados.disparos_erros > 0 ? '#e05252' : '#25D366', lineHeight: 1, marginBottom: 3 }}>{dados.disparos_erros}</p>
-              <p style={{ fontSize: '0.7rem', color: t.textMuted }}>{dados.disparos_erros === 0 ? 'Nenhum erro registrado' : 'Verifique o histórico de disparos'}</p>
-            </div>
+            {[
+              { label: 'Tokens usados', value: dados.tokens_usados != null ? dados.tokens_usados.toLocaleString('pt-BR') : '—', desc: dados.tokens_limite != null ? `${((dados.tokens_usados / dados.tokens_limite) * 100).toFixed(1)}% da franquia` : '', cor: t.text },
+              { label: 'Sessões de Bot', value: dados.sessoes_ativas, desc: 'Ativas nos últimos 30min', cor: '#25D366' },
+              { label: 'Disparos com Erro', value: dados.disparos_erros, desc: dados.disparos_erros === 0 ? 'Nenhum erro registrado' : 'Verifique o histórico', cor: dados.disparos_erros > 0 ? '#e05252' : '#25D366' },
+            ].map((m, i) => (
+              <div key={i} style={{ padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
+                <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>{m.label}</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: m.cor, lineHeight: 1, marginBottom: 3 }}>{m.value}</p>
+                {m.desc && <p style={{ fontSize: '0.7rem', color: t.textMuted }}>{m.desc}</p>}
+              </div>
+            ))}
           </div>
         </div>
       ) : (
@@ -1898,8 +1914,9 @@ const Dashboard = () => {
   const [trialBanner, setTrialBanner] = useState(false);
   const [plano, setPlano]         = useState('starter');
   const [menuAberto, setMenuAberto] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const t           = TEMAS[tema];
+  const t = TEMAS[tema];
   const usuarioId   = parseInt(localStorage.getItem('usuario_id'));
   const usuarioNome = localStorage.getItem('usuario_nome') || 'Usuário';
 
@@ -1908,14 +1925,22 @@ const Dashboard = () => {
     { key: 'Instancias',    label: 'Fluxos',          bloqueado: false },
     { key: 'WhatsApp',      label: 'WhatsApp',        bloqueado: false },
     { key: 'Disparos',      label: 'Disparos',        bloqueado: !PLANO_LIMITES[plano]?.disparos },
-    { key: 'Chatbot IA',    label: 'Chatbot IA',      bloqueado: !PLANO_LIMITES[plano]?.ia },
     { key: 'Templates',     label: 'Templates',       bloqueado: false },
     { key: 'Testes',        label: 'Testes & IA',     bloqueado: false },
     { key: 'Configuracoes', label: 'Configurações',   bloqueado: false },
+    ...(isAdmin ? [{ key: 'Admin', label: 'Painel Admin', bloqueado: false }] : []),
   ];
+
 
   useEffect(() => {
     authFetch(`${API_URL}/pagamentos/minha-assinatura`).then(r => r.json()).then(d => { if (d.tem_assinatura && d.plano) setPlano(d.plano); }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    authFetch(`${API_URL}/admin/check`)
+      .then(r => r.json())
+      .then(d => setIsAdmin(d.is_admin === true))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1969,15 +1994,12 @@ const Dashboard = () => {
               <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#25D366', textTransform: 'uppercase', letterSpacing: '1px' }}>Plano {PLANO_NOME[plano] || plano}</span>
               {plano !== 'business' && <span onClick={() => navigate('/assinar')} style={{ fontSize: '0.63rem', color: t.textMuted, cursor: 'pointer', marginLeft: 3, textDecoration: 'underline' }}>fazer upgrade</span>}
             </div>
-
-            {/* Cards resumo */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
               <StatCard tema={tema} label="Fluxos Criados" value={fluxos.length} trend={fluxos.length > 0 ? `${fluxos.length} fluxo(s) no banco` : 'Nenhum fluxo ainda'} />
               <StatCard tema={tema} label="Último Fluxo" value={fluxos[0]?.nome_fluxo || '—'} trend={fluxos[0] ? new Date(fluxos[0].data_criacao).toLocaleDateString('pt-BR') : 'Sem registros'} />
               <StatCard tema={tema} label="Sessões Ativas" value="0" trend="Disponível após VPS" />
               <StatCard tema={tema} label="Status" value={fluxos.length > 0 ? 'Online' : 'Aguardando'} trend={fluxos.length > 0 ? 'Fluxos prontos' : 'Crie um fluxo'} trendPositive={fluxos.length > 0} />
             </div>
-
             {carregando ? <p style={{ textAlign: 'center', padding: '60px 0', color: t.textMuted }}>Carregando fluxos...</p>
               : fluxos.length > 0 ? (
                 <>
@@ -1990,19 +2012,16 @@ const Dashboard = () => {
                   <p style={{ color: t.textMuted, fontSize: '0.88rem' }}>Clique em "+ Novo Fluxo" para começar.</p>
                 </div>
               )}
-
-            {/* Métricas detalhadas logo abaixo */}
             <MetricasDetalhadas fluxos={fluxos} plano={plano} tema={tema} />
           </motion.div>
         );
-
       case 'Instancias':    return <Instancias fluxos={fluxos} carregando={carregando} tema={tema} onEditar={id => navigate(`/editor/${id}`)} onExcluir={excluirFluxo} />;
       case 'WhatsApp':      return <WhatsAppTab fluxos={fluxos} usuarioId={usuarioId} plano={plano} tema={tema} />;
       case 'Disparos':      return <DisparosTab plano={plano} navigate={navigate} tema={tema} />;
-      case 'Chatbot IA':    return <ChatbotIA fluxos={fluxos} plano={plano} navigate={navigate} tema={tema} />;
-      case 'Templates': return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
+      case 'Templates':     return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
       case 'Testes':        return <TestesIA fluxos={fluxos} plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
       case 'Configuracoes': return <ConfigSettings usuarioId={usuarioId} tema={tema} setTema={setTema} />;
+      case 'Admin':         return <AdminPanel />;
       default:              return null;
     }
   };
@@ -2015,7 +2034,15 @@ const Dashboard = () => {
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${t.scrollbar}; border-radius: 99px; }
+
+        /* ── FIX SELECT: força cores corretas nas <option> em todos os navegadores ── */
+        select option {
+          background-color: ${TEMAS[tema].selectBg} !important;
+          color: ${TEMAS[tema].selectText} !important;
+        }
+
         input:focus, textarea:focus, select:focus { border-color: rgba(37,211,102,0.45) !important; box-shadow: 0 0 0 3px rgba(37,211,102,0.07) !important; }
+
         @media (max-width: 768px) {
           .dash-sidebar { display: none !important; }
           .dash-sidebar.open { display: flex !important; position: fixed !important; inset: 0 auto 0 0 !important; width: 82vw !important; max-width: 270px !important; z-index: 100 !important; box-shadow: 4px 0 30px rgba(0,0,0,0.45) !important; }
@@ -2028,13 +2055,11 @@ const Dashboard = () => {
           .dash-sidebar { display: flex !important; }
           .mobile-btn { display: none !important; }
         }
-        /* Grid de testes responsivo */
         @media (max-width: 900px) {
           .testes-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
-      {/* Trial banner */}
       <AnimatePresence>
         {trialBanner && (
           <motion.div initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -2045,10 +2070,8 @@ const Dashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Overlay mobile */}
       {menuAberto && <div onClick={() => setMenuAberto(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 }} />}
 
-      {/* ── SIDEBAR ── */}
       <aside className={`dash-sidebar${menuAberto ? ' open' : ''}`}
         style={{ width: 240, minWidth: 240, background: t.sidebar, borderRight: `1px solid ${t.cardBorder}`, padding: '34px 20px', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 42, display: 'block' }}>
@@ -2070,7 +2093,6 @@ const Dashboard = () => {
         </div>
       </aside>
 
-      {/* ── MAIN ── */}
       <main className="dash-main" style={{ flexGrow: 1, padding: '0 48px', overflowY: 'auto', minWidth: 0 }}>
         <header className="dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '34px 0', borderBottom: `1px solid ${t.cardBorder}`, position: 'sticky', top: 0, background: t.header, zIndex: 10, gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
@@ -2095,7 +2117,6 @@ const Dashboard = () => {
             </motion.button>
           </div>
         </header>
-
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
             {renderContent()}

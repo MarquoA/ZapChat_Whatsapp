@@ -17,6 +17,7 @@ import Termos from './pages/Termos';
 import Privacidade from './pages/Privacidade';
 import CookieBanner from './components/CookieBanner';
 import NotFound from './pages/NotFound';
+import AdminPanel from './pages/AdminPanel';
 
 const RotaProtegida = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -56,7 +57,14 @@ function AnimatedRoutes() {
             <PageTransition><FlowEditor /></PageTransition>
           </RotaProtegida>
         } />
-        
+
+        {/* ── CORRIGIDO: rota /admin ANTES do catch-all path="*" ── */}
+        <Route path="/admin" element={
+          <RotaProtegida>
+            <PageTransition><AdminPanel /></PageTransition>
+          </RotaProtegida>
+        } />
+
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>

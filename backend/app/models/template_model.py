@@ -1,5 +1,8 @@
 # app/models/template_model.py
+import logging
 from app.database import get_db_connection
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_json_field(value):
@@ -19,7 +22,7 @@ def _parse_json_field(value):
                 normalized = value.replace('\n', '\\n').replace('\r', '\\n').replace('\t', ' ')
                 return json.loads(normalized)
             except Exception as e:
-                print(f"Erro crítico ao processar JSON: {e}")
+                logger.error(f"Erro crítico ao processar JSON do template: {e}")
                 return {"nodes": [], "edges": []} # Retorna estrutura mínima
     return {}
 

@@ -1,15 +1,18 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from jose import JWTError, jwt
 from typing import List
-import asyncio, random, time
+import asyncio, random, httpx
 from app.database import get_db_connection
+import json, os
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
-SECRET_KEY = "zapchat_senha_MmC"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM  = "HS256"
 
 # Limite diário por plano
@@ -119,14 +122,61 @@ async def enviar_disparos(
         "limite_diario": limite,
     }
 
+async def _buscar_evolution_instance_id(instancia_id: int, usuario_id: int) -> str | None:
+    """Retorna o evolution_instance_id (nome na Evolution API) da instância."""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT evolution_instance_id FROM instancias WHERE id = %s AND usuario_id = %s",
+            (instancia_id, usuario_id)
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        return row["evolution_instance_id"] if row else None
+    except Exception as e:
+        logger.error(f"Erro ao buscar evolution_instance_id: {e}")
+        return None
+    finally:
+        conn.close()
+
+
 async def processar_disparos(usuario_id: int, contatos: list, mensagem: str, instancia_id: int):
     """Envia mensagens com delay aleatório para evitar ban."""
+    EVOLUTION_API_URL = os.getenv("EVOLUTION_API_URL", "")
+    EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "")
+
+    evolution_instance_id = None
+    if EVOLUTION_API_URL and EVOLUTION_API_KEY:
+        evolution_instance_id = await _buscar_evolution_instance_id(instancia_id, usuario_id)
+        if not evolution_instance_id:
+            logger.error(f"Instância {instancia_id} sem evolution_instance_id — disparos abortados.")
+            for contato in contatos:
+                registrar_disparo(usuario_id, contato, mensagem, "erro")
+            return
+
     for contato in contatos:
         try:
-            # TODO: integrar com Evolution API quando VPS estiver configurada
-            # await evolution_api_enviar(instancia_id, contato, mensagem) DESCOMENTAR / TROCAR
-            registrar_disparo(usuario_id, contato, mensagem, "enviado")
-        except Exception:
+            if evolution_instance_id and EVOLUTION_API_URL and EVOLUTION_API_KEY:
+                async with httpx.AsyncClient(timeout=15) as client:
+                    resp = await client.post(
+                        f"{EVOLUTION_API_URL}/message/sendText/{evolution_instance_id}",
+                        headers={"apikey": EVOLUTION_API_KEY, "Content-Type": "application/json"},
+                        json={"number": contato, "text": mensagem, "delay": 1200},
+                    )
+                if resp.status_code not in (200, 201):
+                    logger.error(f"Evolution API erro ao disparar para {contato}: {resp.status_code} — {resp.text[:200]}")
+                    registrar_disparo(usuario_id, contato, mensagem, "erro")
+                else:
+                    registrar_disparo(usuario_id, contato, mensagem, "enviado")
+            else:
+                # Evolution API não configurada — registra sem enviar
+                logger.warning("EVOLUTION_API_URL/KEY não configurados; disparo não enviado.")
+                registrar_disparo(usuario_id, contato, mensagem, "erro")
+        except Exception as e:
+            logger.error(f"Erro ao disparar para {contato}: {e}")
             registrar_disparo(usuario_id, contato, mensagem, "erro")
         # Delay humano entre mensagens
         await asyncio.sleep(random.uniform(DELAY_MIN, DELAY_MAX))

@@ -1,4 +1,6 @@
 # app/routes/metricas_routes.py
+import logging
+import os
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import get_db_connection
@@ -6,8 +8,9 @@ from jose import JWTError, jwt
 
 router   = APIRouter()
 security = HTTPBearer()
+logger   = logging.getLogger(__name__)
 
-SECRET_KEY = "zapchat_senha_MmC"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM  = "HS256"
 
 
@@ -171,7 +174,8 @@ async def metricas_dashboard(usuario: dict = Depends(get_usuario_atual)):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao buscar métricas: {str(e)}")
+        logger.error(f"Erro ao buscar métricas para usuario {uid}: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao buscar métricas.")
     finally:
         cursor.close()
         conn.close()

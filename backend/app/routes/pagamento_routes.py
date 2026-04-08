@@ -1,4 +1,5 @@
 # app/routes/pagamento_routes.py
+import logging
 import os
 import hmac
 import hashlib
@@ -13,6 +14,7 @@ from app.database import get_db_connection
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 # ─── FIX BUG #SEGURANÇA: SECRET_KEY nunca deve ficar hardcoded no código.
 # Era: SECRET_KEY = "zapchat_senha_MmC"
@@ -69,7 +71,7 @@ def verificar_hmac_webhook(body_bytes: bytes, x_signature: str, x_request_id: st
         ambiente = os.getenv("AMBIENTE", "dev")
         if ambiente == "producao":
             return False
-        print("AVISO: MP_WEBHOOK_SECRET não configurado. Em produção isso rejeitaria o webhook.")
+        logger.warning("MP_WEBHOOK_SECRET não configurado. Em produção isso rejeitaria o webhook.")
         return True
 
     try:
@@ -98,7 +100,7 @@ def verificar_hmac_webhook(body_bytes: bytes, x_signature: str, x_request_id: st
         return hmac.compare_digest(hash_esperado, v1)
 
     except Exception as e:
-        print(f"Erro na validação HMAC: {e}")
+        logger.error(f"Erro na validação HMAC: {e}")
         return False
 
 # ─── MODELS ───────────────────────────────────────────────────────────────────
@@ -270,7 +272,7 @@ async def webhook(request: Request):
     try:
         ext_ref = int(mp_data.get("external_reference", 0))
     except (ValueError, TypeError):
-        print(f"[WEBHOOK] external_reference inválido: {mp_data.get('external_reference')}")
+        logger.warning(f"[WEBHOOK] external_reference inválido: {mp_data.get('external_reference')}")
         return {"status": "external_reference inválido"}
 
     if not ext_ref:
@@ -321,12 +323,10 @@ async def webhook(request: Request):
     finally:
         conn.close()
 
-    # Log para depuração — remova em produção se quiser
-    print(f"[WEBHOOK] usuario_id={ext_ref} | status={novo_status} | rows={rows_afetados} | periodo_fim={periodo_fim}")
+    logger.info(f"[WEBHOOK] usuario_id={ext_ref} | status={novo_status} | rows={rows_afetados} | periodo_fim={periodo_fim}")
 
     if rows_afetados == 0:
-        # Pode acontecer se não existir linha pendente — insere
-        print(f"[WEBHOOK] Nenhuma linha atualizada para usuario_id={ext_ref}. Tentando INSERT.")
+        logger.warning(f"[WEBHOOK] Nenhuma linha atualizada para usuario_id={ext_ref}. Tentando INSERT.")
         conn = get_db_connection()
         try:
             cursor = conn.cursor()
