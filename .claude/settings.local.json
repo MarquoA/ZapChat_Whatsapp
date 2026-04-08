@@ -11,7 +11,9 @@
       "Bash(curl -s -X POST \"http://localhost:8080/instance/create\" -H \"apikey: admin\" -H \"Content-Type: application/json\" -d \"{\\\\\"instanceName\\\\\":\\\\\"zapchat_final\\\\\",\\\\\"integration\\\\\":\\\\\"WHATSAPP-BAILEYS\\\\\",\\\\\"qrcode\\\\\":true}\")",
       "Bash(curl -s \"http://localhost:8080/instance/connect/zapchat_final\" -H \"apikey: admin\")",
       "Bash(curl -s -X DELETE \"http://localhost:8080/instance/delete/zapchat_final\" -H \"apikey: admin\")",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(cp \"c:/Estudo do Marquo/Estudo T.I/Sites/ZapChat/backend/app/banco_backup_4\" \"c:/Estudo do Marquo/Estudo T.I/Sites/ZapChat/backend/app/banco_backup/banco_backup_4.sql\")",
+      "Bash(cp \"c:/Estudo do Marquo/Estudo T.I/Sites/ZapChat/backend/app/banco_backup_evoapi\" \"c:/Estudo do Marquo/Estudo T.I/Sites/ZapChat/backend/app/banco_backup/banco_backup_evoapi.sql\")"
     ]
   }
 }

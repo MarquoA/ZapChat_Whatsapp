@@ -1,0 +1,1170 @@
+CREATE DATABASE  IF NOT EXISTS `zapchat_evolution` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `zapchat_evolution`;
+-- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
+--
+-- Host: 127.0.0.1    Database: zapchat_evolution
+-- ------------------------------------------------------
+-- Server version	8.0.44
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `_prisma_migrations`
+--
+
+DROP TABLE IF EXISTS `_prisma_migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `_prisma_migrations` (
+  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `checksum` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `finished_at` datetime(3) DEFAULT NULL,
+  `migration_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `logs` text COLLATE utf8mb4_unicode_ci,
+  `rolled_back_at` datetime(3) DEFAULT NULL,
+  `started_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `applied_steps_count` int unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_prisma_migrations`
+--
+
+LOCK TABLES `_prisma_migrations` WRITE;
+/*!40000 ALTER TABLE `_prisma_migrations` DISABLE KEYS */;
+INSERT INTO `_prisma_migrations` VALUES ('085dcfe3-6a0c-4dfc-b436-8d92852488f5','588f0ec8c6e9ae65c8535ea2779b6031a34474e9b1852171d723798793009ae8','2026-04-07 18:31:34.114','20240814214314_integrations_unification',NULL,NULL,'2026-04-07 18:31:30.615',1),('0893c8de-d27f-4d2c-8344-fa570dbdee98','7855c328b5d2388ae44a22559ae347e17cbf8376e63f91e82aea91832a6fa8a8','2026-04-07 18:31:41.999','20240825131301_change_to_evolution_bot',NULL,NULL,'2026-04-07 18:31:39.489',1),('0dd5902a-ff76-4f8b-8ddc-6a99d08dfb9c','3e951ed9fe8c30ebb2f93b7d5d58a84a37195aaf7b075e8adc4e4d3a986eed67','2026-04-07 18:31:28.253','20240809105427_init',NULL,NULL,'2026-04-07 18:31:14.090',1),('1ec8c38a-e26a-467a-a75f-afd850b0cd48','5dd1780943efe9dfe2d032182c13d81a4d3c7449f1ec8958d3951f09408e8413','2026-04-07 18:31:39.476','20240824162012_add_type_on_integration_sessions',NULL,NULL,'2026-04-07 18:31:38.105',1),('4ad0d830-999e-4069-9f19-aa0e1e79ce42','35ab903ac16e03e805f46b408883680b2ce882cbfa6352cf9d5c06d8385b8a65','2026-04-07 18:31:48.177','20241108101333_fix_message_status_as_string',NULL,NULL,'2026-04-07 18:31:43.687',1),('67847eef-67b5-4500-80d7-bb1bda57cc95','72f8c98e20cc6da17b45c2db75d3346e8022255d85de5cdfc8a5b6937294d8b6','2026-04-07 18:31:38.068','20240821203259_add_postgres_migrations',NULL,NULL,'2026-04-07 18:31:34.128',1),('9c831f2b-2800-407b-8fa9-bf56aeac3f8a','87bba6c49668d4e5540f1b466285454427b1a4748b0ab26ccfd71db6369bfe97','2026-04-07 18:31:29.424','20240813153900_add_unique_index_for_remoted_jid_and_instance_in_contacts',NULL,NULL,'2026-04-07 18:31:28.267',1),('ba7243f0-87c1-4eab-9d89-9b9b06c85505','aa03462134bdb796393455a7c62c296586e9da6c40bb46c21d4095e7ac211fb5','2026-04-07 18:31:43.673','20241001172800_add_message_status',NULL,NULL,'2026-04-07 18:31:42.033',1),('f7f4ff38-880b-4dea-bc35-ba8d1161878d','446d6e514aa44f483f6806c7f279038073876f0f4ddb2cf57a2e7169bece4ba8','2026-04-07 18:31:30.598','20240814173138_add_ignore_jids_chatwoot',NULL,NULL,'2026-04-07 18:31:29.437',1);
+/*!40000 ALTER TABLE `_prisma_migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chat`
+--
+
+DROP TABLE IF EXISTS `chat`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `chat` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remoteJid` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `labels` json DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NULL DEFAULT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `unreadMessages` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Chat_instanceId_remoteJid_key` (`instanceId`,`remoteJid`),
+  KEY `Chat_instanceId_idx` (`instanceId`),
+  KEY `Chat_remoteJid_idx` (`remoteJid`),
+  CONSTRAINT `Chat_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chat`
+--
+
+LOCK TABLES `chat` WRITE;
+/*!40000 ALTER TABLE `chat` DISABLE KEYS */;
+/*!40000 ALTER TABLE `chat` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chatwoot`
+--
+
+DROP TABLE IF EXISTS `chatwoot`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `chatwoot` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) DEFAULT '1',
+  `accountId` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nameInbox` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `signMsg` tinyint(1) DEFAULT '0',
+  `signDelimiter` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reopenConversation` tinyint(1) DEFAULT '0',
+  `conversationPending` tinyint(1) DEFAULT '0',
+  `mergeBrazilContacts` tinyint(1) DEFAULT '0',
+  `importContacts` tinyint(1) DEFAULT '0',
+  `importMessages` tinyint(1) DEFAULT '0',
+  `daysLimitImportMessages` int DEFAULT NULL,
+  `organization` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `logo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Chatwoot_instanceId_key` (`instanceId`),
+  CONSTRAINT `Chatwoot_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chatwoot`
+--
+
+LOCK TABLES `chatwoot` WRITE;
+/*!40000 ALTER TABLE `chatwoot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `chatwoot` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contact`
+--
+
+DROP TABLE IF EXISTS `contact`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contact` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remoteJid` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pushName` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profilePicUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NULL DEFAULT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Contact_remoteJid_instanceId_key` (`remoteJid`,`instanceId`),
+  KEY `Contact_instanceId_idx` (`instanceId`),
+  KEY `Contact_remoteJid_idx` (`remoteJid`),
+  CONSTRAINT `Contact_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contact`
+--
+
+LOCK TABLES `contact` WRITE;
+/*!40000 ALTER TABLE `contact` DISABLE KEYS */;
+/*!40000 ALTER TABLE `contact` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `dify`
+--
+
+DROP TABLE IF EXISTS `dify`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `dify` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `botType` enum('chatBot','textGenerator','agent','workflow') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `apiUrl` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `apiKey` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `triggerType` enum('all','keyword','none','advanced') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerOperator` enum('contains','equals','startsWith','endsWith','regex') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerValue` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  KEY `Dify_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `Dify_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `dify`
+--
+
+LOCK TABLES `dify` WRITE;
+/*!40000 ALTER TABLE `dify` DISABLE KEYS */;
+/*!40000 ALTER TABLE `dify` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `difysetting`
+--
+
+DROP TABLE IF EXISTS `difysetting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `difysetting` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `difyIdFallback` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `DifySetting_instanceId_key` (`instanceId`),
+  KEY `DifySetting_difyIdFallback_fkey` (`difyIdFallback`),
+  CONSTRAINT `DifySetting_difyIdFallback_fkey` FOREIGN KEY (`difyIdFallback`) REFERENCES `dify` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `DifySetting_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `difysetting`
+--
+
+LOCK TABLES `difysetting` WRITE;
+/*!40000 ALTER TABLE `difysetting` DISABLE KEYS */;
+/*!40000 ALTER TABLE `difysetting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `evolutionbot`
+--
+
+DROP TABLE IF EXISTS `evolutionbot`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `evolutionbot` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `apiUrl` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `apiKey` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `triggerType` enum('all','keyword','none','advanced') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerOperator` enum('contains','equals','startsWith','endsWith','regex') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerValue` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  KEY `EvolutionBot_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `EvolutionBot_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `evolutionbot`
+--
+
+LOCK TABLES `evolutionbot` WRITE;
+/*!40000 ALTER TABLE `evolutionbot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `evolutionbot` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `evolutionbotsetting`
+--
+
+DROP TABLE IF EXISTS `evolutionbotsetting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `evolutionbotsetting` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `botIdFallback` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `EvolutionBotSetting_instanceId_key` (`instanceId`),
+  KEY `EvolutionBotSetting_botIdFallback_fkey` (`botIdFallback`),
+  CONSTRAINT `EvolutionBotSetting_botIdFallback_fkey` FOREIGN KEY (`botIdFallback`) REFERENCES `evolutionbot` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `EvolutionBotSetting_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `evolutionbotsetting`
+--
+
+LOCK TABLES `evolutionbotsetting` WRITE;
+/*!40000 ALTER TABLE `evolutionbotsetting` DISABLE KEYS */;
+/*!40000 ALTER TABLE `evolutionbotsetting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `flowise`
+--
+
+DROP TABLE IF EXISTS `flowise`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `flowise` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `apiUrl` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `apiKey` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `triggerType` enum('all','keyword','none','advanced') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerOperator` enum('contains','equals','startsWith','endsWith','regex') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerValue` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  KEY `Flowise_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `Flowise_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flowise`
+--
+
+LOCK TABLES `flowise` WRITE;
+/*!40000 ALTER TABLE `flowise` DISABLE KEYS */;
+/*!40000 ALTER TABLE `flowise` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `flowisesetting`
+--
+
+DROP TABLE IF EXISTS `flowisesetting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `flowisesetting` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `flowiseIdFallback` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `FlowiseSetting_instanceId_key` (`instanceId`),
+  KEY `FlowiseSetting_flowiseIdFallback_fkey` (`flowiseIdFallback`),
+  CONSTRAINT `FlowiseSetting_flowiseIdFallback_fkey` FOREIGN KEY (`flowiseIdFallback`) REFERENCES `flowise` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `FlowiseSetting_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flowisesetting`
+--
+
+LOCK TABLES `flowisesetting` WRITE;
+/*!40000 ALTER TABLE `flowisesetting` DISABLE KEYS */;
+/*!40000 ALTER TABLE `flowisesetting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `instance`
+--
+
+DROP TABLE IF EXISTS `instance`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `instance` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `connectionStatus` enum('open','close','connecting') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'open',
+  `ownerJid` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profileName` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profilePicUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `integration` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `businessId` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `token` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `clientName` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `disconnectionReasonCode` int DEFAULT NULL,
+  `disconnectionObject` json DEFAULT NULL,
+  `disconnectionAt` timestamp NULL DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Instance_name_key` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `instance`
+--
+
+LOCK TABLES `instance` WRITE;
+/*!40000 ALTER TABLE `instance` DISABLE KEYS */;
+INSERT INTO `instance` VALUES ('167f2d60-d69f-44f3-9b7f-0a9b36eaef42','zapchat_debug','connecting',NULL,NULL,NULL,'WHATSAPP-BAILEYS',NULL,NULL,'7206E292-D7F7-4AB6-8A35-C3E78B90E03A','mysql',NULL,NULL,NULL,'2026-04-07 19:20:14','2026-04-07 23:43:07'),('2528d756-8496-4ef7-90a5-220cff0bbe0c','zapchat_teste','connecting',NULL,NULL,NULL,'WHATSAPP-BAILEYS',NULL,NULL,'4902B27D-8F91-4996-A75F-E62AB4040F88','mysql',NULL,NULL,NULL,'2026-04-07 19:23:07','2026-04-07 23:43:08'),('531d643b-a526-4b44-be56-42c2c9254312','zapchat_10_test','connecting',NULL,NULL,NULL,'WHATSAPP-BAILEYS',NULL,NULL,'2FF04A11-B4C0-466E-B6EF-EB1FF2BF63A9','mysql',NULL,NULL,NULL,'2026-04-07 19:12:09','2026-04-07 23:43:09'),('8916828c-b08f-4123-b155-a5556383e453','zapchat_10_','connecting',NULL,NULL,NULL,'WHATSAPP-BAILEYS',NULL,NULL,'4FD9DB07-6B2D-4912-893C-B9860D8C4122','mysql',NULL,NULL,NULL,'2026-04-07 20:26:13','2026-04-07 23:46:50'),('dff47759-16aa-477c-baa3-917f43bb7b2c','zapchat_qrtest','connecting',NULL,NULL,NULL,'WHATSAPP-BAILEYS',NULL,NULL,'A70AEF07-9422-4513-BC1C-B9F565A60FE7','mysql',NULL,NULL,NULL,'2026-04-07 20:17:09','2026-04-07 23:43:06');
+/*!40000 ALTER TABLE `instance` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `integrationsession`
+--
+
+DROP TABLE IF EXISTS `integrationsession`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `integrationsession` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sessionId` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remoteJid` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pushName` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('opened','closed','paused') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `awaitUser` tinyint(1) NOT NULL DEFAULT '0',
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `parameters` json DEFAULT NULL,
+  `botId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `context` json DEFAULT NULL,
+  `type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IntegrationSession_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `IntegrationSession_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `integrationsession`
+--
+
+LOCK TABLES `integrationsession` WRITE;
+/*!40000 ALTER TABLE `integrationsession` DISABLE KEYS */;
+/*!40000 ALTER TABLE `integrationsession` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `isonwhatsapp`
+--
+
+DROP TABLE IF EXISTS `isonwhatsapp`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `isonwhatsapp` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remoteJid` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `jidOptions` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `IsOnWhatsapp_remoteJid_key` (`remoteJid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `isonwhatsapp`
+--
+
+LOCK TABLES `isonwhatsapp` WRITE;
+/*!40000 ALTER TABLE `isonwhatsapp` DISABLE KEYS */;
+/*!40000 ALTER TABLE `isonwhatsapp` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `label`
+--
+
+DROP TABLE IF EXISTS `label`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `label` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `labelId` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `color` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `predefinedId` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Label_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `Label_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `label`
+--
+
+LOCK TABLES `label` WRITE;
+/*!40000 ALTER TABLE `label` DISABLE KEYS */;
+/*!40000 ALTER TABLE `label` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `media`
+--
+
+DROP TABLE IF EXISTS `media`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `media` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fileName` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `mimetype` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `messageId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Media_fileName_key` (`fileName`),
+  UNIQUE KEY `Media_messageId_key` (`messageId`),
+  KEY `Media_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `Media_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Media_messageId_fkey` FOREIGN KEY (`messageId`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `media`
+--
+
+LOCK TABLES `media` WRITE;
+/*!40000 ALTER TABLE `media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `media` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `message`
+--
+
+DROP TABLE IF EXISTS `message`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `message` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `key` json NOT NULL,
+  `pushName` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `participant` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `messageType` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` json NOT NULL,
+  `contextInfo` json DEFAULT NULL,
+  `source` enum('ios','android','web','unknown','desktop') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `messageTimestamp` int NOT NULL,
+  `chatwootMessageId` int DEFAULT NULL,
+  `chatwootInboxId` int DEFAULT NULL,
+  `chatwootConversationId` int DEFAULT NULL,
+  `chatwootContactInboxSourceId` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `chatwootIsRead` tinyint(1) DEFAULT '0',
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `typebotSessionId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `webhookUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sessionId` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Message_instanceId_idx` (`instanceId`),
+  KEY `Message_sessionId_fkey` (`sessionId`),
+  CONSTRAINT `Message_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Message_sessionId_fkey` FOREIGN KEY (`sessionId`) REFERENCES `integrationsession` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `message`
+--
+
+LOCK TABLES `message` WRITE;
+/*!40000 ALTER TABLE `message` DISABLE KEYS */;
+/*!40000 ALTER TABLE `message` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `messageupdate`
+--
+
+DROP TABLE IF EXISTS `messageupdate`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `messageupdate` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `keyId` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remoteJid` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fromMe` tinyint(1) NOT NULL,
+  `participant` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pollUpdates` json DEFAULT NULL,
+  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `messageId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `MessageUpdate_messageId_idx` (`messageId`),
+  KEY `MessageUpdate_instanceId_idx` (`instanceId`),
+  CONSTRAINT `MessageUpdate_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `MessageUpdate_messageId_fkey` FOREIGN KEY (`messageId`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `messageupdate`
+--
+
+LOCK TABLES `messageupdate` WRITE;
+/*!40000 ALTER TABLE `messageupdate` DISABLE KEYS */;
+/*!40000 ALTER TABLE `messageupdate` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `openaibot`
+--
+
+DROP TABLE IF EXISTS `openaibot`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `openaibot` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `botType` enum('assistant','chatCompletion') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `assistantId` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `functionUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `model` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `systemMessages` json DEFAULT NULL,
+  `assistantMessages` json DEFAULT NULL,
+  `userMessages` json DEFAULT NULL,
+  `maxTokens` int DEFAULT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `triggerType` enum('all','keyword','none','advanced') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerOperator` enum('contains','equals','startsWith','endsWith','regex') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerValue` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `openaiCredsId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  KEY `OpenaiBot_openaiCredsId_fkey` (`openaiCredsId`),
+  KEY `OpenaiBot_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `OpenaiBot_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `OpenaiBot_openaiCredsId_fkey` FOREIGN KEY (`openaiCredsId`) REFERENCES `openaicreds` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `openaibot`
+--
+
+LOCK TABLES `openaibot` WRITE;
+/*!40000 ALTER TABLE `openaibot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openaibot` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `openaicreds`
+--
+
+DROP TABLE IF EXISTS `openaicreds`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `openaicreds` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `apiKey` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `OpenaiCreds_name_key` (`name`),
+  UNIQUE KEY `OpenaiCreds_apiKey_key` (`apiKey`),
+  KEY `OpenaiCreds_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `OpenaiCreds_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `openaicreds`
+--
+
+LOCK TABLES `openaicreds` WRITE;
+/*!40000 ALTER TABLE `openaicreds` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openaicreds` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `openaisetting`
+--
+
+DROP TABLE IF EXISTS `openaisetting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `openaisetting` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `speechToText` tinyint(1) DEFAULT '0',
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `openaiCredsId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `openaiIdFallback` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `splitMessages` tinyint(1) DEFAULT '0',
+  `timePerChar` int DEFAULT '50',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `OpenaiSetting_openaiCredsId_key` (`openaiCredsId`),
+  UNIQUE KEY `OpenaiSetting_instanceId_key` (`instanceId`),
+  KEY `OpenaiSetting_openaiIdFallback_fkey` (`openaiIdFallback`),
+  CONSTRAINT `OpenaiSetting_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `OpenaiSetting_openaiCredsId_fkey` FOREIGN KEY (`openaiCredsId`) REFERENCES `openaicreds` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `OpenaiSetting_openaiIdFallback_fkey` FOREIGN KEY (`openaiIdFallback`) REFERENCES `openaibot` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `openaisetting`
+--
+
+LOCK TABLES `openaisetting` WRITE;
+/*!40000 ALTER TABLE `openaisetting` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openaisetting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `proxy`
+--
+
+DROP TABLE IF EXISTS `proxy`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `proxy` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `host` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `port` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `protocol` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Proxy_instanceId_key` (`instanceId`),
+  CONSTRAINT `Proxy_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `proxy`
+--
+
+LOCK TABLES `proxy` WRITE;
+/*!40000 ALTER TABLE `proxy` DISABLE KEYS */;
+/*!40000 ALTER TABLE `proxy` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pusher`
+--
+
+DROP TABLE IF EXISTS `pusher`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pusher` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `appId` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `secret` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cluster` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `useTLS` tinyint(1) NOT NULL DEFAULT '0',
+  `events` json NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Pusher_instanceId_key` (`instanceId`),
+  CONSTRAINT `Pusher_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pusher`
+--
+
+LOCK TABLES `pusher` WRITE;
+/*!40000 ALTER TABLE `pusher` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pusher` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `rabbitmq`
+--
+
+DROP TABLE IF EXISTS `rabbitmq`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `rabbitmq` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `events` json NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Rabbitmq_instanceId_key` (`instanceId`),
+  CONSTRAINT `Rabbitmq_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `rabbitmq`
+--
+
+LOCK TABLES `rabbitmq` WRITE;
+/*!40000 ALTER TABLE `rabbitmq` DISABLE KEYS */;
+/*!40000 ALTER TABLE `rabbitmq` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `session`
+--
+
+DROP TABLE IF EXISTS `session`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `session` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sessionId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `creds` text COLLATE utf8mb4_unicode_ci,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Session_sessionId_key` (`sessionId`),
+  CONSTRAINT `Session_sessionId_fkey` FOREIGN KEY (`sessionId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `session`
+--
+
+LOCK TABLES `session` WRITE;
+/*!40000 ALTER TABLE `session` DISABLE KEYS */;
+INSERT INTO `session` VALUES ('cmnozx8ge000dmo5w697ic88w','531d643b-a526-4b44-be56-42c2c9254312','\"{\\\"noiseKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"ALIHuwulR+SQnxLG5x+NRORuj0s61ro+xqtxcDqOEFI=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"HDfhRskGILuwNu4bb61kWTJ+Jm/aX+kXy3q+gxfL5Sc=\\\"}},\\\"pairingEphemeralKeyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"oCx+wkY9HwyC46BT4fSYE8h5qjc9u4HD7XkfGq0DSno=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"vfIv0E0qZ1NLYYXp5SLPTprkl+CXKrgE625MT6wyCWg=\\\"}},\\\"signedIdentityKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"kEw31JLb/lqjUZTWkwxiWxmuww3sC2B2UJxA0oEx6W0=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"bjrVLdAySJFv7rT1sOSfPAHp2fnKhut7HlOjAV5zPCA=\\\"}},\\\"signedPreKey\\\":{\\\"keyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"QP4MONO0kV3ZHPgjwsBSqHjg2ihLlULKmQjs0uaGRXE=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"hSWbWzcC/H4xBqUEFB+akSeDqArSaFOsnFIDu43PQT8=\\\"}},\\\"signature\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"DihfQ/6ZPapRBVKlrv3B/gOJJrIT7b8UnF4uDNVZz+rf9qZsW8r/41kYIV/WE5p6flkdVTskaTDB+RI2a572iA==\\\"},\\\"keyId\\\":1},\\\"registrationId\\\":89,\\\"advSecretKey\\\":\\\"m1cbQrrYqUTzfFRnFHyjdW32ZcryqcZy3csNUcH3uBw=\\\",\\\"processedHistoryMessages\\\":[],\\\"nextPreKeyId\\\":1,\\\"firstUnuploadedPreKeyId\\\":1,\\\"accountSyncCounter\\\":0,\\\"accountSettings\\\":{\\\"unarchiveChats\\\":false},\\\"registered\\\":false}\"','2026-04-07 19:12:09'),('cmnp07mwc0003mo5xz617bkly','167f2d60-d69f-44f3-9b7f-0a9b36eaef42','\"{\\\"noiseKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"CHuHEcuPFRuLCKb+wtNrpcGfpjaHsXVlsPyEgqlPZWg=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"dKuGrJnWn5r4zDzNTaMvLEsJnwfX7B3XOnEiMJfaKkg=\\\"}},\\\"pairingEphemeralKeyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"wF7HZqk868ZV+m+ftvjv3wZInLs8+K9YwukS0mNKJUU=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"OZNKmqkwNu/RgLUaR6uUJ+l4dC0W5zkfjLg9fA1O1Xg=\\\"}},\\\"signedIdentityKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"yGyAr/2kFT9/wu4B8DuK7onPBqTbrKYClB98TWXE9UU=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"ois9Oy+2acvUtvYvzDddIRIyG6kb/j4Oc0Lyq+2vemg=\\\"}},\\\"signedPreKey\\\":{\\\"keyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"oG1FHfxY9pR6Ert6Mss9YHOebUSCNLWFwxXH3CP04Hk=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"GkpqdLtJWlrjjiG/N+89x4G1kx2h4ZzC2hEZNNzhoWQ=\\\"}},\\\"signature\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"oO0UZzrAAo/FYl2DtgLrqjOK3IWNSrH4A2W5dBk1sBcvKqpFh5hJXX/IC7QnBPAMm59uYgdIY+K3IIDqjiINhA==\\\"},\\\"keyId\\\":1},\\\"registrationId\\\":17,\\\"advSecretKey\\\":\\\"jX2pK1ZUw2r7hRMmAn0QeTQPJAs0i3l7gOvtUwhBPPs=\\\",\\\"processedHistoryMessages\\\":[],\\\"nextPreKeyId\\\":1,\\\"firstUnuploadedPreKeyId\\\":1,\\\"accountSyncCounter\\\":0,\\\"accountSettings\\\":{\\\"unarchiveChats\\\":false},\\\"registered\\\":false}\"','2026-04-07 19:20:14'),('cmnp0bce20003qq5w7hpygfo5','2528d756-8496-4ef7-90a5-220cff0bbe0c','\"{\\\"noiseKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"IBnsM6PjquYPT6Ig1bLcSmd4/x76cwvCES9Ola7f6nA=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"q3Q2T3Z7JGvFDQqOjKhUHdgzofabNdelcv/L6grUr1c=\\\"}},\\\"pairingEphemeralKeyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"aPlnJX3mkv1f8FCcM3lcwQ5N2qqVcPWLHUL9B2IBBHE=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"aCTbs/PZlur1LkcAlOolGnDu0ES+d4DtjbwSjTNq/Xg=\\\"}},\\\"signedIdentityKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"wHaXifXb/6pywZ36zzBr/9TrlsD8vE+SSm7LxXRE4UY=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"ldos5Eusl1xQUL4eIqP44i/JlgtViN9aMJ+OkqFLg2c=\\\"}},\\\"signedPreKey\\\":{\\\"keyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"MEA2H+DLrC5lKxdEw15vry+lz3fB+iFHPYllVyjjCnk=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"zkF4WchLtcV1DtFGqKPxoN/8gi5AmHzENW1DDsSxBDY=\\\"}},\\\"signature\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"ywiFCb5zNwvc8cxhGcXbmmFuQbUKvEAyzjN5nTIXFuAD73bPUG0tpSLrtlZtH59xaxjersx9VzPh0jMyr/iQgQ==\\\"},\\\"keyId\\\":1},\\\"registrationId\\\":0,\\\"advSecretKey\\\":\\\"AVCPHAEcir8MC8CpR63+3wyNS3Vi7uLdDi55e2ocIn4=\\\",\\\"processedHistoryMessages\\\":[],\\\"nextPreKeyId\\\":1,\\\"firstUnuploadedPreKeyId\\\":1,\\\"accountSyncCounter\\\":0,\\\"accountSettings\\\":{\\\"unarchiveChats\\\":false},\\\"registered\\\":false}\"','2026-04-07 19:23:07'),('cmnp28ubp0003mt5wq1gnzgzr','dff47759-16aa-477c-baa3-917f43bb7b2c','\"{\\\"noiseKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"IMb02EjEukf1PbVRxYcBKeQw00nsty1WVPlYynu/yXI=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"dfyKDvOLP9ru/Mpk9roWW4YMORKFGomOSWVycFFPk00=\\\"}},\\\"pairingEphemeralKeyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"ILLFZd3MgDLaKVHN4k4081b4AEUWKAqPJTV+qOR8OX4=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"YPb8lX8gdpK6O+w8qi9vIJa73m+65PfOj1XBqFf6vAY=\\\"}},\\\"signedIdentityKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"QHvBI4knk/704RNXIlRRVBFh98I5o8iWKWvpxIPlFFc=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"m81ZfZ8Xm8wVFRMSOk1vbYtn+5ckxgXC7N5FdLtBgH8=\\\"}},\\\"signedPreKey\\\":{\\\"keyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"yMRMGgaY/Eb0aAX8gTbn/L7YvQalErU6vY2r5EZed18=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"Rusq4fUVz0RU8mJte511Znc+ekIwhbLY3I4Ln7qChXY=\\\"}},\\\"signature\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"paY3GdSWmbll8AI2IauEAwvic8dW1MILXuesbVLeumAHwfwn59Ax5jOnSjL1yCR2seyQx+K7UkXxm3EKDCbZBg==\\\"},\\\"keyId\\\":1},\\\"registrationId\\\":5,\\\"advSecretKey\\\":\\\"IwM321/5o4YPvt9KOmyrBORakxVqbGVgiZbReYnzYLM=\\\",\\\"processedHistoryMessages\\\":[],\\\"nextPreKeyId\\\":1,\\\"firstUnuploadedPreKeyId\\\":1,\\\"accountSyncCounter\\\":0,\\\"accountSettings\\\":{\\\"unarchiveChats\\\":false},\\\"registered\\\":false}\"','2026-04-07 20:17:10'),('cmnp2khmm0009o25woig6lv92','8916828c-b08f-4123-b155-a5556383e453','\"{\\\"noiseKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"MFrQiMfJU/u2cZsMHqbt+9cKinlzcnMVFVSVJsgHhGM=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"jZyL6ZjFaiZKJecEVO4EQA9zulBDzBF1NMxOn+YnD08=\\\"}},\\\"pairingEphemeralKeyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"qNVogphaXeM09faUSJzYu/N2M3qGYBt0wAwwbFPeZFw=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"MilDUN25kPHKYZ6mfgc6vS5bKDnl7QWMHkX3ZRt1hkY=\\\"}},\\\"signedIdentityKey\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"yO5W8ANQQE1nbdF8CAnYgTPrpHVv312qq/vI236CP1E=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"sr3Pz8pZ4OhiY4Th2VtXH32TrlT77Z7XWsvF0SPcAlg=\\\"}},\\\"signedPreKey\\\":{\\\"keyPair\\\":{\\\"private\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"4Lov6Vnm1N5TAOoKlfOktZc1x1jth9ftm1jKVlkOBls=\\\"},\\\"public\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"MaeKlAbKTMoYmFIlf8hu0He4uYGCC4SirTrHwV+883c=\\\"}},\\\"signature\\\":{\\\"type\\\":\\\"Buffer\\\",\\\"data\\\":\\\"nB2TLtjGRXmvZQgNAAcziAoMyoNsRMoo8/n431tVhQm6M7PySOz+017vHUYv7G7CfGIqwAg/9zB/CpdpsO3OiA==\\\"},\\\"keyId\\\":1},\\\"registrationId\\\":149,\\\"advSecretKey\\\":\\\"uuMwZV2bU3vlLfr8bSn2RcCikUkdwZgjgW+rKGbW3RI=\\\",\\\"processedHistoryMessages\\\":[],\\\"nextPreKeyId\\\":1,\\\"firstUnuploadedPreKeyId\\\":1,\\\"accountSyncCounter\\\":0,\\\"accountSettings\\\":{\\\"unarchiveChats\\\":false},\\\"registered\\\":false}\"','2026-04-07 20:26:13');
+/*!40000 ALTER TABLE `session` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `setting`
+--
+
+DROP TABLE IF EXISTS `setting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `setting` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `rejectCall` tinyint(1) NOT NULL DEFAULT '0',
+  `msgCall` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `groupsIgnore` tinyint(1) NOT NULL DEFAULT '0',
+  `alwaysOnline` tinyint(1) NOT NULL DEFAULT '0',
+  `readMessages` tinyint(1) NOT NULL DEFAULT '0',
+  `readStatus` tinyint(1) NOT NULL DEFAULT '0',
+  `syncFullHistory` tinyint(1) NOT NULL DEFAULT '0',
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `wavoipToken` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Setting_instanceId_key` (`instanceId`),
+  KEY `Setting_instanceId_idx` (`instanceId`),
+  CONSTRAINT `Setting_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `setting`
+--
+
+LOCK TABLES `setting` WRITE;
+/*!40000 ALTER TABLE `setting` DISABLE KEYS */;
+INSERT INTO `setting` VALUES ('cmnozx8d2000bmo5w7fgj3xho',0,'',0,0,0,0,0,'2026-04-07 19:12:09','2026-04-07 22:12:09','531d643b-a526-4b44-be56-42c2c9254312',''),('cmnp07mow0001mo5xwpkgq2lb',0,'',0,0,0,0,0,'2026-04-07 19:20:14','2026-04-07 22:20:14','167f2d60-d69f-44f3-9b7f-0a9b36eaef42',''),('cmnp0bc2t0001qq5wpgnyfo0h',0,'',0,0,0,0,0,'2026-04-07 19:23:07','2026-04-07 22:23:07','2528d756-8496-4ef7-90a5-220cff0bbe0c',''),('cmnp28tyw0001mt5wv34mfb3t',0,'',0,0,0,0,0,'2026-04-07 20:17:09','2026-04-07 23:17:10','dff47759-16aa-477c-baa3-917f43bb7b2c',''),('cmnp2khid0007o25w1b4uup1h',0,'',0,0,0,0,0,'2026-04-07 20:26:13','2026-04-07 23:26:13','8916828c-b08f-4123-b155-a5556383e453','');
+/*!40000 ALTER TABLE `setting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sqs`
+--
+
+DROP TABLE IF EXISTS `sqs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sqs` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `events` json NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Sqs_instanceId_key` (`instanceId`),
+  CONSTRAINT `Sqs_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sqs`
+--
+
+LOCK TABLES `sqs` WRITE;
+/*!40000 ALTER TABLE `sqs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sqs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `template`
+--
+
+DROP TABLE IF EXISTS `template`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `template` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `templateId` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `template` json NOT NULL,
+  `webhookUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Template_templateId_key` (`templateId`),
+  UNIQUE KEY `Template_name_key` (`name`),
+  KEY `Template_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `Template_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `template`
+--
+
+LOCK TABLES `template` WRITE;
+/*!40000 ALTER TABLE `template` DISABLE KEYS */;
+/*!40000 ALTER TABLE `template` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `typebot`
+--
+
+DROP TABLE IF EXISTS `typebot`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `typebot` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `typebot` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NULL DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `triggerType` enum('all','keyword','none','advanced') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerOperator` enum('contains','equals','startsWith','endsWith','regex') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `triggerValue` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Typebot_instanceId_fkey` (`instanceId`),
+  CONSTRAINT `Typebot_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `typebot`
+--
+
+LOCK TABLES `typebot` WRITE;
+/*!40000 ALTER TABLE `typebot` DISABLE KEYS */;
+/*!40000 ALTER TABLE `typebot` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `typebotsetting`
+--
+
+DROP TABLE IF EXISTS `typebotsetting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `typebotsetting` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expire` int DEFAULT '0',
+  `keywordFinish` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delayMessage` int DEFAULT NULL,
+  `unknownMessage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `listeningFromMe` tinyint(1) DEFAULT '0',
+  `stopBotFromMe` tinyint(1) DEFAULT '0',
+  `keepOpen` tinyint(1) DEFAULT '0',
+  `debounceTime` int DEFAULT NULL,
+  `typebotIdFallback` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ignoreJids` json DEFAULT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `TypebotSetting_instanceId_key` (`instanceId`),
+  KEY `TypebotSetting_typebotIdFallback_fkey` (`typebotIdFallback`),
+  CONSTRAINT `TypebotSetting_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `TypebotSetting_typebotIdFallback_fkey` FOREIGN KEY (`typebotIdFallback`) REFERENCES `typebot` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `typebotsetting`
+--
+
+LOCK TABLES `typebotsetting` WRITE;
+/*!40000 ALTER TABLE `typebotsetting` DISABLE KEYS */;
+/*!40000 ALTER TABLE `typebotsetting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `webhook`
+--
+
+DROP TABLE IF EXISTS `webhook`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `webhook` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) DEFAULT '1',
+  `events` json DEFAULT NULL,
+  `webhookByEvents` tinyint(1) DEFAULT '0',
+  `webhookBase64` tinyint(1) DEFAULT '0',
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `headers` json DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Webhook_instanceId_key` (`instanceId`),
+  KEY `Webhook_instanceId_idx` (`instanceId`),
+  CONSTRAINT `Webhook_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `webhook`
+--
+
+LOCK TABLES `webhook` WRITE;
+/*!40000 ALTER TABLE `webhook` DISABLE KEYS */;
+INSERT INTO `webhook` VALUES ('cmnp2khgm0005o25wudqktsoq','http://host.docker.internal:8000/bot/webhook/10',1,'[\"MESSAGES_UPSERT\", \"CONNECTION_UPDATE\"]',0,0,'2026-04-07 20:26:13','2026-04-07 23:26:13','8916828c-b08f-4123-b155-a5556383e453',NULL);
+/*!40000 ALTER TABLE `webhook` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `websocket`
+--
+
+DROP TABLE IF EXISTS `websocket`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `websocket` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `events` json NOT NULL,
+  `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL,
+  `instanceId` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Websocket_instanceId_key` (`instanceId`),
+  CONSTRAINT `Websocket_instanceId_fkey` FOREIGN KEY (`instanceId`) REFERENCES `instance` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `websocket`
+--
+
+LOCK TABLES `websocket` WRITE;
+/*!40000 ALTER TABLE `websocket` DISABLE KEYS */;
+/*!40000 ALTER TABLE `websocket` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-04-07 21:45:58
