@@ -17,31 +17,37 @@ const TEMAS = {
     scrollbar: 'rgba(255,255,255,0.08)', waBg: '#0b1a0e',
     waBubbleBot: 'rgba(37,211,102,0.15)', waBubbleUser: 'rgba(255,255,255,0.06)',
     tag: 'rgba(255,255,255,0.05)',
-    // Select específico
     selectBg: '#111a11', selectText: '#e8e8e8', selectBorder: 'rgba(255,255,255,0.12)',
+    accent: '#25D366', accentDim: 'rgba(37,211,102,0.1)', accentText: '#0d140d',
+    danger: '#ff4b4b', dangerDim: 'rgba(255,75,75,0.1)',
+    warning: '#f0a500', warningDim: 'rgba(240,165,0,0.08)',
+    purple: '#a78bfa', purpleDim: 'rgba(167,139,250,0.08)',
   },
   claro: {
-    // Paleta refinada — sem brancos/pretos absolutos
-    bg: '#eef1ed',
-    sidebar: '#f4f6f3',
-    card: '#f9faf8',
-    cardBorder: 'rgba(60,90,60,0.10)',
-    text: '#1c2b1c',
-    textMuted: 'rgba(30,50,30,0.52)',
-    textSub: 'rgba(30,50,30,0.32)',
-    header: '#eef1ed',
-    input: 'rgba(30,60,30,0.05)',
-    inputBorder: 'rgba(30,60,30,0.14)',
-    menuHover: 'rgba(37,211,102,0.09)',
-    scrollbar: 'rgba(30,60,30,0.12)',
-    waBg: '#dde8d8',
-    waBubbleBot: '#c8e6c9',
-    waBubbleUser: '#f4f6f3',
-    tag: 'rgba(30,60,30,0.05)',
-    // Select específico
-    selectBg: '#edf2ed',
-    selectText: '#1c2b1c',
-    selectBorder: 'rgba(30,60,30,0.18)',
+    // Paleta premium — tons naturais, sem neon, sem preto/branco absoluto
+    bg: '#e6ebe5',
+    sidebar: '#eaedea',
+    card: '#f0f3ef',
+    cardBorder: 'rgba(45,75,45,0.12)',
+    text: '#1a2a1a',
+    textMuted: '#3d5c3d',
+    textSub: '#5a7a5a',
+    header: '#e6ebe5',
+    input: 'rgba(22,55,22,0.06)',
+    inputBorder: 'rgba(22,55,22,0.16)',
+    menuHover: 'rgba(30,100,55,0.07)',
+    scrollbar: 'rgba(22,55,22,0.14)',
+    waBg: '#d4ddd0',
+    waBubbleBot: '#b8d1bb',
+    waBubbleUser: '#eaede9',
+    tag: 'rgba(22,55,22,0.06)',
+    selectBg: '#e2e6e2',
+    selectText: '#1a2a1a',
+    selectBorder: 'rgba(22,55,22,0.2)',
+    accent: '#2e7a50', accentDim: 'rgba(46,122,80,0.1)', accentText: '#f0f3ef',
+    danger: '#b53535', dangerDim: 'rgba(181,53,53,0.08)',
+    warning: '#9a6a08', warningDim: 'rgba(154,106,8,0.08)',
+    purple: '#6b4fa0', purpleDim: 'rgba(107,79,160,0.08)',
   },
 };
 
@@ -100,13 +106,13 @@ const BloqueadoBanner = ({ recurso, planoAtual, navigate, tema }) => {
   const t = TEMAS[tema];
   return (
     <motion.div {...fadeUp} style={{ marginTop: 40, padding: '60px 40px', borderRadius: 20, border: `1px solid ${t.cardBorder}`, background: t.card, textAlign: 'center' }}>
-      <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontWeight: 900, color: '#25D366', fontSize: '0.9rem' }}>PRO</div>
+      <div style={{ width: 56, height: 56, borderRadius: 16, background: t.accentDim, border: `1px solid ${t.accent}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontWeight: 900, color: t.accent, fontSize: '0.9rem' }}>PRO</div>
       <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 10, color: t.text }}>{recurso} não disponível no seu plano</h3>
       <p style={{ color: t.textMuted, fontSize: '0.85rem', maxWidth: 380, margin: '0 auto 28px', lineHeight: 1.7 }}>
-        Faça upgrade para <strong style={{ color: '#25D366' }}>{upgrade}</strong> e desbloqueie esta funcionalidade.
+        Faça upgrade para <strong style={{ color: t.accent }}>{upgrade}</strong> e desbloqueie esta funcionalidade.
       </p>
       <motion.button whileHover={{ scale: 1.03 }} onClick={() => navigate('/assinar')}
-        style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '14px 32px', borderRadius: 10, fontWeight: 900, cursor: 'pointer', fontSize: '0.85rem' }}>
+        style={{ background: t.accent, color: t.accentText, border: 'none', padding: '14px 32px', borderRadius: 10, fontWeight: 900, cursor: 'pointer', fontSize: '0.85rem' }}>
         FAZER UPGRADE
       </motion.button>
     </motion.div>
@@ -116,7 +122,7 @@ const BloqueadoBanner = ({ recurso, planoAtual, navigate, tema }) => {
 const MenuItem = ({ label, ativo, bloqueado, onClick, tema }) => {
   const t = TEMAS[tema];
   return (
-    <div onClick={onClick} style={{ padding: '11px 14px', cursor: 'pointer', fontSize: '0.88rem', borderRadius: 8, color: ativo ? '#25D366' : t.textMuted, background: ativo ? 'rgba(37,211,102,0.07)' : 'transparent', fontWeight: ativo ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.15s', opacity: bloqueado ? 0.5 : 1, borderLeft: ativo ? '2px solid #25D366' : '2px solid transparent' }}
+    <div onClick={onClick} style={{ padding: '11px 14px', cursor: 'pointer', fontSize: '0.88rem', borderRadius: 8, color: ativo ? t.accent : t.textMuted, background: ativo ? t.accentDim : 'transparent', fontWeight: ativo ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.15s', opacity: bloqueado ? 0.5 : 1, borderLeft: ativo ? `2px solid ${t.accent}` : '2px solid transparent' }}
       onMouseEnter={e => { if (!ativo) e.currentTarget.style.background = t.menuHover; }}
       onMouseLeave={e => { if (!ativo) e.currentTarget.style.background = 'transparent'; }}>
       <span>{label}</span>
@@ -131,7 +137,7 @@ const StatCard = ({ label, value, trend, trendPositive = true, tema, big = false
     <motion.div whileHover={{ y: -3 }} style={{ background: t.card, padding: big ? '28px' : '22px', borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
       <p style={{ color: t.textMuted, fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>{label}</p>
       <h3 style={{ fontSize: big ? '2rem' : '1.7rem', fontWeight: 800, marginBottom: 6, color: t.text }}>{value}</h3>
-      {trend && <span style={{ color: trendPositive ? '#25D366' : '#ff4b4b', fontSize: '0.72rem', fontWeight: 600 }}>{trend}</span>}
+      {trend && <span style={{ color: trendPositive ? t.accent : t.danger, fontSize: '0.72rem', fontWeight: 600 }}>{trend}</span>}
     </motion.div>
   );
 };
@@ -141,15 +147,15 @@ const FluxoCard = ({ id, nome_fluxo, data_criacao, onExcluir, onEditar, tema }) 
   return (
     <motion.div whileHover={{ x: 4 }} style={{ padding: '18px 22px', borderRadius: 12, border: `1px solid ${t.cardBorder}`, background: t.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#25D366', boxShadow: '0 0 6px rgba(37,211,102,0.6)', flexShrink: 0 }} />
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: t.accent, boxShadow: `0 0 6px ${t.accent}99`, flexShrink: 0 }} />
         <div style={{ minWidth: 0 }}>
           <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: 3, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nome_fluxo}</h4>
           <p style={{ fontSize: '0.7rem', color: t.textMuted }}>Criado em {new Date(data_criacao).toLocaleString('pt-BR')}</p>
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-        <button onClick={onEditar} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 800 }}>EDITAR</button>
-        <button onClick={onExcluir} style={{ background: 'transparent', border: '1px solid #ff4b4b', color: '#ff4b4b', padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700 }}>EXCLUIR</button>
+        <button onClick={onEditar} style={{ background: t.accent, color: t.accentText, border: 'none', padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 800 }}>EDITAR</button>
+        <button onClick={onExcluir} style={{ background: 'transparent', border: `1px solid ${t.danger}`, color: t.danger, padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700 }}>EXCLUIR</button>
       </div>
     </motion.div>
   );
@@ -165,14 +171,17 @@ const Input = ({ label, tema, ...props }) => {
   );
 };
 
-const SaveButton = ({ onClick, loading, label = 'SALVAR ALTERAÇÕES', disabled }) => (
-  <motion.button onClick={onClick} disabled={loading || disabled}
-    whileHover={{ backgroundColor: '#25D366', color: '#0d140d' }}
-    style={{ background: 'transparent', border: '1px solid #25D366', color: '#25D366', padding: '13px 24px', borderRadius: 10, fontWeight: 800, cursor: (loading || disabled) ? 'not-allowed' : 'pointer', fontSize: '0.8rem', transition: 'background 0.2s, color 0.2s', opacity: (loading || disabled) ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-    {loading && <span style={{ width: 13, height: 13, border: '2px solid rgba(37,211,102,0.3)', borderTop: '2px solid #25D366', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />}
-    {loading ? 'SALVANDO...' : label}
-  </motion.button>
-);
+const SaveButton = ({ onClick, loading, label = 'SALVAR ALTERAÇÕES', disabled, tema = 'escuro' }) => {
+  const t = TEMAS[tema];
+  return (
+    <motion.button onClick={onClick} disabled={loading || disabled}
+      whileHover={{ backgroundColor: t.accent, color: t.accentText }}
+      style={{ background: 'transparent', border: `1px solid ${t.accent}`, color: t.accent, padding: '13px 24px', borderRadius: 10, fontWeight: 800, cursor: (loading || disabled) ? 'not-allowed' : 'pointer', fontSize: '0.8rem', transition: 'background 0.2s, color 0.2s', opacity: (loading || disabled) ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+      {loading && <span style={{ width: 13, height: 13, border: `2px solid ${t.accentDim}`, borderTop: `2px solid ${t.accent}`, borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />}
+      {loading ? 'SALVANDO...' : label}
+    </motion.button>
+  );
+};
 
 // ─── CHAT WHATSAPP SIMULADO ───────────────────────────────────────────────────
 const WaChat = ({ mensagens, digitando, inputVal, onInput, onEnviar, placeholder = 'Digite uma mensagem...', tema, altura = 420, onReset }) => {
@@ -264,18 +273,9 @@ const montarTextoComOpcoes = (mensagem, opcoes) => {
   return (mensagem ? mensagem + '\n\n' : '') + lista;
 };
 
-// ─── ABA: TESTES & IA ─────────────────────────────────────────────────────────
-// ALTERAÇÃO: A aba agora inclui a sub-aba "Criar Agente IA" com:
-//   • Personalidade (formulário completo)
-//   • Base de Conhecimento
-//   • Ferramentas
-// E a chamada real à API Anthropic está acoplada — basta fornecer a API key.
-// A aba "Chatbot IA" foi removida do menu e seu conteúdo foi absorvido aqui.
-const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
+// ─── ABA: TESTE DE FLUXO ─────────────────────────────────────────────────────
+const TesteFluxo = ({ fluxos, tema }) => {
   const t = TEMAS[tema];
-  const [subTab, setSubTab] = useState('Fluxo');
-
-  // ── Estado: Testar Fluxo ──
   const [fluxoId, setFluxoId]           = useState('');
   const [iniciado, setIniciado]         = useState(false);
   const [nodeAtual, setNodeAtual]       = useState('');
@@ -283,7 +283,7 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
   const [inputFluxo, setInputFluxo]     = useState('');
   const [digitandoBot, setDigitandoBot] = useState(false);
   const [iniciando, setIniciando]       = useState(false);
-  const [metricas, setMetricas] = useState({ total: 0, botMsg: 0, userMsg: 0, nos: [], inicio: null, tempos: [] });
+  const [metricas, setMetricas]         = useState({ total: 0, botMsg: 0, userMsg: 0, nos: [], inicio: null, tempos: [] });
 
   const resetFluxo = () => {
     setIniciado(false); setNodeAtual(''); setMensagens([]);
@@ -358,164 +358,135 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
   const tmr = metricas.tempos.length > 0 ? Math.round(metricas.tempos.reduce((a, b) => a + b, 0) / metricas.tempos.length) : 0;
   const duracao = metricas.inicio ? Math.round((Date.now() - metricas.inicio) / 1000) : 0;
 
-  // ── Estado: Agente IA ──
-  // Sub-abas internas do agente
-  const [agenteSubTab, setAgenteSubTab] = useState('Personalidade');
+  return (
+    <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }} className="testes-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 16, color: t.text }}>Configurar Simulacao</h4>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Fluxo para testar</label>
+              {fluxos.length === 0 ? (
+                <p style={{ fontSize: '0.82rem', color: '#f0a500' }}>Nenhum fluxo criado. Crie um fluxo primeiro.</p>
+              ) : (
+                <StyledSelect value={fluxoId} onChange={e => { setFluxoId(e.target.value); resetFluxo(); }} tema={tema}>
+                  <option value="">Selecione um fluxo...</option>
+                  {fluxos.map(f => <option key={f.id} value={f.id}>{f.nome_fluxo}</option>)}
+                </StyledSelect>
+              )}
+            </div>
+            <button onClick={iniciarSimulacao} disabled={!fluxoId || iniciando}
+              style={{ width: '100%', padding: '12px', background: !fluxoId ? t.accentDim : t.accent, color: !fluxoId ? t.accent : t.accentText, border: 'none', borderRadius: 9, fontWeight: 800, cursor: !fluxoId ? 'not-allowed' : 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: '0.2s' }}>
+              {iniciando && <span style={{ width: 13, height: 13, border: '2px solid rgba(13,20,13,0.3)', borderTop: '2px solid #0d140d', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />}
+              {iniciando ? 'Carregando...' : iniciado ? 'Reiniciar Simulacao' : 'Iniciar Simulacao'}
+            </button>
+          </div>
 
-  // Personalidade
-  const [agente, setAgente] = useState({
-    nome: '', tom: 'equilibrado', modelo: 'claude-sonnet-4-20250514',
-    tokens: 1000, prompt: '', finalizacao: '',
-    // API Key — armazenada apenas em memória (não persiste no localStorage por segurança)
-    apiKey: '',
-  });
+          <div style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
+            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: 16, color: t.text }}>Metricas da Sessao</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {[
+                { label: 'Mensagens', value: metricas.total },
+                { label: 'Nos percorridos', value: metricas.nos.length },
+                { label: 'TMR', value: tmr > 0 ? fmtTempo(tmr) : '—', sub: 'Tempo medio de resposta' },
+                { label: 'Duracao', value: metricas.inicio ? fmtTempo(duracao) : '—', sub: 'Total da conversa' },
+                { label: 'Bot enviou', value: metricas.botMsg },
+                { label: 'Voce enviou', value: metricas.userMsg },
+              ].map((m, i) => (
+                <div key={i} style={{ padding: '12px 14px', background: t.tag, borderRadius: 10, border: `1px solid ${t.cardBorder}` }}>
+                  <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{m.label}</p>
+                  <p style={{ fontSize: '1.3rem', fontWeight: 800, color: t.text, lineHeight: 1 }}>{m.value}</p>
+                  {m.sub && <p style={{ fontSize: '0.6rem', color: t.textMuted, marginTop: 3 }}>{m.sub}</p>}
+                </div>
+              ))}
+            </div>
+            {metricas.nos.length > 0 && (
+              <div style={{ marginTop: 14 }}>
+                <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Caminho percorrido</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {metricas.nos.map((n, i) => (
+                    <span key={i} style={{ padding: '3px 9px', background: t.accentDim, border: `1px solid ${t.accent}33`, borderRadius: 20, fontSize: '0.65rem', color: t.accent, fontFamily: 'monospace' }}>{n}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
-  // Base de Conhecimento
-  const [baseConhecimento, setBaseConhecimento] = useState([]);
-  const [novoConhecimento, setNovoConhecimento] = useState({ titulo: '', conteudo: '' });
-  const [adicionandoConhecimento, setAdicionandoConhecimento] = useState(false);
+        <WaChat
+          mensagens={mensagens} digitando={digitandoBot}
+          inputVal={inputFluxo} onInput={setInputFluxo} onEnviar={enviarMsgFluxo}
+          placeholder={iniciado ? 'Digite sua resposta...' : 'Inicie a simulacao primeiro'}
+          tema={tema} altura={520} onReset={iniciado ? resetFluxo : null}
+        />
+      </div>
+    </motion.div>
+  );
+};
 
-  // Ferramentas
-  const [ferramentas, setFerramentas] = useState({
-    webSearch: false,
-    coletarLead: false,
-    agendarReuniao: false,
-    consultarEstoque: false,
-    calcularPrecoPedido: false,
-  });
-  const ferramentasLabels = {
-    webSearch:             { label: 'Busca na Web',          desc: 'Permite que a IA pesquise informações atualizadas na internet.' },
-    coletarLead:           { label: 'Coletar Lead',           desc: 'A IA solicita nome, e-mail e telefone do usuário automaticamente.' },
-    agendarReuniao:        { label: 'Agendar Reunião',        desc: 'Integração com Google Calendar para agendar compromissos.' },
-    consultarEstoque:      { label: 'Consultar Estoque',      desc: 'Acessa seu banco de dados de produtos para verificar disponibilidade.' },
-    calcularPrecoPedido:   { label: 'Calcular Preço/Pedido',  desc: 'Calcula preços, fretes e totais com base nas regras do seu negócio.' },
-  };
+// ─── ABA: AGENTE IA ───────────────────────────────────────────────────────────
+const MODELOS_IA = [
+  {
+    value: 'gpt-4o-mini',
+    label: 'GPT-4o Mini — Recomendado',
+    desc: 'Custo baixo, alta velocidade. Sem suporte a anexos de arquivos.',
+    aviso: null,
+  },
+  {
+    value: 'gpt-4o',
+    label: 'GPT-4o — Maxima qualidade',
+    desc: 'Multimodal, suporte a arquivos e imagens. Consome significativamente mais Créditos de I.A.',
+    aviso: 'Atencao: o GPT-4o tem custo muito maior por mensagem em comparacao ao GPT-4o Mini. Use apenas quando precisar de maxima qualidade ou suporte a arquivos e imagens.',
+  },
+  {
+    value: 'gpt-3.5-turbo',
+    label: 'GPT-3.5 Turbo — Economico',
+    desc: 'Modelo mais antigo. Custo mais baixo, sem suporte a arquivos. Qualidade inferior.',
+    aviso: null,
+  },
+];
 
-  // Chat preview
-  const [agenteMsgs, setAgenteMsgs]           = useState([]);
-  const [agenteInput, setAgenteInput]         = useState('');
-  const [agenteDigitando, setAgenteDigitando] = useState(false);
-  const [salvandoAgente, setSalvandoAgente]   = useState(false);
-  const [agenteErro, setAgenteErro]           = useState('');
-  // Histórico de mensagens para contexto multi-turno
-  const historicoRef = useRef([]);
+const FERRAMENTAS_LABELS = {
+  webSearch:           { label: 'Busca na Web',         desc: 'A IA usa informacoes atualizadas da internet para responder. Requer GPT-4o.' },
+  coletarLead:         { label: 'Coletar Lead',          desc: 'A IA solicita nome, e-mail e telefone do usuario automaticamente.' },
+  agendarReuniao:      { label: 'Agendar Reuniao',       desc: 'Integracao com Google Calendar para agendar compromissos.' },
+  consultarEstoque:    { label: 'Consultar Estoque',     desc: 'Acessa seu banco de dados de produtos para verificar disponibilidade.' },
+  calcularPrecoPedido: { label: 'Calcular Preco/Pedido', desc: 'Calcula precos, fretes e totais com base nas regras do seu negocio.' },
+};
 
-  // ── Enviar mensagem ao Agente IA (API Anthropic REAL) ─────────────────────
-  const enviarMsgAgente = async () => {
-    if (!agenteInput.trim()) return;
+const FERRAMENTAS_INICIAL = { webSearch: false, coletarLead: false, agendarReuniao: false, consultarEstoque: false, calcularPrecoPedido: false };
 
-    if (!agente.prompt.trim()) {
-      setAgenteErro('Preencha as Instruções/Prompt do agente antes de testar.');
-      return;
-    }
+const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
+  const t = TEMAS[tema];
+  const bloqueado = !PLANO_LIMITES[plano]?.ia;
 
-    setAgenteErro('');
-    const txt = agenteInput.trim();
-    setAgenteInput('');
+  // ── Estado: lista de agentes ──
+  const [agentes, setAgentes]                     = useState([]);
+  const [carregandoAgentes, setCarregandoAgentes] = useState(true);
 
-    // Adiciona a mensagem do usuário ao histórico local
-    historicoRef.current = [...historicoRef.current, { role: 'user', content: txt }];
-    setAgenteMsgs(prev => [...prev, { tipo: 'user', texto: txt, hora: agora() }]);
-    setAgenteDigitando(true);
+  // ── Estado: formulario ──
+  const [agenteId, setAgenteId]                   = useState(0);
+  const [agenteSubTab, setAgenteSubTab]           = useState('Personalidade');
+  const [agente, setAgente]                       = useState({ nome: '', tom: 'equilibrado', modelo: 'gpt-4o-mini', max_tokens: 1000, prompt: '', finalizacao: '' });
+  const [baseConhecimento, setBaseConhecimento]   = useState([]);
+  const [novoConhecimento, setNovoConhecimento]   = useState({ titulo: '', conteudo: '' });
+  const [adicionandoDoc, setAdicionandoDoc]       = useState(false);
+  const [ferramentas, setFerramentas]             = useState({ ...FERRAMENTAS_INICIAL });
+  const [salvandoAgente, setSalvandoAgente]       = useState(false);
+  const [agenteErro, setAgenteErro]               = useState('');
 
-    // Monta system prompt com base de conhecimento e ferramentas ativas
-    const ferramentasAtivas = Object.entries(ferramentas)
-      .filter(([, v]) => v)
-      .map(([k]) => ferramentasLabels[k].label)
-      .join(', ');
+  // ── Estado: limite de tokens do plano ──
+  const [maxTokensPlano, setMaxTokensPlano]       = useState(2000);
 
-    const baseTexto = baseConhecimento.length > 0
-      ? '\n\n--- BASE DE CONHECIMENTO ---\n' +
-        baseConhecimento.map(b => `[${b.titulo}]\n${b.conteudo}`).join('\n\n')
-      : '';
+  // ── Estado: saldo de tokens do usuario ──
+  const [saldoTokens, setSaldoTokens]             = useState(null); // null = carregando
 
-    const ferramentasTexto = ferramentasAtivas
-      ? `\n\n--- FERRAMENTAS DISPONÍVEIS ---\n${ferramentasAtivas}\n(Mencione quando precisar usar uma ferramenta.)`
-      : '';
-
-    const systemPrompt = agente.prompt + baseTexto + ferramentasTexto;
-
-    // ── Se não houver API key, usa simulação ──
-    if (!agente.apiKey.trim()) {
-      await new Promise(r => setTimeout(r, 1200));
-      setAgenteDigitando(false);
-      const respSimulada = `[Simulação — API Key não configurada]\n\nQuando você inserir sua Anthropic API Key no campo acima, o agente "${agente.nome || 'sem nome'}" responderá aqui com IA real.\n\nSua mensagem foi: "${txt}"`;
-      historicoRef.current = [...historicoRef.current, { role: 'assistant', content: respSimulada }];
-      setAgenteMsgs(prev => [...prev, { tipo: 'bot', texto: respSimulada, hora: agora() }]);
-      return;
-    }
-
-    // ── Chamada REAL à API Anthropic ──────────────────────────────────────────
-    // ATENÇÃO: Em produção, nunca exponha a API Key no frontend.
-    // O ideal é que esta chamada passe pelo seu backend (VPS).
-    // Use este fluxo apenas para testes locais ou quando o backend ainda não estiver pronto.
-    try {
-      const body = {
-        model: agente.modelo,
-        max_tokens: agente.tokens,
-        system: systemPrompt,
-        messages: historicoRef.current,
-      };
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': agente.apiKey,
-          'anthropic-version': '2023-06-01',
-          // Necessário para chamadas diretas do browser (CORS)
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error?.message || `Erro ${res.status} na API da Anthropic.`);
-      }
-
-      const resposta = data.content?.[0]?.text || 'Sem resposta.';
-      historicoRef.current = [...historicoRef.current, { role: 'assistant', content: resposta }];
-      setAgenteDigitando(false);
-      setAgenteMsgs(prev => [...prev, { tipo: 'bot', texto: resposta, hora: agora() }]);
-
-    } catch (e) {
-      setAgenteDigitando(false);
-      setAgenteErro(`Erro ao chamar a IA: ${e.message}`);
-      // Remove a última mensagem do histórico (não confirmada)
-      historicoRef.current = historicoRef.current.slice(0, -1);
-    }
-  };
-
-  const salvarAgente = async () => {
-    if (!agente.nome.trim()) return setAgenteErro('Informe o nome do agente.');
-    if (!agente.prompt.trim()) return setAgenteErro('O prompt/instruções é obrigatório.');
-    setSalvandoAgente(true);
-    setAgenteErro('');
-    // TROCAR: implementar POST /agentes/salvar no backend
-    await new Promise(r => setTimeout(r, 900));
-    setSalvandoAgente(false);
-    setAgenteErro('__ok__');
-    setTimeout(() => setAgenteErro(''), 3000);
-  };
-
-  const adicionarConhecimento = () => {
-    if (!novoConhecimento.titulo.trim() || !novoConhecimento.conteudo.trim()) return;
-    setBaseConhecimento(prev => [...prev, { ...novoConhecimento, id: Date.now() }]);
-    setNovoConhecimento({ titulo: '', conteudo: '' });
-    setAdicionandoConhecimento(false);
-  };
-
-  const removerConhecimento = (id) => {
-    setBaseConhecimento(prev => prev.filter(b => b.id !== id));
-  };
-
-  const resetaHistoricoChat = () => {
-    setAgenteMsgs([]);
-    historicoRef.current = [];
-    setAgenteErro('');
-  };
+  // ── Estado: chat de teste ──
+  const [agenteMsgs, setAgenteMsgs]               = useState([]);
+  const [agenteInput, setAgenteInput]             = useState('');
+  const [agenteDigitando, setAgenteDigitando]     = useState(false);
+  const [chatErro, setChatErro]                   = useState('');
+  const historicoRef                              = useRef([]);
 
   const inputAreaStyle = {
     width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`,
@@ -524,339 +495,540 @@ const TestesIA = ({ fluxos, plano, usuarioId, navigate, tema }) => {
     fontFamily: 'inherit', lineHeight: 1.6,
   };
 
+  const carregarSaldo = () => {
+    if (bloqueado) return;
+    authFetch(`${API_URL}/ia/tokens`)
+      .then(r => r.json())
+      .then(d => setSaldoTokens(d))
+      .catch(() => {});
+  };
+
+  // Carrega limite de tokens do plano e saldo do usuario
+  useEffect(() => {
+    if (bloqueado) return;
+    authFetch(`${API_URL}/ia/limites`)
+      .then(r => r.json())
+      .then(d => { if (d.max_tokens_por_mensagem) setMaxTokensPlano(d.max_tokens_por_mensagem); })
+      .catch(() => {});
+    carregarSaldo();
+  }, [bloqueado]);
+
+  // Carrega lista de agentes
+  const carregarAgentes = useCallback(async () => {
+    if (!usuarioId || bloqueado) return;
+    setCarregandoAgentes(true);
+    try {
+      const res = await authFetch(`${API_URL}/ia/agentes/listar/${usuarioId}`);
+      const data = await res.json();
+      setAgentes(data.agentes || []);
+    } catch {}
+    finally { setCarregandoAgentes(false); }
+  }, [usuarioId, bloqueado]);
+
+  useEffect(() => { carregarAgentes(); }, [carregarAgentes]);
+
+  const resetaChat = () => {
+    setAgenteMsgs([]);
+    historicoRef.current = [];
+    setChatErro('');
+  };
+
+  const novoAgente = () => {
+    setAgenteId(0);
+    setAgente({ nome: '', tom: 'equilibrado', modelo: 'gpt-4o-mini', max_tokens: 1000, prompt: '', finalizacao: '' });
+    setBaseConhecimento([]);
+    setFerramentas({ ...FERRAMENTAS_INICIAL });
+    setAgenteSubTab('Personalidade');
+    setAgenteErro('');
+    resetaChat();
+  };
+
+  const editarAgente = async (id) => {
+    try {
+      const res = await authFetch(`${API_URL}/ia/agentes/${id}/${usuarioId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erro ao carregar agente.');
+      setAgenteId(data.id);
+      setAgente({
+        nome: data.nome || '',
+        tom: data.tom || 'equilibrado',
+        modelo: data.modelo || 'gpt-4o-mini',
+        max_tokens: data.max_tokens || 1000,
+        prompt: data.prompt || '',
+        finalizacao: data.finalizacao || '',
+      });
+      setBaseConhecimento(Array.isArray(data.base_conhecimento) ? data.base_conhecimento : []);
+      setFerramentas({ ...FERRAMENTAS_INICIAL, ...(data.ferramentas || {}) });
+      setAgenteSubTab('Personalidade');
+      setAgenteErro('');
+      resetaChat();
+    } catch (e) { setAgenteErro(`Erro ao carregar agente: ${e.message}`); }
+  };
+
+  const deletarAgente = async (id) => {
+    if (!window.confirm('Excluir este agente? Esta acao nao pode ser desfeita.')) return;
+    try {
+      const res = await authFetch(`${API_URL}/ia/agentes/${id}/${usuarioId}`, { method: 'DELETE' });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.detail); }
+      setAgentes(prev => prev.filter(a => a.id !== id));
+      if (agenteId === id) novoAgente();
+    } catch (e) { alert(`Erro ao excluir: ${e.message}`); }
+  };
+
+  const salvarAgente = async () => {
+    if (!agente.nome.trim()) return setAgenteErro('Informe o nome do agente.');
+    if (!agente.prompt.trim()) return setAgenteErro('O campo de instrucoes/prompt e obrigatorio.');
+    setSalvandoAgente(true); setAgenteErro('');
+    try {
+      const res = await authFetch(`${API_URL}/ia/agentes/salvar`, {
+        method: 'POST',
+        body: JSON.stringify({
+          id: agenteId, usuario_id: usuarioId,
+          nome: agente.nome, tom: agente.tom, modelo: agente.modelo,
+          max_tokens: agente.max_tokens, prompt: agente.prompt,
+          finalizacao: agente.finalizacao,
+          base_conhecimento: baseConhecimento,
+          ferramentas,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erro ao salvar agente.');
+      setAgenteId(data.id);
+      setAgenteErro('__ok__');
+      setTimeout(() => setAgenteErro(''), 3000);
+      await carregarAgentes();
+    } catch (e) { setAgenteErro(e.message); }
+    finally { setSalvandoAgente(false); }
+  };
+
+  const adicionarDoc = () => {
+    if (!novoConhecimento.titulo.trim() || !novoConhecimento.conteudo.trim()) return;
+    setBaseConhecimento(prev => [...prev, { ...novoConhecimento, id: Date.now() }]);
+    setNovoConhecimento({ titulo: '', conteudo: '' });
+    setAdicionandoDoc(false);
+  };
+
+  const enviarMsgAgente = async () => {
+    if (!agenteInput.trim()) return;
+    if (!agente.prompt.trim()) { setChatErro('Preencha as instrucoes do agente antes de testar.'); return; }
+
+    setChatErro('');
+    const txt = agenteInput.trim();
+    setAgenteInput('');
+    historicoRef.current = [...historicoRef.current, { role: 'user', content: txt }];
+    setAgenteMsgs(prev => [...prev, { tipo: 'user', texto: txt, hora: agora() }]);
+    setAgenteDigitando(true);
+
+    const ferramentasAtivas = Object.entries(ferramentas)
+      .filter(([, v]) => v)
+      .map(([k]) => FERRAMENTAS_LABELS[k].label)
+      .join(', ');
+
+    const baseTexto = baseConhecimento.length > 0
+      ? '\n\n--- BASE DE CONHECIMENTO ---\n' + baseConhecimento.map(b => `[${b.titulo}]\n${b.conteudo}`).join('\n\n')
+      : '';
+
+    const ferramentasTexto = ferramentasAtivas
+      ? `\n\n--- FERRAMENTAS DISPONÍVEIS ---\n${ferramentasAtivas}`
+      : '';
+
+    const systemPrompt = agente.prompt + baseTexto + ferramentasTexto;
+
+    try {
+      const res = await authFetch(`${API_URL}/ia/chat`, {
+        method: 'POST',
+        body: JSON.stringify({
+          mensagens: historicoRef.current,
+          system_prompt: systemPrompt,
+          modelo: agente.modelo,
+          max_tokens: Math.min(agente.max_tokens, maxTokensPlano),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || `Erro ${res.status}`);
+      const resposta = data.resposta || 'Sem resposta.';
+      historicoRef.current = [...historicoRef.current, { role: 'assistant', content: resposta }];
+      setAgenteDigitando(false);
+      setAgenteMsgs(prev => [...prev, { tipo: 'bot', texto: resposta, hora: agora() }]);
+      carregarSaldo();
+    } catch (e) {
+      setAgenteDigitando(false);
+      setChatErro(`Erro ao chamar a IA: ${e.message}`);
+      historicoRef.current = historicoRef.current.slice(0, -1);
+    }
+  };
+
+  const modeloInfo = MODELOS_IA.find(m => m.value === agente.modelo) || MODELOS_IA[0];
+  const totalFerramentasAtivas = Object.values(ferramentas).filter(Boolean).length;
+
+  if (bloqueado) {
+    return (
+      <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
+        <BloqueadoBanner recurso="Agente IA" planoAtual={plano} navigate={navigate} tema={tema} />
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
-      {/* Sub-tabs principais */}
-      <div style={{ display: 'flex', gap: 28, borderBottom: `1px solid ${t.cardBorder}`, marginBottom: 28 }}>
-        {[['Fluxo', 'Testar Fluxo'], ['IA', 'Criar Agente IA']].map(([key, lbl]) => (
-          <div key={key} onClick={() => setSubTab(key)}
-            style={{ padding: '9px 0', fontSize: '0.88rem', fontWeight: 600, color: subTab === key ? '#25D366' : t.textMuted, borderBottom: subTab === key ? '2px solid #25D366' : '2px solid transparent', cursor: 'pointer', transition: 'color 0.2s, border-color 0.2s', whiteSpace: 'nowrap' }}>
-            {lbl}
+
+      {/* Painel: seus agentes */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: t.text, marginBottom: 2 }}>Seus Agentes</h4>
+            <p style={{ fontSize: '0.72rem', color: t.textMuted }}>
+              {carregandoAgentes ? 'Carregando...' : `${agentes.length} agente(s) configurado(s)`}
+            </p>
           </div>
-        ))}
-      </div>
+          <button onClick={novoAgente}
+            style={{ background: 'transparent', border: `1px solid ${t.accent}66`, color: t.accent, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}>
+            + Novo Agente
+          </button>
+        </div>
 
-      {/* ── SUB-ABA: TESTAR FLUXO ── */}
-      {subTab === 'Fluxo' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }} className="testes-grid">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 16, color: t.text }}>Configurar Simulação</h4>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Fluxo para testar</label>
-                {fluxos.length === 0 ? (
-                  <p style={{ fontSize: '0.82rem', color: '#f0a500' }}>Nenhum fluxo criado. Crie um fluxo primeiro.</p>
-                ) : (
-                  <StyledSelect value={fluxoId} onChange={e => { setFluxoId(e.target.value); resetFluxo(); }} tema={tema}>
-                    <option value="">Selecione um fluxo...</option>
-                    {fluxos.map(f => <option key={f.id} value={f.id}>{f.nome_fluxo}</option>)}
-                  </StyledSelect>
-                )}
-              </div>
-              <button onClick={iniciarSimulacao} disabled={!fluxoId || iniciando}
-                style={{ width: '100%', padding: '12px', background: !fluxoId ? 'rgba(37,211,102,0.2)' : '#25D366', color: !fluxoId ? '#25D366' : '#0d140d', border: 'none', borderRadius: 9, fontWeight: 800, cursor: !fluxoId ? 'not-allowed' : 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: '0.2s' }}>
-                {iniciando && <span style={{ width: 13, height: 13, border: '2px solid rgba(13,20,13,0.3)', borderTop: '2px solid #0d140d', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />}
-                {iniciando ? 'Carregando...' : iniciado ? 'Reiniciar Simulação' : 'Iniciar Simulação'}
-              </button>
-            </div>
+        {!carregandoAgentes && agentes.length === 0 && (
+          <div style={{ padding: '28px', borderRadius: 14, border: `1px dashed ${t.cardBorder}`, textAlign: 'center' }}>
+            <p style={{ fontSize: '0.82rem', color: t.textMuted }}>
+              Nenhum agente criado ainda. Configure um agente abaixo e clique em Salvar.
+            </p>
+          </div>
+        )}
 
-            <div style={{ padding: '22px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
-              <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: 16, color: t.text }}>Métricas da Sessão</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                {[
-                  { label: 'Mensagens', value: metricas.total },
-                  { label: 'Nós percorridos', value: metricas.nos.length },
-                  { label: 'TMR', value: tmr > 0 ? fmtTempo(tmr) : '—', sub: 'Tempo médio de resposta' },
-                  { label: 'Duração', value: metricas.inicio ? fmtTempo(duracao) : '—', sub: 'Total da conversa' },
-                  { label: 'Bot enviou', value: metricas.botMsg },
-                  { label: 'Você enviou', value: metricas.userMsg },
-                ].map((m, i) => (
-                  <div key={i} style={{ padding: '12px 14px', background: t.tag, borderRadius: 10, border: `1px solid ${t.cardBorder}` }}>
-                    <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{m.label}</p>
-                    <p style={{ fontSize: '1.3rem', fontWeight: 800, color: t.text, lineHeight: 1 }}>{m.value}</p>
-                    {m.sub && <p style={{ fontSize: '0.6rem', color: t.textMuted, marginTop: 3 }}>{m.sub}</p>}
+        {agentes.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 14 }}>
+            {agentes.map(a => (
+              <div key={a.id} style={{
+                padding: '16px 18px', background: t.card, borderRadius: 14,
+                border: `1px solid ${agenteId === a.id ? t.accent + '66' : t.cardBorder}`,
+                transition: 'border-color 0.2s',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                    background: agenteId === a.id ? t.accent : t.accentDim,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: agenteId === a.id ? t.accentText : t.accent, fontWeight: 800, fontSize: '1rem',
+                  }}>
+                    {a.nome[0].toUpperCase()}
                   </div>
-                ))}
-              </div>
-              {metricas.nos.length > 0 && (
-                <div style={{ marginTop: 14 }}>
-                  <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Caminho percorrido</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {metricas.nos.map((n, i) => (
-                      <span key={i} style={{ padding: '3px 9px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 20, fontSize: '0.65rem', color: '#25D366', fontFamily: 'monospace' }}>{n}</span>
-                    ))}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 700, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.nome}</p>
+                    <p style={{ fontSize: '0.65rem', color: t.textMuted }}>{a.modelo}</p>
                   </div>
                 </div>
+                <p style={{ fontSize: '0.62rem', color: t.textMuted, marginBottom: 12 }}>
+                  Criado em {new Date(a.criado_em).toLocaleDateString('pt-BR')} — {a.max_tokens} créditos de I.A máx.
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => editarAgente(a.id)} style={{
+                    flex: 1, padding: '7px 0', borderRadius: 7, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 800,
+                    background: agenteId === a.id ? t.accent : 'transparent',
+                    color: agenteId === a.id ? t.accentText : t.accent,
+                    border: `1px solid ${t.accent}55`,
+                  }}>
+                    {agenteId === a.id ? 'Editando' : 'Editar'}
+                  </button>
+                  <button onClick={() => deletarAgente(a.id)} style={{
+                    padding: '7px 12px', background: 'transparent',
+                    border: `1px solid ${t.danger}44`, color: t.danger,
+                    borderRadius: 7, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700,
+                  }}>
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Painel de saldo de Creditos de I.A */}
+      {saldoTokens && (
+        <div style={{ padding: '14px 18px', background: t.card, borderRadius: 12, border: `1px solid ${t.cardBorder}`, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: '0.68rem', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Créditos de I.A disponíveis</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: saldoTokens.saldo < 100000 ? t.danger : t.accent }}>
+                {saldoTokens.saldo.toLocaleString('pt-BR')} restantes
+              </span>
+            </div>
+            <div style={{ height: 6, background: t.cardBorder, borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.max((saldoTokens.saldo / saldoTokens.limite_ciclo) * 100, 0).toFixed(1)}%`,
+                background: saldoTokens.saldo < 100000 ? t.danger : saldoTokens.saldo < 300000 ? t.warning : t.accent,
+                borderRadius: 99, transition: 'width 0.4s',
+              }} />
+            </div>
+            <p style={{ fontSize: '0.6rem', color: t.textMuted, marginTop: 4 }}>
+              {saldoTokens.total_usado.toLocaleString('pt-BR')} créditos utilizados neste ciclo — renova em {saldoTokens.ultimo_reset ? new Date(saldoTokens.ultimo_reset).toLocaleDateString('pt-BR') : '—'}
+            </p>
+          </div>
+          {saldoTokens.saldo < 100000 && (
+            <div style={{ padding: '6px 14px', background: t.dangerDim, border: `1px solid ${t.danger}44`, borderRadius: 8 }}>
+              <p style={{ fontSize: '0.7rem', color: t.danger, fontWeight: 700 }}>Saldo critico — considere adquirir créditos adicionais.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Divisor */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+        <div style={{ flex: 1, height: 1, background: t.cardBorder }} />
+        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+          {agenteId > 0 ? `Editando: ${agente.nome || 'agente'}` : 'Configurar novo agente'}
+        </span>
+        <div style={{ flex: 1, height: 1, background: t.cardBorder }} />
+      </div>
+
+      {/* Editor + Chat */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }} className="testes-grid">
+
+        {/* Coluna esquerda: formulario */}
+        <div>
+          <div style={{ display: 'flex', borderBottom: `1px solid ${t.cardBorder}` }}>
+            {['Personalidade', 'Base de Conhecimento', 'Ferramentas'].map(tab => (
+              <div key={tab} onClick={() => setAgenteSubTab(tab)}
+                style={{ padding: '10px 16px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', color: agenteSubTab === tab ? t.accent : t.textMuted, borderBottom: agenteSubTab === tab ? `2px solid ${t.accent}` : '2px solid transparent', transition: 'color 0.2s' }}>
+                {tab}
+              </div>
+            ))}
+          </div>
+
+          {/* Personalidade */}
+          {agenteSubTab === 'Personalidade' && (
+            <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 15 }}>
+              {/* Nome */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 46, height: 46, borderRadius: '50%', background: t.accentDim, border: `2px dashed ${t.accent}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.2rem', color: t.accent, fontWeight: 700 }}>
+                  {agente.nome ? agente.nome[0].toUpperCase() : '+'}
+                </div>
+                <Input tema={tema} label="Nome do agente" type="text"
+                  value={agente.nome} onChange={e => setAgente(a => ({ ...a, nome: e.target.value }))}
+                  placeholder="Ex: Assistente de Vendas" style={{ flex: 1 }} />
+              </div>
+
+              {/* Tom e Modelo */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Tom</label>
+                  <StyledSelect value={agente.tom} onChange={e => setAgente(a => ({ ...a, tom: e.target.value }))} tema={tema}>
+                    <option value="formal">Formal</option>
+                    <option value="equilibrado">Equilibrado — Recomendado</option>
+                    <option value="criativo">Criativo</option>
+                    <option value="direto">Direto</option>
+                  </StyledSelect>
+                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>
+                    {{ formal: 'Profissional e objetivo.', equilibrado: 'Equilibrio desempenho/custo.', criativo: 'Criativo e envolvente.', direto: 'Curto e direto.' }[agente.tom]}
+                  </p>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Modelo de IA</label>
+                  <StyledSelect value={agente.modelo} onChange={e => setAgente(a => ({ ...a, modelo: e.target.value }))} tema={tema}>
+                    {MODELOS_IA.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                  </StyledSelect>
+                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5, lineHeight: 1.4 }}>{modeloInfo.desc}</p>
+                </div>
+              </div>
+
+              {/* Aviso GPT-4o */}
+              {modeloInfo.aviso && (
+                <div style={{ padding: '10px 14px', background: t.warningDim, border: `1px solid ${t.warning}44`, borderRadius: 9 }}>
+                  <p style={{ fontSize: '0.72rem', color: t.warning, lineHeight: 1.5 }}>{modeloInfo.aviso}</p>
+                </div>
+              )}
+
+              {/* Slider de Creditos de I.A */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                  <label style={{ fontSize: '0.68rem', color: t.textMuted, textTransform: 'uppercase', fontWeight: 700 }}>Máximo de Créditos de I.A por resposta</label>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: t.accent }}>{agente.max_tokens}</span>
+                </div>
+                <input type="range" min={100} max={maxTokensPlano} step={100}
+                  value={Math.min(agente.max_tokens, maxTokensPlano)}
+                  onChange={e => setAgente(a => ({ ...a, max_tokens: parseInt(e.target.value) }))}
+                  style={{ width: '100%', accentColor: t.accent, cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                  <span style={{ fontSize: '0.6rem', color: t.textMuted }}>100</span>
+                  <span style={{ fontSize: '0.6rem', color: t.textMuted }}>{maxTokensPlano} — limite do plano {PLANO_NOME[plano]}</span>
+                </div>
+                <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>Quanto maior, mais detalhada a resposta e maior o consumo de Créditos de I.A.</p>
+              </div>
+
+              {/* Prompt */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Instrucoes / Prompt</label>
+                <textarea value={agente.prompt} onChange={e => setAgente(a => ({ ...a, prompt: e.target.value }))} rows={5}
+                  placeholder="Ex: Voce e um assistente de vendas da empresa X. Apresente os produtos de forma clara, entenda a necessidade do cliente e guie-o ate a compra."
+                  style={inputAreaStyle} />
+                <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 4 }}>As instrucoes definem o comportamento e a personalidade da IA.</p>
+              </div>
+
+              {/* Mensagem de encerramento */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Mensagem de encerramento (opcional)</label>
+                <textarea value={agente.finalizacao} onChange={e => setAgente(a => ({ ...a, finalizacao: e.target.value }))} rows={2}
+                  placeholder="Mensagem enviada automaticamente quando o atendimento e encerrado por inatividade."
+                  style={{ ...inputAreaStyle, resize: 'none' }} />
+              </div>
+
+              {agenteErro === '__ok__' && <p style={{ fontSize: '0.78rem', color: t.accent, fontWeight: 700 }}>Agente salvo com sucesso.</p>}
+              {agenteErro && agenteErro !== '__ok__' && <p style={{ fontSize: '0.78rem', color: t.danger, fontWeight: 600 }}>{agenteErro}</p>}
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={resetaChat}
+                  style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 9, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
+                  Limpar chat
+                </button>
+                <SaveButton onClick={salvarAgente} loading={salvandoAgente} label="Salvar agente" tema={tema} />
+              </div>
+            </div>
+          )}
+
+          {/* Base de Conhecimento */}
+          {agenteSubTab === 'Base de Conhecimento' && (
+            <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.6 }}>
+                Adicione documentos, textos ou perguntas frequentes que a IA deve conhecer para responder com mais precisao.
+              </p>
+
+              {baseConhecimento.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {baseConhecimento.map((b, idx) => (
+                    <div key={b.id || idx} style={{ padding: '12px 14px', background: t.tag, borderRadius: 10, border: `1px solid ${t.cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '0.82rem', fontWeight: 700, color: t.text, marginBottom: 4 }}>{b.titulo}</p>
+                        <p style={{ fontSize: '0.72rem', color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.conteudo}</p>
+                      </div>
+                      <button onClick={() => setBaseConhecimento(prev => prev.filter((_, i) => i !== idx))}
+                        style={{ background: 'transparent', border: `1px solid ${t.danger}44`, color: t.danger, padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>
+                        Remover
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {adicionandoDoc ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
+                  <Input tema={tema} label="Titulo" type="text"
+                    value={novoConhecimento.titulo}
+                    onChange={e => setNovoConhecimento(p => ({ ...p, titulo: e.target.value }))}
+                    placeholder="Ex: Politica de devolucao" />
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Conteudo</label>
+                    <textarea rows={4}
+                      value={novoConhecimento.conteudo}
+                      onChange={e => setNovoConhecimento(p => ({ ...p, conteudo: e.target.value }))}
+                      placeholder="Cole aqui o texto, FAQ, politica ou qualquer informacao relevante..."
+                      style={inputAreaStyle} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setAdicionandoDoc(false)}
+                      style={{ flex: 1, padding: '10px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem' }}>
+                      Cancelar
+                    </button>
+                    <button onClick={adicionarDoc}
+                      style={{ flex: 2, padding: '10px', background: t.accent, color: t.accentText, border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem' }}>
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => setAdicionandoDoc(true)}
+                  style={{ padding: '12px', background: 'transparent', border: `1px dashed ${t.accent}66`, color: t.accent, borderRadius: 10, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, width: '100%' }}>
+                  + Adicionar documento
+                </button>
+              )}
+
+              {baseConhecimento.length === 0 && !adicionandoDoc && (
+                <p style={{ fontSize: '0.75rem', color: t.textMuted, textAlign: 'center', padding: '20px 0' }}>Nenhum documento adicionado ainda.</p>
+              )}
+            </div>
+          )}
+
+          {/* Ferramentas */}
+          {agenteSubTab === 'Ferramentas' && (
+            <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.6 }}>
+                Ative ferramentas que a IA podera usar durante o atendimento.
+              </p>
+              {agente.modelo !== 'gpt-4o' && (
+                <div style={{ padding: '10px 14px', background: t.warningDim, border: `1px solid ${t.warning}44`, borderRadius: 9 }}>
+                  <p style={{ fontSize: '0.72rem', color: t.warning, lineHeight: 1.5 }}>
+                    Ferramentas avancadas como Busca na Web tem melhor desempenho com o modelo GPT-4o.
+                  </p>
+                </div>
+              )}
+              {Object.entries(FERRAMENTAS_LABELS).map(([key, info]) => {
+                const requerGpt4o = key === 'webSearch';
+                const desabilitado = requerGpt4o && agente.modelo !== 'gpt-4o';
+                return (
+                  <div key={key}
+                    onClick={() => !desabilitado && setFerramentas(prev => ({ ...prev, [key]: !prev[key] }))}
+                    style={{
+                      padding: '14px 16px',
+                      background: ferramentas[key] ? t.accentDim : t.tag,
+                      border: `1px solid ${ferramentas[key] ? t.accent + '44' : t.cardBorder}`,
+                      borderRadius: 12, cursor: desabilitado ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.18s',
+                      opacity: desabilitado ? 0.5 : 1,
+                    }}>
+                    <div style={{ width: 38, height: 22, borderRadius: 11, flexShrink: 0, background: ferramentas[key] ? t.accent : (tema === 'escuro' ? 'rgba(255,255,255,0.12)' : 'rgba(30,60,30,0.15)'), position: 'relative', transition: 'background 0.2s' }}>
+                      <div style={{ position: 'absolute', top: 3, left: ferramentas[key] ? 19 : 3, width: 16, height: 16, borderRadius: '50%', background: ferramentas[key] ? t.accentText : (tema === 'escuro' ? 'rgba(255,255,255,0.5)' : 'rgba(30,60,30,0.4)'), transition: 'left 0.2s' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.85rem', fontWeight: 700, color: t.text, marginBottom: 2 }}>
+                        {info.label}
+                        {desabilitado && <span style={{ fontSize: '0.62rem', color: t.warning, marginLeft: 8, fontWeight: 600 }}>Requer GPT-4o</span>}
+                      </p>
+                      <p style={{ fontSize: '0.7rem', color: t.textMuted, lineHeight: 1.4 }}>{info.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Coluna direita: chat de teste */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ padding: '10px 14px', background: t.accentDim, border: `1px solid ${t.accent}22`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: t.accentText, flexShrink: 0 }}>
+                {agente.nome ? agente.nome[0].toUpperCase() : 'A'}
+              </div>
+              <div>
+                <p style={{ fontSize: '0.78rem', fontWeight: 700, color: t.text }}>{agente.nome || 'Agente sem nome'}</p>
+                <p style={{ fontSize: '0.62rem', color: t.accent }}>{agente.modelo} — {agente.max_tokens} créditos</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {baseConhecimento.length > 0 && (
+                <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: 20, background: t.accentDim, color: t.accent, fontWeight: 700 }}>{baseConhecimento.length} docs</span>
+              )}
+              {totalFerramentasAtivas > 0 && (
+                <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: 20, background: t.accentDim, color: t.accent, fontWeight: 700 }}>{totalFerramentasAtivas} tools</span>
               )}
             </div>
           </div>
 
           <WaChat
-            mensagens={mensagens} digitando={digitandoBot}
-            inputVal={inputFluxo} onInput={setInputFluxo} onEnviar={enviarMsgFluxo}
-            placeholder={iniciado ? 'Digite sua resposta...' : 'Inicie a simulação primeiro'}
-            tema={tema} altura={520} onReset={iniciado ? resetFluxo : null}
+            mensagens={agenteMsgs} digitando={agenteDigitando}
+            inputVal={agenteInput} onInput={setAgenteInput} onEnviar={enviarMsgAgente}
+            placeholder={agente.prompt.trim() ? 'Teste seu agente aqui...' : 'Configure o prompt primeiro'}
+            tema={tema} altura={460} onReset={resetaChat}
           />
+
+          {chatErro && (
+            <p style={{ fontSize: '0.75rem', color: t.danger, fontWeight: 600, padding: '8px 12px', background: t.dangerDim, borderRadius: 8, border: `1px solid ${t.danger}33` }}>
+              {chatErro}
+            </p>
+          )}
         </div>
-      )}
-
-      {/* ── SUB-ABA: CRIAR AGENTE IA ── */}
-      {subTab === 'IA' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }} className="testes-grid">
-          {/* Coluna esquerda: formulário com 3 sub-abas */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-
-            {/* Sub-tabs internas do agente */}
-            <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${t.cardBorder}`, marginBottom: 0 }}>
-              {['Personalidade', 'Base de Conhecimento', 'Ferramentas'].map(tab => (
-                <div key={tab} onClick={() => setAgenteSubTab(tab)}
-                  style={{
-                    padding: '10px 16px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
-                    color: agenteSubTab === tab ? '#25D366' : t.textMuted,
-                    borderBottom: agenteSubTab === tab ? '2px solid #25D366' : '2px solid transparent',
-                    transition: 'color 0.2s', whiteSpace: 'nowrap',
-                  }}>
-                  {tab}
-                </div>
-              ))}
-            </div>
-
-            {/* ── Personalidade ── */}
-            {agenteSubTab === 'Personalidade' && (
-              <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 15 }}>
-
-                {/* API Key */}
-                <div style={{ padding: '13px 16px', background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.18)', borderRadius: 10 }}>
-                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Anthropic API Key</label>
-                  <input
-                    type="password"
-                    value={agente.apiKey}
-                    onChange={e => setAgente(a => ({ ...a, apiKey: e.target.value }))}
-                    placeholder="sk-ant-api03-..."
-                    style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '10px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.85rem', boxSizing: 'border-box', fontFamily: 'monospace' }}
-                  />
-                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5, lineHeight: 1.5 }}>
-                    {agente.apiKey ? '✓ API Key configurada — IA real ativada.' : 'Sem API Key: modo simulação. Em produção, use o backend da VPS.'}
-                  </p>
-                </div>
-
-                {/* Nome */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(37,211,102,0.12)', border: '2px dashed rgba(37,211,102,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.2rem', cursor: 'pointer', color: '#25D366', fontWeight: 700 }}>
-                    {agente.nome ? agente.nome[0].toUpperCase() : '+'}
-                  </div>
-                  <Input tema={tema} label="Nome do agente" type="text"
-                    value={agente.nome} onChange={e => setAgente(a => ({ ...a, nome: e.target.value }))}
-                    placeholder="Ex: Assistente de Vendas" style={{ flex: 1 }} />
-                </div>
-
-                {/* Tom e Modelo */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Tom</label>
-                    <StyledSelect value={agente.tom} onChange={e => setAgente(a => ({ ...a, tom: e.target.value }))} tema={tema}>
-                      <option value="formal">Formal</option>
-                      <option value="equilibrado">Equilibrado — Recomendado</option>
-                      <option value="criativo">Criativo</option>
-                      <option value="direto">Direto</option>
-                    </StyledSelect>
-                    <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>
-                      {{ formal: 'Profissional e objetivo.', equilibrado: 'Equilíbrio desempenho/custo.', criativo: 'Criativo e envolvente.', direto: 'Curto e direto.' }[agente.tom]}
-                    </p>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Modelo de IA</label>
-                    <StyledSelect value={agente.modelo} onChange={e => setAgente(a => ({ ...a, modelo: e.target.value }))} tema={tema}>
-                      <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — Recomendado</option>
-                      <option value="claude-opus-4-5">Claude Opus 4.5 — Máxima qualidade</option>
-                      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 — Mais rápido</option>
-                    </StyledSelect>
-                    <p style={{ fontSize: '0.62rem', color: agente.apiKey ? '#25D366' : '#f0a500', marginTop: 5 }}>
-                      {agente.apiKey ? 'Modelo ativo.' : 'Configure a API Key para ativar.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Máx tokens */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Máximo de tokens</label>
-                  <input type="number" min={100} max={4000} value={agente.tokens}
-                    onChange={e => setAgente(a => ({ ...a, tokens: parseInt(e.target.value) || 1000 }))}
-                    style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }} />
-                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>Quanto maior, mais detalhada a resposta — e maior o custo.</p>
-                </div>
-
-                {/* Prompt */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Instruções / Prompt</label>
-                  <textarea value={agente.prompt} onChange={e => setAgente(a => ({ ...a, prompt: e.target.value }))} rows={5}
-                    placeholder="Ex: Você é um assistente de vendas da empresa X. Seu objetivo é apresentar nossos produtos de forma clara, entender a necessidade do cliente e guiá-lo até a compra. Seja sempre educado e objetivo."
-                    style={inputAreaStyle} />
-                  <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 4 }}>As instruções definem o comportamento e a personalidade da IA.</p>
-                </div>
-
-                {/* Mensagem de finalização */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Mensagem de finalização (opcional)</label>
-                  <textarea value={agente.finalizacao} onChange={e => setAgente(a => ({ ...a, finalizacao: e.target.value }))} rows={2}
-                    placeholder="Mensagem enviada após o agente encerrar o atendimento."
-                    style={{ ...inputAreaStyle, rows: 2 }} />
-                </div>
-
-                {agenteErro === '__ok__' && <p style={{ fontSize: '0.78rem', color: '#25D366', fontWeight: 700 }}>Agente salvo com sucesso!</p>}
-                {agenteErro && agenteErro !== '__ok__' && <p style={{ fontSize: '0.78rem', color: '#ff4b4b', fontWeight: 600 }}>{agenteErro}</p>}
-
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={resetaHistoricoChat}
-                    style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 9, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                    Limpar chat
-                  </button>
-                  <SaveButton onClick={salvarAgente} loading={salvandoAgente} label="Salvar agente" />
-                </div>
-              </div>
-            )}
-
-            {/* ── Base de Conhecimento ── */}
-            {agenteSubTab === 'Base de Conhecimento' && (
-              <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.6 }}>
-                  Adicione documentos, textos ou perguntas frequentes que a IA deve conhecer para responder com mais precisão.
-                </p>
-
-                {baseConhecimento.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {baseConhecimento.map((b) => (
-                      <div key={b.id} style={{ padding: '12px 14px', background: t.tag, borderRadius: 10, border: `1px solid ${t.cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: t.text, marginBottom: 4 }}>{b.titulo}</p>
-                          <p style={{ fontSize: '0.72rem', color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.conteudo}</p>
-                        </div>
-                        <button onClick={() => removerConhecimento(b.id)}
-                          style={{ background: 'transparent', border: '1px solid rgba(255,75,75,0.3)', color: '#ff4b4b', padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>
-                          Remover
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {adicionandoConhecimento ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
-                    <Input tema={tema} label="Título" type="text"
-                      value={novoConhecimento.titulo}
-                      onChange={e => setNovoConhecimento(p => ({ ...p, titulo: e.target.value }))}
-                      placeholder="Ex: Política de devolução" />
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.68rem', color: t.textMuted, marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Conteúdo</label>
-                      <textarea rows={4}
-                        value={novoConhecimento.conteudo}
-                        onChange={e => setNovoConhecimento(p => ({ ...p, conteudo: e.target.value }))}
-                        placeholder="Cole aqui o texto, FAQ, política ou qualquer informação relevante..."
-                        style={inputAreaStyle} />
-                    </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => setAdicionandoConhecimento(false)}
-                        style={{ flex: 1, padding: '10px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem' }}>
-                        Cancelar
-                      </button>
-                      <button onClick={adicionarConhecimento}
-                        style={{ flex: 2, padding: '10px', background: '#25D366', color: '#0d140d', border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem' }}>
-                        Adicionar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button onClick={() => setAdicionandoConhecimento(true)}
-                    style={{ padding: '12px', background: 'transparent', border: `1px dashed rgba(37,211,102,0.4)`, color: '#25D366', borderRadius: 10, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, width: '100%' }}>
-                    + Adicionar documento
-                  </button>
-                )}
-
-                {baseConhecimento.length === 0 && !adicionandoConhecimento && (
-                  <p style={{ fontSize: '0.75rem', color: t.textMuted, textAlign: 'center', padding: '20px 0' }}>Nenhum documento adicionado ainda.</p>
-                )}
-              </div>
-            )}
-
-            {/* ── Ferramentas ── */}
-            {agenteSubTab === 'Ferramentas' && (
-              <div style={{ padding: '22px', background: t.card, borderRadius: '0 0 14px 14px', border: `1px solid ${t.cardBorder}`, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <p style={{ fontSize: '0.78rem', color: t.textMuted, lineHeight: 1.6 }}>
-                  Ative ferramentas que a IA poderá usar durante o atendimento. A integração real é configurada no backend.
-                </p>
-                {Object.entries(ferramentasLabels).map(([key, info]) => (
-                  <div key={key}
-                    onClick={() => setFerramentas(prev => ({ ...prev, [key]: !prev[key] }))}
-                    style={{
-                      padding: '14px 16px', background: ferramentas[key] ? 'rgba(37,211,102,0.07)' : t.tag,
-                      border: `1px solid ${ferramentas[key] ? 'rgba(37,211,102,0.3)' : t.cardBorder}`,
-                      borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.18s',
-                    }}>
-                    {/* Toggle visual */}
-                    <div style={{
-                      width: 38, height: 22, borderRadius: 11, flexShrink: 0,
-                      background: ferramentas[key] ? '#25D366' : (tema === 'escuro' ? 'rgba(255,255,255,0.12)' : 'rgba(30,60,30,0.15)'),
-                      position: 'relative', transition: 'background 0.2s',
-                    }}>
-                      <div style={{
-                        position: 'absolute', top: 3, left: ferramentas[key] ? 19 : 3,
-                        width: 16, height: 16, borderRadius: '50%',
-                        background: ferramentas[key] ? '#0d140d' : (tema === 'escuro' ? 'rgba(255,255,255,0.5)' : 'rgba(30,60,30,0.4)'),
-                        transition: 'left 0.2s',
-                      }} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.85rem', fontWeight: 700, color: t.text, marginBottom: 2 }}>{info.label}</p>
-                      <p style={{ fontSize: '0.7rem', color: t.textMuted, lineHeight: 1.4 }}>{info.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Coluna direita: chat preview */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ padding: '10px 14px', background: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.15)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#0d140d', flexShrink: 0 }}>
-                  {agente.nome ? agente.nome[0].toUpperCase() : 'A'}
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.78rem', fontWeight: 700, color: t.text }}>{agente.nome || 'Agente sem nome'}</p>
-                  <p style={{ fontSize: '0.62rem', color: agente.apiKey ? '#25D366' : t.textMuted }}>
-                    {agente.apiKey ? `IA real — ${agente.modelo}` : 'Modo simulação'}
-                  </p>
-                </div>
-              </div>
-              {/* Indicador de base de conhecimento e ferramentas */}
-              <div style={{ display: 'flex', gap: 6 }}>
-                {baseConhecimento.length > 0 && (
-                  <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: 20, background: 'rgba(37,211,102,0.1)', color: '#25D366', fontWeight: 700 }}>
-                    {baseConhecimento.length} docs
-                  </span>
-                )}
-                {Object.values(ferramentas).some(Boolean) && (
-                  <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: 20, background: 'rgba(37,211,102,0.1)', color: '#25D366', fontWeight: 700 }}>
-                    {Object.values(ferramentas).filter(Boolean).length} tools
-                  </span>
-                )}
-              </div>
-            </div>
-            <WaChat
-              mensagens={agenteMsgs} digitando={agenteDigitando}
-              inputVal={agenteInput} onInput={setAgenteInput} onEnviar={enviarMsgAgente}
-              placeholder={agente.prompt.trim() ? 'Teste seu agente aqui...' : 'Configure o prompt primeiro'}
-              tema={tema} altura={460} onReset={resetaHistoricoChat}
-            />
-            {agenteErro && agenteErro !== '__ok__' && (
-              <p style={{ fontSize: '0.75rem', color: '#ff4b4b', fontWeight: 600, padding: '8px 12px', background: 'rgba(255,75,75,0.06)', borderRadius: 8, border: '1px solid rgba(255,75,75,0.2)' }}>
-                {agenteErro}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
     </motion.div>
   );
 };
@@ -972,19 +1144,19 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
     }
   };
 
-  const statusColor = s => s === 'conectado' ? '#25D366' : s === 'aguardando' ? '#f0a500' : '#ff4b4b';
+  const statusColor = s => s === 'conectado' ? t.accent : s === 'aguardando' ? t.warning : t.danger;
   const statusLabel = s => s === 'conectado' ? 'Conectado' : s === 'aguardando' ? 'Aguardando QR' : 'Desconectado';
 
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
 
       {/* Banner de plano */}
-      <div style={{ background: 'rgba(37,211,102,0.04)', border: '1px solid rgba(37,211,102,0.14)', borderRadius: 10, padding: '13px 18px', marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+      <div style={{ background: t.accentDim, border: `1px solid ${t.accent}22`, borderRadius: 10, padding: '13px 18px', marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <span style={{ fontSize: '0.8rem', color: t.textMuted }}>
-          <strong style={{ color: '#25D366' }}>{instancias.length}</strong> de <strong style={{ color: t.text }}>{limite === 999 ? 'ilimitadas' : limite}</strong> instâncias — Plano <strong style={{ color: '#25D366' }}>{PLANO_NOME[plano]}</strong>
+          <strong style={{ color: t.accent }}>{instancias.length}</strong> de <strong style={{ color: t.text }}>{limite === 999 ? 'ilimitadas' : limite}</strong> instâncias — Plano <strong style={{ color: t.accent }}>{PLANO_NOME[plano]}</strong>
         </span>
         {atingiuLimite && plano !== 'business' && (
-          <button onClick={() => navigate('/assinar')} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '7px 16px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.7rem' }}>FAZER UPGRADE</button>
+          <button onClick={() => navigate('/assinar')} style={{ background: t.accent, color: t.accentText, border: 'none', padding: '7px 16px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.7rem' }}>FAZER UPGRADE</button>
         )}
       </div>
 
@@ -992,7 +1164,7 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
         <p style={{ fontSize: '0.72rem', color: t.textMuted }}>{instancias.length} instância(s)</p>
         <button onClick={() => { if (atingiuLimite) { setErroLimite(`Limite de ${limite} instância(s) atingido.`); return; } setMostrarForm(v => !v); setErroLimite(''); }}
-          style={{ background: 'transparent', color: atingiuLimite ? '#ff4b4b' : '#25D366', border: `1px solid ${atingiuLimite ? '#ff4b4b' : '#25D366'}`, padding: '9px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem' }}>
+          style={{ background: 'transparent', color: atingiuLimite ? t.danger : t.accent, border: `1px solid ${atingiuLimite ? t.danger : t.accent}`, padding: '9px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem' }}>
           {atingiuLimite ? 'LIMITE ATINGIDO' : mostrarForm ? 'CANCELAR' : '+ NOVA INSTÂNCIA'}
         </button>
       </div>
@@ -1001,9 +1173,9 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
       <AnimatePresence>
         {erroLimite && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ padding: '12px 16px', background: 'rgba(255,75,75,0.07)', border: '1px solid rgba(255,75,75,0.22)', borderRadius: 9, marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <span style={{ fontSize: '0.8rem', color: '#ff4b4b' }}>{erroLimite}</span>
-            <button onClick={() => navigate('/assinar')} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '7px 14px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>VER PLANOS</button>
+            style={{ padding: '12px 16px', background: t.dangerDim, border: `1px solid ${t.danger}33`, borderRadius: 9, marginBottom: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <span style={{ fontSize: '0.8rem', color: t.danger }}>{erroLimite}</span>
+            <button onClick={() => navigate('/assinar')} style={{ background: t.accent, color: t.accentText, border: 'none', padding: '7px 14px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>VER PLANOS</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1025,7 +1197,7 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
               </div>
             </div>
             <button onClick={criarInstancia} disabled={criando}
-              style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '11px 22px', borderRadius: 8, fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: criando ? 0.6 : 1 }}>
+              style={{ background: t.accent, color: t.accentText, border: 'none', padding: '11px 22px', borderRadius: 8, fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: criando ? 0.6 : 1 }}>
               {criando ? 'CRIANDO...' : 'CRIAR INSTÂNCIA'}
             </button>
           </motion.div>
@@ -1047,7 +1219,7 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
                 {/* Header da instância */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(37,211,102,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#25D366', fontSize: '0.85rem', flexShrink: 0 }}>W</div>
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: t.accentDim, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: t.accent, fontSize: '0.85rem', flexShrink: 0 }}>W</div>
                     <div>
                       <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: t.text, marginBottom: 2 }}>{inst.nome}</h4>
                       <p style={{ fontSize: '0.7rem', color: t.textMuted }}>Fluxo: {inst.fluxo_nome}</p>
@@ -1056,18 +1228,18 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     {/* Status */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(inst.status), display: 'inline-block', boxShadow: inst.status === 'conectado' ? '0 0 6px #25D366' : 'none' }} />
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(inst.status), display: 'inline-block', boxShadow: inst.status === 'conectado' ? `0 0 6px ${t.accent}` : 'none' }} />
                       <span style={{ fontSize: '0.7rem', fontWeight: 700, color: statusColor(inst.status) }}>{statusLabel(inst.status)}</span>
                     </div>
                     {/* Botão conectar/reconectar */}
                     <button
                       onClick={() => buscarQRCode(inst)}
                       disabled={loadingQR[inst.id]}
-                      style={{ background: inst.status === 'conectado' ? 'transparent' : '#25D366', color: inst.status === 'conectado' ? '#25D366' : '#0d140d', border: inst.status === 'conectado' ? '1px solid #25D366' : 'none', padding: '7px 14px', borderRadius: 6, cursor: loadingQR[inst.id] ? 'not-allowed' : 'pointer', fontSize: '0.68rem', fontWeight: 700, opacity: loadingQR[inst.id] ? 0.6 : 1 }}>
+                      style={{ background: inst.status === 'conectado' ? 'transparent' : t.accent, color: inst.status === 'conectado' ? t.accent : t.accentText, border: inst.status === 'conectado' ? `1px solid ${t.accent}` : 'none', padding: '7px 14px', borderRadius: 6, cursor: loadingQR[inst.id] ? 'not-allowed' : 'pointer', fontSize: '0.68rem', fontWeight: 700, opacity: loadingQR[inst.id] ? 0.6 : 1 }}>
                       {loadingQR[inst.id] ? 'Carregando...' : inst.status === 'conectado' ? 'RECONECTAR' : 'CONECTAR'}
                     </button>
                     <button onClick={() => excluirInstancia(inst.id)}
-                      style={{ background: 'transparent', border: '1px solid #ff4b4b', color: '#ff4b4b', padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700 }}>
+                      style={{ background: 'transparent', border: `1px solid ${t.danger}`, color: t.danger, padding: '7px 14px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700 }}>
                       EXCLUIR
                     </button>
                   </div>
@@ -1085,7 +1257,7 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
                       {/* Carregando QR */}
                       {loadingQR[inst.id] && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                          <span style={{ width: 32, height: 32, border: '3px solid rgba(37,211,102,0.2)', borderTop: '3px solid #25D366', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
+                          <span style={{ width: 32, height: 32, border: `3px solid ${t.accentDim}`, borderTop: `3px solid ${t.accent}`, borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
                           <p style={{ color: t.textMuted, fontSize: '0.82rem' }}>Gerando QR Code...</p>
                         </div>
                       )}
@@ -1093,9 +1265,9 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
                       {/* Erro no QR */}
                       {erroQR[inst.id] && !loadingQR[inst.id] && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                          <p style={{ color: '#ff4b4b', fontSize: '0.82rem', fontWeight: 600 }}>{erroQR[inst.id]}</p>
+                          <p style={{ color: t.danger, fontSize: '0.82rem', fontWeight: 600 }}>{erroQR[inst.id]}</p>
                           <button onClick={() => buscarQRCode(inst)}
-                            style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '8px 18px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.75rem' }}>
+                            style={{ background: t.accent, color: t.accentText, border: 'none', padding: '8px 18px', borderRadius: 7, fontWeight: 800, cursor: 'pointer', fontSize: '0.75rem' }}>
                             Tentar novamente
                           </button>
                         </div>
@@ -1198,21 +1370,21 @@ const DisparosTab = ({ plano, navigate, tema }) => {
     } finally { setEnviando(false); }
   };
 
-  const corStatus = s => ({ enviado: '#25D366', erro: '#ff4444', pendente: '#f0a500' }[s] || '#888');
+  const corStatus = s => ({ enviado: t.accent, erro: t.danger, pendente: t.warning }[s] || t.textMuted);
 
   if (!PLANO_LIMITES[plano]?.disparos) return <BloqueadoBanner recurso="Disparos em Massa" planoAtual={plano} navigate={navigate} tema={tema} />;
 
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36, display: 'flex', flexDirection: 'column', gap: 22 }}>
       {statusHoje && (
-        <div style={{ padding: '18px 22px', background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.14)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+        <div style={{ padding: '18px 22px', background: t.accentDim, border: `1px solid ${t.accent}22`, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
           <div>
             <p style={{ fontSize: '0.7rem', color: t.textMuted, marginBottom: 3, textTransform: 'uppercase' }}>Disparados hoje</p>
-            <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#25D366', lineHeight: 1 }}>{statusHoje.enviados_hoje}<span style={{ fontSize: '0.85rem', color: t.textMuted, fontWeight: 400, marginLeft: 5 }}>/ {statusHoje.limite_diario}</span></p>
+            <p style={{ fontSize: '1.5rem', fontWeight: 800, color: t.accent, lineHeight: 1 }}>{statusHoje.enviados_hoje}<span style={{ fontSize: '0.85rem', color: t.textMuted, fontWeight: 400, marginLeft: 5 }}>/ {statusHoje.limite_diario}</span></p>
           </div>
           <div style={{ flex: 1, minWidth: 140 }}>
             <div style={{ height: 5, background: t.cardBorder, borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.min((statusHoje.enviados_hoje / statusHoje.limite_diario) * 100, 100)}%`, background: '#25D366', borderRadius: 99, transition: 'width 0.6s ease' }} />
+              <div style={{ height: '100%', width: `${Math.min((statusHoje.enviados_hoje / statusHoje.limite_diario) * 100, 100)}%`, background: t.accent, borderRadius: 99, transition: 'width 0.6s ease' }} />
             </div>
             <p style={{ fontSize: '0.7rem', color: t.textMuted, marginTop: 5 }}>{statusHoje.limite_diario - statusHoje.enviados_hoje} restantes hoje</p>
           </div>
@@ -1223,7 +1395,7 @@ const DisparosTab = ({ plano, navigate, tema }) => {
         <div>
           <label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Instância WhatsApp</label>
           {instancias.length === 0
-            ? <p style={{ fontSize: '0.82rem', color: '#ff4444' }}>Nenhuma instância encontrada.</p>
+            ? <p style={{ fontSize: '0.82rem', color: t.danger }}>Nenhuma instância encontrada.</p>
             : <StyledSelect value={instanciaId} onChange={e => setInstanciaId(e.target.value)} tema={tema}>
                 {instancias.map(i => <option key={i.id} value={String(i.id)}>{i.nome} — {i.numero || 'sem número'}</option>)}
               </StyledSelect>
@@ -1237,10 +1409,10 @@ const DisparosTab = ({ plano, navigate, tema }) => {
         <div>
           <label style={{ fontSize: '0.7rem', color: t.textMuted, display: 'block', marginBottom: 7, textTransform: 'uppercase', fontWeight: 700 }}>Contatos — um por linha</label>
           <textarea value={contatosRaw} onChange={e => setContatosRaw(e.target.value)} placeholder={'5511999999999\n5521888888888'} rows={5} style={{ width: '100%', padding: '11px 13px', background: t.input, border: `1px solid ${t.inputBorder}`, borderRadius: 8, color: t.text, fontSize: '0.83rem', resize: 'vertical', outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box' }} />
-          {contatosParsados.length > 0 && <p style={{ fontSize: '0.7rem', color: '#25D366', marginTop: 3 }}>{contatosParsados.length} contato(s) válido(s)</p>}
+          {contatosParsados.length > 0 && <p style={{ fontSize: '0.7rem', color: t.accent, marginTop: 3 }}>{contatosParsados.length} contato(s) válido(s)</p>}
         </div>
-        {resultado && <div style={{ padding: '11px 14px', borderRadius: 8, fontSize: '0.83rem', whiteSpace: 'pre-line', background: resultado.tipo === 'sucesso' ? 'rgba(37,211,102,0.09)' : 'rgba(255,68,68,0.09)', border: `1px solid ${resultado.tipo === 'sucesso' ? 'rgba(37,211,102,0.28)' : 'rgba(255,68,68,0.28)'}`, color: resultado.tipo === 'sucesso' ? '#25D366' : '#ff6666' }}>{resultado.texto}</div>}
-        <button onClick={handleEnviar} disabled={enviando} style={{ padding: '12px 24px', background: enviando ? 'rgba(37,211,102,0.3)' : '#25D366', border: 'none', borderRadius: 10, color: enviando ? '#25D366' : '#0d140d', fontWeight: 800, fontSize: '0.88rem', cursor: enviando ? 'not-allowed' : 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
+        {resultado && <div style={{ padding: '11px 14px', borderRadius: 8, fontSize: '0.83rem', whiteSpace: 'pre-line', background: resultado.tipo === 'sucesso' ? t.accentDim : t.dangerDim, border: `1px solid ${resultado.tipo === 'sucesso' ? t.accent + '44' : t.danger + '44'}`, color: resultado.tipo === 'sucesso' ? t.accent : t.danger }}>{resultado.texto}</div>}
+        <button onClick={handleEnviar} disabled={enviando} style={{ padding: '12px 24px', background: enviando ? `${t.accent}55` : t.accent, border: 'none', borderRadius: 10, color: t.accentText, fontWeight: 800, fontSize: '0.88rem', cursor: enviando ? 'not-allowed' : 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8 }}>
           {enviando && <span style={{ width: 13, height: 13, border: '2px solid rgba(13,20,13,0.3)', borderTopColor: '#0d140d', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />}
           {enviando ? 'Enviando...' : `Disparar para ${contatosParsados.length || 0} contato(s)`}
         </button>
@@ -1338,7 +1510,7 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
   };
 
   const statusLabel = { ativo: 'Ativo', trial: 'Trial', pausado: 'Pausado', cancelado: 'Cancelado', pendente: 'Pendente' };
-  const statusColor = { ativo: '#25D366', trial: '#f0a500', pausado: '#f0a500', cancelado: '#ff4b4b', pendente: '#888' };
+  const statusColor = { ativo: t.accent, trial: t.warning, pausado: t.warning, cancelado: t.danger, pendente: t.textMuted };
   const card = { padding: '28px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` };
 
   return (
@@ -1346,7 +1518,7 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
       <div style={{ display: 'flex', gap: 24, borderBottom: `1px solid ${t.cardBorder}`, marginBottom: 26, flexWrap: 'wrap' }}>
         {['Perfil', 'Seguranca', 'Assinatura', 'Visual'].map(item => (
           <div key={item} onClick={() => setSubTab(item)}
-            style={{ padding: '9px 0', fontSize: '0.86rem', fontWeight: 600, color: subTab === item ? '#25D366' : t.textMuted, borderBottom: subTab === item ? '2px solid #25D366' : '2px solid transparent', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}>
+            style={{ padding: '9px 0', fontSize: '0.86rem', fontWeight: 600, color: subTab === item ? t.accent : t.textMuted, borderBottom: subTab === item ? `2px solid ${t.accent}` : '2px solid transparent', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}>
             {item === 'Seguranca' ? 'Segurança' : item}
           </div>
         ))}
@@ -1355,34 +1527,34 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
       {subTab === 'Perfil' && (
         <motion.div {...fadeUp} style={{ display: 'grid', gap: 18, maxWidth: 560 }}>
           <div style={card}><h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 22, color: t.text }}>Dados Pessoais</h4><div style={{ display: 'grid', gap: 13 }}><Input tema={tema} label="Nome de Exibição" type="text" value={nome} onChange={e => setNome(e.target.value)} /><Input tema={tema} label="E-mail (somente leitura)" type="email" value={email} disabled style={{ opacity: 0.5 }} /></div></div>
-          {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, color: msgTipo === 'ok' ? '#25D366' : '#ff4b4b' }}>{msg}</p>}
-          <SaveButton onClick={salvarPerfil} loading={loading} />
+          {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, color: msgTipo === 'ok' ? t.accent : t.danger }}>{msg}</p>}
+          <SaveButton onClick={salvarPerfil} loading={loading} tema={tema} />
         </motion.div>
       )}
 
       {subTab === 'Seguranca' && (
         <motion.div {...fadeUp} style={{ display: 'grid', gap: 18, maxWidth: 560 }}>
           <div style={card}><h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 22, color: t.text }}>Alterar Senha</h4><div style={{ display: 'grid', gap: 13 }}><Input tema={tema} label="Senha Atual" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} placeholder="••••••••" /><Input tema={tema} label="Nova Senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} placeholder="••••••••" /><Input tema={tema} label="Confirmar Nova Senha" type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} placeholder="••••••••" /></div></div>
-          {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, color: msgTipo === 'ok' ? '#25D366' : '#ff4b4b' }}>{msg}</p>}
-          <SaveButton onClick={alterarSenha} loading={loading} label="ALTERAR SENHA" />
+          {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, color: msgTipo === 'ok' ? t.accent : t.danger }}>{msg}</p>}
+          <SaveButton onClick={alterarSenha} loading={loading} label="ALTERAR SENHA" tema={tema} />
         </motion.div>
       )}
 
       {subTab === 'Assinatura' && (
         <motion.div {...fadeUp} style={{ maxWidth: 560 }}>
-          {loadingAss ? <div style={{ paddingTop: 50, textAlign: 'center' }}><span style={{ width: 30, height: 30, border: '3px solid rgba(37,211,102,0.2)', borderTop: '3px solid #25D366', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} /></div>
+          {loadingAss ? <div style={{ paddingTop: 50, textAlign: 'center' }}><span style={{ width: 30, height: 30, border: `3px solid ${t.accentDim}`, borderTop: `3px solid ${t.accent}`, borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} /></div>
             : !assinatura?.tem_assinatura ? (
               <div style={{ ...card, textAlign: 'center', padding: '40px 28px' }}>
                 <h4 style={{ fontWeight: 700, marginBottom: 10, color: t.text }}>Nenhum plano ativo</h4>
                 <p style={{ color: t.textMuted, fontSize: '0.82rem', marginBottom: 24, lineHeight: 1.6 }}>Você ainda não possui uma assinatura ativa.</p>
-                <button onClick={() => navigate('/assinar')} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '13px 28px', borderRadius: 10, fontWeight: 900, cursor: 'pointer', fontSize: '0.83rem' }}>VER PLANOS</button>
+                <button onClick={() => navigate('/assinar')} style={{ background: t.accent, color: t.accentText, border: 'none', padding: '13px 28px', borderRadius: 10, fontWeight: 900, cursor: 'pointer', fontSize: '0.83rem' }}>VER PLANOS</button>
               </div>
             ) : (
               <div style={card}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 10 }}>
                   <h4 style={{ fontWeight: 700, color: t.text }}>Plano Atual</h4>
                   <div style={{ display: 'flex', gap: 7 }}>
-                    <span style={{ background: 'rgba(37,211,102,0.1)', color: '#25D366', padding: '3px 11px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 800 }}>{PLANO_NOME[assinatura.plano] || assinatura.plano}</span>
+                    <span style={{ background: t.accentDim, color: t.accent, padding: '3px 11px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 800 }}>{PLANO_NOME[assinatura.plano] || assinatura.plano}</span>
                     <span style={{ background: `${statusColor[assinatura.status]}18`, color: statusColor[assinatura.status], padding: '3px 11px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 800 }}>{statusLabel[assinatura.status]}</span>
                   </div>
                 </div>
@@ -1399,18 +1571,18 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                     {assinatura.status === 'ativo' ? 'Renovação automática pelo Mercado Pago. Ao cancelar, o acesso continua até o fim do período já pago.' : assinatura.status === 'cancelado' ? 'Assinatura cancelada. Após o vencimento seu plano retorna para Starter automaticamente.' : 'Trial ativo. Após o vencimento seu plano retorna para Starter.'}
                   </p>
                 </div>
-                {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: 14, color: msgTipo === 'ok' ? '#25D366' : '#ff4b4b' }}>{msg}</p>}
+                {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: 14, color: msgTipo === 'ok' ? t.accent : t.danger }}>{msg}</p>}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   {['ativo', 'trial'].includes(assinatura.status) && assinatura.plano !== 'business' && (
-                    <button onClick={() => navigate('/assinar')} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '12px 22px', borderRadius: 9, fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem' }}>FAZER UPGRADE</button>
+                    <button onClick={() => navigate('/assinar')} style={{ background: t.accent, color: t.accentText, border: 'none', padding: '12px 22px', borderRadius: 9, fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem' }}>FAZER UPGRADE</button>
                   )}
                   {['ativo', 'trial'].includes(assinatura.status) && (
-                    <button onClick={cancelarAssinatura} disabled={cancelando} style={{ background: 'transparent', color: '#ff4b4b', border: '1px solid #ff4b4b', padding: '12px 22px', borderRadius: 9, fontWeight: 700, cursor: cancelando ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: cancelando ? 0.6 : 1 }}>
+                    <button onClick={cancelarAssinatura} disabled={cancelando} style={{ background: 'transparent', color: t.danger, border: `1px solid ${t.danger}`, padding: '12px 22px', borderRadius: 9, fontWeight: 700, cursor: cancelando ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: cancelando ? 0.6 : 1 }}>
                       {cancelando ? 'CANCELANDO...' : 'CANCELAR ASSINATURA'}
                     </button>
                   )}
                   {assinatura.status === 'cancelado' && (
-                    <button onClick={() => navigate('/assinar')} style={{ background: '#25D366', color: '#0d140d', border: 'none', padding: '12px 22px', borderRadius: 9, fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem' }}>REATIVAR ASSINATURA</button>
+                    <button onClick={() => navigate('/assinar')} style={{ background: t.accent, color: t.accentText, border: 'none', padding: '12px 22px', borderRadius: 9, fontWeight: 800, cursor: 'pointer', fontSize: '0.78rem' }}>REATIVAR ASSINATURA</button>
                   )}
                 </div>
               </div>
@@ -1437,15 +1609,15 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                     key="escuro"
                     whileHover={{ scale: 1.015 }}
                     onClick={() => { setTema('escuro'); localStorage.setItem('zapchat_tema', 'escuro'); }}
-                    style={{ borderRadius: 16, border: `2px solid ${ativo ? '#25D366' : p.cardBorder}`, background: p.bg, cursor: 'pointer', overflow: 'hidden', transition: 'border-color 0.2s', boxShadow: ativo ? '0 0 0 4px rgba(37,211,102,0.1)' : 'none' }}
+                    style={{ borderRadius: 16, border: `2px solid ${ativo ? t.accent : p.cardBorder}`, background: p.bg, cursor: 'pointer', overflow: 'hidden', transition: 'border-color 0.2s', boxShadow: ativo ? `0 0 0 4px ${t.accentDim}` : 'none' }}
                   >
                     {/* Mini preview da sidebar + conteúdo */}
                     <div style={{ display: 'flex', height: 110 }}>
                       {/* Sidebar mini */}
                       <div style={{ width: 44, background: p.sidebar, borderRight: `1px solid ${p.cardBorder}`, padding: '10px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                        <div style={{ fontSize: '0.48rem', fontWeight: 900, color: p.text, marginBottom: 6 }}>Z<span style={{ color: '#25D366' }}>C</span></div>
+                        <div style={{ fontSize: '0.48rem', fontWeight: 900, color: p.text, marginBottom: 6 }}>Z<span style={{ color: p.accent }}>C</span></div>
                         {[1, 2, 3, 4].map(i => (
-                          <div key={i} style={{ height: 6, borderRadius: 3, background: i === 1 ? 'rgba(37,211,102,0.5)' : p.cardBorder, width: i === 1 ? '90%' : `${60 + i * 5}%` }} />
+                          <div key={i} style={{ height: 6, borderRadius: 3, background: i === 1 ? `${p.accent}66` : p.cardBorder, width: i === 1 ? '90%' : `${60 + i * 5}%` }} />
                         ))}
                       </div>
                       {/* Conteúdo mini */}
@@ -1470,8 +1642,8 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                         <p style={{ fontSize: '0.62rem', color: p.textMuted }}>Fundo #080c08</p>
                       </div>
                       {ativo && (
-                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#0d140d" strokeWidth="2" strokeLinecap="round" /></svg>
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={t.accentText} strokeWidth="2" strokeLinecap="round" /></svg>
                         </div>
                       )}
                     </div>
@@ -1488,15 +1660,15 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                     key="claro"
                     whileHover={{ scale: 1.015 }}
                     onClick={() => { setTema('claro'); localStorage.setItem('zapchat_tema', 'claro'); }}
-                    style={{ borderRadius: 16, border: `2px solid ${ativo ? '#25D366' : p.cardBorder}`, background: p.bg, cursor: 'pointer', overflow: 'hidden', transition: 'border-color 0.2s', boxShadow: ativo ? '0 0 0 4px rgba(37,211,102,0.12)' : 'none' }}
+                    style={{ borderRadius: 16, border: `2px solid ${ativo ? t.accent : p.cardBorder}`, background: p.bg, cursor: 'pointer', overflow: 'hidden', transition: 'border-color 0.2s', boxShadow: ativo ? `0 0 0 4px ${t.accentDim}` : 'none' }}
                   >
                     {/* Mini preview */}
                     <div style={{ display: 'flex', height: 110 }}>
                       {/* Sidebar mini */}
                       <div style={{ width: 44, background: p.sidebar, borderRight: `1px solid ${p.cardBorder}`, padding: '10px 6px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                        <div style={{ fontSize: '0.48rem', fontWeight: 900, color: p.text, marginBottom: 6 }}>Z<span style={{ color: '#25D366' }}>C</span></div>
+                        <div style={{ fontSize: '0.48rem', fontWeight: 900, color: p.text, marginBottom: 6 }}>Z<span style={{ color: p.accent }}>C</span></div>
                         {[1, 2, 3, 4].map(i => (
-                          <div key={i} style={{ height: 6, borderRadius: 3, background: i === 1 ? 'rgba(37,211,102,0.45)' : p.cardBorder, width: i === 1 ? '90%' : `${60 + i * 5}%` }} />
+                          <div key={i} style={{ height: 6, borderRadius: 3, background: i === 1 ? `${p.accent}55` : p.cardBorder, width: i === 1 ? '90%' : `${60 + i * 5}%` }} />
                         ))}
                       </div>
                       {/* Conteúdo mini */}
@@ -1521,8 +1693,8 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                         <p style={{ fontSize: '0.62rem', color: p.textMuted }}>Verde natural • Suave</p>
                       </div>
                       {ativo && (
-                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#0d140d" strokeWidth="2" strokeLinecap="round" /></svg>
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={t.accentText} strokeWidth="2" strokeLinecap="round" /></svg>
                         </div>
                       )}
                     </div>
@@ -1542,7 +1714,7 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                   { nome: 'Sidebar', cor: TEMAS[tema].sidebar },
                   { nome: 'Card', cor: tema === 'escuro' ? '#161e16' : TEMAS[tema].card },
                   { nome: 'Texto', cor: TEMAS[tema].text },
-                  { nome: 'Acento', cor: '#25D366' },
+                  { nome: 'Acento', cor: TEMAS[tema].accent },
                 ].map(({ nome, cor }) => (
                   <div key={nome} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ width: 18, height: 18, borderRadius: 5, background: cor, border: `1px solid ${t.cardBorder}`, flexShrink: 0 }} />
@@ -1631,7 +1803,7 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
         {categorias.map(cat => (
           <button key={cat} onClick={() => setCategoriaAtiva(cat)}
-            style={{ padding: '7px 16px', borderRadius: 20, border: `1px solid ${categoriaAtiva === cat ? '#25D366' : t.cardBorder}`, background: categoriaAtiva === cat ? 'rgba(37,211,102,0.1)' : 'transparent', color: categoriaAtiva === cat ? '#25D366' : t.textMuted, fontWeight: categoriaAtiva === cat ? 700 : 500, cursor: 'pointer', fontSize: '0.78rem', transition: 'all 0.15s' }}>
+            style={{ padding: '7px 16px', borderRadius: 20, border: `1px solid ${categoriaAtiva === cat ? t.accent : t.cardBorder}`, background: categoriaAtiva === cat ? t.accentDim : 'transparent', color: categoriaAtiva === cat ? t.accent : t.textMuted, fontWeight: categoriaAtiva === cat ? 700 : 500, cursor: 'pointer', fontSize: '0.78rem', transition: 'all 0.15s' }}>
             {labelCategoria[cat] || cat}
           </button>
         ))}
@@ -1648,10 +1820,10 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
               onClick={() => abrirPreview(tmpl)}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: tmpl.cor_destaque, borderRadius: '16px 16px 0 0' }} />
               {tmpl.plano_minimo !== 'starter' && (
-                <div style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 20, padding: '2px 9px', fontSize: '0.58rem', fontWeight: 800, color: '#25D366', textTransform: 'uppercase' }}>{tmpl.plano_minimo.toUpperCase()}</div>
+                <div style={{ position: 'absolute', top: 14, right: 14, background: t.accentDim, border: `1px solid ${t.accent}44`, borderRadius: 20, padding: '2px 9px', fontSize: '0.58rem', fontWeight: 800, color: t.accent, textTransform: 'uppercase' }}>{tmpl.plano_minimo.toUpperCase()}</div>
               )}
               {!tmpl.disponivel && (
-                <div style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,75,75,0.12)', border: '1px solid rgba(255,75,75,0.3)', borderRadius: 20, padding: '2px 9px', fontSize: '0.58rem', fontWeight: 800, color: '#ff4b4b' }}>BLOQUEADO</div>
+                <div style={{ position: 'absolute', top: 14, right: 14, background: t.dangerDim, border: `1px solid ${t.danger}44`, borderRadius: 20, padding: '2px 9px', fontSize: '0.58rem', fontWeight: 800, color: t.danger }}>BLOQUEADO</div>
               )}
               {tmpl.imagem_url ? (
                 <div style={{ width: '100%', height: 140, borderRadius: 10, background: `linear-gradient(135deg, ${tmpl.cor_destaque}15 0%, ${tmpl.cor_destaque}08 100%)`, border: `1px solid ${tmpl.cor_destaque}30`, marginBottom: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1666,7 +1838,7 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
               <p style={{ fontSize: '0.76rem', color: t.textMuted, lineHeight: 1.6, marginBottom: 16, minHeight: 48 }}>{tmpl.descricao}</p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={tagStyle(tmpl.cor_destaque)}>{labelCategoria[tmpl.categoria] || tmpl.categoria}</span>
-                <span style={{ fontSize: '0.72rem', color: tmpl.disponivel ? '#25D366' : t.textMuted, fontWeight: 600 }}>{tmpl.disponivel ? 'Ver preview →' : 'Fazer upgrade'}</span>
+                <span style={{ fontSize: '0.72rem', color: tmpl.disponivel ? t.accent : t.textMuted, fontWeight: 600 }}>{tmpl.disponivel ? 'Ver preview →' : 'Fazer upgrade'}</span>
               </div>
             </motion.div>
           ))}
@@ -1700,7 +1872,7 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
                   <div style={{ background: t.input, borderRadius: 12, border: `1px solid ${t.cardBorder}`, padding: '16px', maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {nosPreview.map((no, idx) => (
                       <div key={no.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                        <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: idx === 0 ? '#25D366' : `${preview.cor_destaque}28`, border: `1px solid ${idx === 0 ? '#25D366' : preview.cor_destaque}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: idx === 0 ? '#0d140d' : preview.cor_destaque }}>{idx + 1}</div>
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: idx === 0 ? t.accent : `${preview.cor_destaque}28`, border: `1px solid ${idx === 0 ? t.accent : preview.cor_destaque}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: idx === 0 ? t.accentText : preview.cor_destaque }}>{idx + 1}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: '0.74rem', color: t.text, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{no.data?.label?.replace(/\n/g, ' ') || '(sem texto)'}</p>
                           {no.data?.options?.length > 0 && <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 2 }}>{no.data.options.length} opção(ões) de resposta</p>}
@@ -1716,12 +1888,12 @@ const TemplatesTab = ({ plano, usuarioId, navigate, tema }) => {
                   style={{ width: '100%', background: t.input, border: `1px solid ${t.inputBorder}`, padding: '11px 13px', borderRadius: 8, color: t.text, outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }} />
                 <p style={{ fontSize: '0.65rem', color: t.textMuted, marginTop: 5 }}>Você poderá renomear o fluxo a qualquer momento no editor.</p>
               </div>
-              {erroModal && <p style={{ fontSize: '0.78rem', color: '#ff4b4b', fontWeight: 600, marginBottom: 14 }}>{erroModal}</p>}
+              {erroModal && <p style={{ fontSize: '0.78rem', color: t.danger, fontWeight: 600, marginBottom: 14 }}>{erroModal}</p>}
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={fecharPreview} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, borderRadius: 10, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Cancelar</button>
                 <motion.button onClick={usarTemplate} disabled={criando} whileHover={{ scale: criando ? 1 : 1.02 }}
-                  style={{ flex: 2, padding: '12px', background: criando ? 'rgba(37,211,102,0.3)' : '#25D366', color: criando ? '#25D366' : '#0d140d', border: 'none', borderRadius: 10, fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s' }}>
-                  {criando && <span style={{ width: 13, height: 13, border: '2px solid rgba(13,20,13,0.3)', borderTop: '2px solid #0d140d', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />}
+                  style={{ flex: 2, padding: '12px', background: criando ? `${t.accent}55` : t.accent, color: t.accentText, border: 'none', borderRadius: 10, fontWeight: 800, cursor: criando ? 'not-allowed' : 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s' }}>
+                  {criando && <span style={{ width: 13, height: 13, border: `2px solid ${t.accentDim}`, borderTop: `2px solid ${t.accentText}`, borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />}
                   {criando ? 'Criando fluxo...' : 'Usar este template'}
                 </motion.button>
               </div>
@@ -1794,12 +1966,12 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14 }}>
         {[
-          { l: 'Disparos hoje', v: dados.disparos_hoje, cor: '#25D366' },
+          { l: 'Disparos hoje', v: dados.disparos_hoje, cor: t.accent },
           { l: 'Total disparos', v: dados.total_disparos, cor: t.text },
-          { l: 'Sessões ativas', v: dados.sessoes_ativas, cor: '#25D366' },
+          { l: 'Sessões ativas', v: dados.sessoes_ativas, cor: t.accent },
           { l: 'Fluxos criados', v: dados.total_fluxos, cor: t.text },
-          { l: 'Instâncias', v: `${dados.instancias_conectadas}/${dados.instancias_total}`, cor: '#25D366' },
-          { l: 'Erros disparos', v: dados.disparos_erros, cor: dados.disparos_erros > 0 ? '#e05252' : t.textMuted },
+          { l: 'Instâncias', v: `${dados.instancias_conectadas}/${dados.instancias_total}`, cor: t.accent },
+          { l: 'Erros disparos', v: dados.disparos_erros, cor: dados.disparos_erros > 0 ? t.danger : t.textMuted },
         ].map((m, i) => (
           <div key={i} style={{ padding: '16px', background: t.card, borderRadius: 12, border: `1px solid ${t.cardBorder}`, textAlign: 'center' }}>
             <p style={{ fontSize: '0.6rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.5px' }}>{m.l}</p>
@@ -1816,7 +1988,7 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 100, marginTop: 18, overflowX: 'auto' }}>
               {horas24.map((h, i) => (
                 <div key={i} style={{ flex: 1, minWidth: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
-                  <div title={`${h.hora}: ${h.total}`} style={{ width: '100%', background: h.total === maxVol && maxVol > 0 ? '#25D366' : isDark ? 'rgba(37,211,102,0.2)' : 'rgba(37,211,102,0.25)', borderRadius: '4px 4px 0 0', height: `${(h.total / maxVol) * 80}%`, transition: 'height 0.3s', minHeight: h.total > 0 ? 4 : 1 }} />
+                  <div title={`${h.hora}: ${h.total}`} style={{ width: '100%', background: h.total === maxVol && maxVol > 0 ? t.accent : t.accentDim, borderRadius: '4px 4px 0 0', height: `${(h.total / maxVol) * 80}%`, transition: 'height 0.3s', minHeight: h.total > 0 ? 4 : 1 }} />
                   <p style={{ fontSize: '0.48rem', color: t.textMuted, transform: 'rotate(-45deg)', transformOrigin: 'center', whiteSpace: 'nowrap' }}>{h.hora}</p>
                 </div>
               ))}
@@ -1845,10 +2017,10 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
                 <div key={i}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: '0.78rem', color: t.text, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, paddingRight: 8 }}>{f.nome_fluxo}</span>
-                    <span style={{ fontSize: '0.72rem', color: '#25D366', fontWeight: 700, flexShrink: 0 }}>{f.usos} sessões</span>
+                    <span style={{ fontSize: '0.72rem', color: t.accent, fontWeight: 700, flexShrink: 0 }}>{f.usos} sessões</span>
                   </div>
                   <div style={{ height: 5, background: t.cardBorder, borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${f.percentual}%`, background: i === 0 ? '#25D366' : isDark ? 'rgba(37,211,102,0.35)' : 'rgba(37,211,102,0.5)', borderRadius: 99, transition: 'width 0.4s' }} />
+                    <div style={{ height: '100%', width: `${f.percentual}%`, background: i === 0 ? t.accent : t.accentDim, borderRadius: 99, transition: 'width 0.4s' }} />
                   </div>
                 </div>
               ))}
@@ -1859,9 +2031,9 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
           {secao('Velocidade de Atendimento', dados.tmr_segundos != null ? 'Dados reais' : 'Disponível após conectar WhatsApp')}
           <div style={{ marginTop: 14, display: 'grid', gap: 12 }}>
             {[
-              { label: 'TMR', value: dados.tmr_segundos != null ? fmtTempo(dados.tmr_segundos) : '—', desc: 'Tempo médio de resposta', cor: '#25D366' },
-              { label: 'TMA', value: dados.tma_segundos != null ? fmtTempo(dados.tma_segundos) : '—', desc: 'Tempo médio de atendimento', cor: '#25D366' },
-              { label: 'Taxa de resolução', value: dados.taxa_resolucao != null ? `${dados.taxa_resolucao}%` : '—', desc: 'Conversas encerradas pelo bot', cor: '#f0a500' },
+              { label: 'TMR', value: dados.tmr_segundos != null ? fmtTempo(dados.tmr_segundos) : '—', desc: 'Tempo médio de resposta', cor: t.accent },
+              { label: 'TMA', value: dados.tma_segundos != null ? fmtTempo(dados.tma_segundos) : '—', desc: 'Tempo médio de atendimento', cor: t.accent },
+              { label: 'Taxa de resolução', value: dados.taxa_resolucao != null ? `${dados.taxa_resolucao}%` : '—', desc: 'Conversas encerradas pelo bot', cor: t.warning },
             ].map((m, i) => (
               <div key={i} style={{ padding: '12px 14px', background: t.tag, borderRadius: 10, border: `1px solid ${t.cardBorder}` }}>
                 <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>{m.label}</p>
@@ -1877,9 +2049,9 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
           {secao('Métricas de IA', dados.tokens_usados != null ? 'Dados reais' : 'Disponível após configurar agente IA')}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 18 }}>
             {[
-              { label: 'Tokens usados', value: dados.tokens_usados != null ? dados.tokens_usados.toLocaleString('pt-BR') : '—', desc: dados.tokens_limite != null ? `${((dados.tokens_usados / dados.tokens_limite) * 100).toFixed(1)}% da franquia` : '', cor: t.text },
-              { label: 'Sessões de Bot', value: dados.sessoes_ativas, desc: 'Ativas nos últimos 30min', cor: '#25D366' },
-              { label: 'Disparos com Erro', value: dados.disparos_erros, desc: dados.disparos_erros === 0 ? 'Nenhum erro registrado' : 'Verifique o histórico', cor: dados.disparos_erros > 0 ? '#e05252' : '#25D366' },
+              { label: 'Créditos de I.A usados', value: dados.tokens_usados != null ? dados.tokens_usados.toLocaleString('pt-BR') : '—', desc: dados.tokens_limite != null ? `${((dados.tokens_usados / dados.tokens_limite) * 100).toFixed(1)}% da franquia` : '', cor: t.text },
+              { label: 'Sessões de Bot', value: dados.sessoes_ativas, desc: 'Ativas nos últimos 30min', cor: t.accent },
+              { label: 'Disparos com Erro', value: dados.disparos_erros, desc: dados.disparos_erros === 0 ? 'Nenhum erro registrado' : 'Verifique o histórico', cor: dados.disparos_erros > 0 ? t.danger : t.accent },
             ].map((m, i) => (
               <div key={i} style={{ padding: '16px', background: t.tag, borderRadius: 12, border: `1px solid ${t.cardBorder}` }}>
                 <p style={{ fontSize: '0.62rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>{m.label}</p>
@@ -1893,9 +2065,9 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
         <div style={{ padding: '20px 24px', background: t.card, borderRadius: 14, border: `1px dashed ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <p style={{ fontSize: '0.85rem', fontWeight: 700, color: t.text, marginBottom: 3 }}>Métricas de IA disponíveis no plano Pro</p>
-            <p style={{ fontSize: '0.75rem', color: t.textMuted }}>Veja uso de tokens, sessões ativas e taxa de erros.</p>
+            <p style={{ fontSize: '0.75rem', color: t.textMuted }}>Veja uso de Créditos de I.A, sessões ativas e taxa de erros.</p>
           </div>
-          <span style={{ fontSize: '0.68rem', background: 'rgba(37,211,102,0.1)', color: '#25D366', padding: '4px 12px', borderRadius: 20, fontWeight: 800 }}>PRO</span>
+          <span style={{ fontSize: '0.68rem', background: t.accentDim, color: t.accent, padding: '4px 12px', borderRadius: 20, fontWeight: 800 }}>PRO</span>
         </div>
       )}
     </div>
@@ -1926,7 +2098,8 @@ const Dashboard = () => {
     { key: 'WhatsApp',      label: 'WhatsApp',        bloqueado: false },
     { key: 'Disparos',      label: 'Disparos',        bloqueado: !PLANO_LIMITES[plano]?.disparos },
     { key: 'Templates',     label: 'Templates',       bloqueado: false },
-    { key: 'Testes',        label: 'Testes & IA',     bloqueado: false },
+    { key: 'TesteFluxo',   label: 'Teste de Fluxo',  bloqueado: false },
+    { key: 'AgenteIA',     label: 'Agente IA',        bloqueado: false },
     { key: 'Configuracoes', label: 'Configurações',   bloqueado: false },
     ...(isAdmin ? [{ key: 'Admin', label: 'Painel Admin', bloqueado: false }] : []),
   ];
@@ -1945,6 +2118,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (searchParams.get('trial') === 'ativado') { setTrialBanner(true); setTimeout(() => setTrialBanner(false), 6000); }
+    const aba = searchParams.get('aba');
+    if (aba) setActiveTab(aba);
   }, [searchParams]);
 
   const carregarFluxos = useCallback(async () => {
@@ -1989,9 +2164,9 @@ const Dashboard = () => {
       case 'Dashboard':
         return (
           <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.18)', borderRadius: 20, padding: '5px 13px', marginBottom: 26 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#25D366', boxShadow: '0 0 5px #25D366' }} />
-              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#25D366', textTransform: 'uppercase', letterSpacing: '1px' }}>Plano {PLANO_NOME[plano] || plano}</span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: t.accentDim, border: `1px solid ${t.accent}28`, borderRadius: 20, padding: '5px 13px', marginBottom: 26 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.accent }} />
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: t.accent, textTransform: 'uppercase', letterSpacing: '1px' }}>Plano {PLANO_NOME[plano] || plano}</span>
               {plano !== 'business' && <span onClick={() => navigate('/assinar')} style={{ fontSize: '0.63rem', color: t.textMuted, cursor: 'pointer', marginLeft: 3, textDecoration: 'underline' }}>fazer upgrade</span>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 36 }}>
@@ -2019,9 +2194,10 @@ const Dashboard = () => {
       case 'WhatsApp':      return <WhatsAppTab fluxos={fluxos} usuarioId={usuarioId} plano={plano} tema={tema} />;
       case 'Disparos':      return <DisparosTab plano={plano} navigate={navigate} tema={tema} />;
       case 'Templates':     return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
-      case 'Testes':        return <TestesIA fluxos={fluxos} plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
+      case 'TesteFluxo':   return <TesteFluxo fluxos={fluxos} tema={tema} />;
+      case 'AgenteIA':     return <AgenteIA plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
       case 'Configuracoes': return <ConfigSettings usuarioId={usuarioId} tema={tema} setTema={setTema} />;
-      case 'Admin':         return <AdminPanel />;
+      case 'Admin':         return <AdminPanel tema={tema} />;
       default:              return null;
     }
   };
@@ -2041,7 +2217,7 @@ const Dashboard = () => {
           color: ${TEMAS[tema].selectText} !important;
         }
 
-        input:focus, textarea:focus, select:focus { border-color: rgba(37,211,102,0.45) !important; box-shadow: 0 0 0 3px rgba(37,211,102,0.07) !important; }
+        input:focus, textarea:focus, select:focus { border-color: ${t.accent}72 !important; box-shadow: 0 0 0 3px ${t.accentDim} !important; }
 
         @media (max-width: 768px) {
           .dash-sidebar { display: none !important; }
@@ -2063,8 +2239,8 @@ const Dashboard = () => {
       <AnimatePresence>
         {trialBanner && (
           <motion.div initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', top: 18, right: 18, zIndex: 999, background: '#0c1f0f', border: '1px solid rgba(37,211,102,0.4)', borderRadius: 12, padding: '14px 20px', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }}>
-            <p style={{ fontWeight: 800, fontSize: '0.83rem', color: '#25D366', marginBottom: 1 }}>Trial ativado com sucesso!</p>
+            style={{ position: 'fixed', top: 18, right: 18, zIndex: 999, background: t.card, border: `1px solid ${t.accent}66`, borderRadius: 12, padding: '14px 20px', boxShadow: '0 8px 28px rgba(0,0,0,0.25)' }}>
+            <p style={{ fontWeight: 800, fontSize: '0.83rem', color: t.accent, marginBottom: 1 }}>Trial ativado com sucesso!</p>
             <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>7 dias de acesso completo ao Starter.</p>
           </motion.div>
         )}
@@ -2075,21 +2251,21 @@ const Dashboard = () => {
       <aside className={`dash-sidebar${menuAberto ? ' open' : ''}`}
         style={{ width: 240, minWidth: 240, background: t.sidebar, borderRight: `1px solid ${t.cardBorder}`, padding: '34px 20px', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 42, display: 'block' }}>
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 900, letterSpacing: '-1px', color: t.text }}>ZAP<span style={{ color: '#25D366' }}>CHAT</span></h2>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 900, letterSpacing: '-1px', color: t.text }}>ZAP<span style={{ color: t.accent }}>CHAT</span></h2>
         </Link>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, flexGrow: 1 }}>
           {menuItems.map(({ key, label, bloqueado }) => (
             <MenuItem key={key} label={label} ativo={activeTab === key} bloqueado={bloqueado} tema={tema} onClick={() => { setActiveTab(key); setMenuAberto(false); }} />
           ))}
         </nav>
-        <div style={{ padding: '11px 13px', background: 'rgba(37,211,102,0.06)', borderRadius: 10, border: '1px solid rgba(37,211,102,0.12)', marginBottom: 10, textAlign: 'center' }}>
+        <div style={{ padding: '11px 13px', background: t.accentDim, borderRadius: 10, border: `1px solid ${t.accent}22`, marginBottom: 10, textAlign: 'center' }}>
           <p style={{ fontSize: '0.58rem', color: t.textMuted, textTransform: 'uppercase', fontWeight: 700, marginBottom: 2 }}>Plano atual</p>
-          <p style={{ fontSize: '0.82rem', fontWeight: 900, color: '#25D366' }}>{PLANO_NOME[plano] || plano}</p>
+          <p style={{ fontSize: '0.82rem', fontWeight: 900, color: t.accent }}>{PLANO_NOME[plano] || plano}</p>
           {plano !== 'business' && <p onClick={() => navigate('/assinar')} style={{ fontSize: '0.6rem', color: t.textMuted, cursor: 'pointer', marginTop: 3, textDecoration: 'underline' }}>fazer upgrade</p>}
         </div>
         <div style={{ padding: 13, background: t.card, borderRadius: 10, border: `1px solid ${t.cardBorder}` }}>
           <p style={{ fontSize: '0.6rem', color: t.textMuted, textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>Logado como</p>
-          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#25D366', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{usuarioNome}</p>
+          <p style={{ fontSize: '0.82rem', fontWeight: 700, color: t.accent, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{usuarioNome}</p>
         </div>
       </aside>
 
@@ -2111,8 +2287,8 @@ const Dashboard = () => {
               SAIR
             </button>
             <motion.button onClick={criarNovoFluxo} disabled={criando}
-              whileHover={{ scale: 1.02, backgroundColor: '#25D366', color: '#0d140d' }}
-              style={{ background: 'transparent', color: '#25D366', border: '1px solid #25D366', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: criando ? 'not-allowed' : 'pointer', opacity: criando ? 0.6 : 1, transition: 'background 0.2s, color 0.2s', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+              whileHover={{ scale: 1.02, backgroundColor: t.accent, color: t.accentText }}
+              style={{ background: 'transparent', color: t.accent, border: `1px solid ${t.accent}`, padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: criando ? 'not-allowed' : 'pointer', opacity: criando ? 0.6 : 1, transition: 'background 0.2s, color 0.2s', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
               {criando ? 'Criando...' : '+ Novo Fluxo'}
             </motion.button>
           </div>

@@ -16,7 +16,25 @@ const authFetch = (url, options = {}) => {
   });
 };
 
-const T = {
+const makeT = (tema) => tema === 'claro' ? {
+  bg: '#e6ebe5',
+  bgAlt: '#eaedea',
+  card: 'rgba(0,0,0,0.025)',
+  cardHover: 'rgba(0,0,0,0.04)',
+  border: 'rgba(45,75,45,0.12)',
+  borderHover: 'rgba(45,75,45,0.22)',
+  text: '#1a2a1a',
+  muted: 'rgba(22,42,22,0.55)',
+  sub: 'rgba(22,42,22,0.35)',
+  input: 'rgba(22,55,22,0.06)',
+  inputBorder: 'rgba(22,55,22,0.16)',
+  green: '#2e7a50',
+  greenDim: 'rgba(46,122,80,0.08)',
+  red: '#b53535',
+  yellow: '#9a6a08',
+  blue: '#3a6fa0',
+  purple: '#6b4fa0',
+} : {
   bg: '#070b07',
   bgAlt: '#0b100b',
   card: 'rgba(255,255,255,0.022)',
@@ -35,6 +53,9 @@ const T = {
   blue: '#4a8fd4',
   purple: '#8b6bc4',
 };
+
+// T é atualizado pelo componente AdminPanel a cada render com base no tema recebido
+let T = makeT('escuro');
 
 const fadeUp = {
   initial: { opacity: 0, y: 10 },
@@ -1441,7 +1462,8 @@ const TemplatesAdmin = () => {
 };
 
 /* ── Main AdminPanel ── */
-const AdminPanel = () => {
+const AdminPanel = ({ tema = 'escuro' }) => {
+  T = makeT(tema);
   const navigate = useNavigate();
   const [aba, setAba] = useState('metricas');
   const [ok, setOk] = useState(null);
@@ -1487,11 +1509,11 @@ const AdminPanel = () => {
         @keyframes spin { to { transform: rotate(360deg) } }
         ::-webkit-scrollbar { width: 4px }
         ::-webkit-scrollbar-track { background: transparent }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 99px }
-        select option { background-color: #0b100b !important; color: #eee !important }
+        ::-webkit-scrollbar-thumb { background: ${T.sub}; border-radius: 99px }
+        select option { background-color: ${T.bg} !important; color: ${T.text} !important }
         input:focus, textarea:focus, select:focus {
-          border-color: rgba(37,211,102,0.4) !important;
-          box-shadow: 0 0 0 3px rgba(37,211,102,0.06) !important;
+          border-color: ${T.green}66 !important;
+          box-shadow: 0 0 0 3px ${T.green}11 !important;
         }
         @media (max-width: 768px) {
           .admin-grid-2 { grid-template-columns: 1fr !important }
@@ -1507,7 +1529,7 @@ const AdminPanel = () => {
           gap: 2,
           padding: '0 36px',
           borderBottom: `1px solid ${T.border}`,
-          background: 'rgba(7,11,7,0.6)',
+          background: T.bgAlt,
         }}
       >
         {abas.map((a) => (

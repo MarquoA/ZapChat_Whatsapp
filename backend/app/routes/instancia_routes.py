@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 from app.models.instancia_model import (
     salvar_instancia, listar_instancias,
     atualizar_status, deletar_instancia,
-    buscar_instancia_por_id, salvar_evolution_id               # ── NOVO: imports das funções novas
+    buscar_instancia_por_id, salvar_evolution_id
 )
 from app.database import get_db_connection
 
@@ -16,10 +16,9 @@ router = APIRouter()
 security = HTTPBearer()
 logger = logging.getLogger(__name__)
 
-SECRET_KEY = os.getenv("SECRET_KEY")                                # ── ALTERADO: lê do .env em vez de hardcoded
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
-# ── NOVO: Configuração da Evolution API (lê do .env)
 EVOLUTION_API_URL = os.getenv("EVOLUTION_API_URL", "http://localhost:8080")
 EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "")
 
@@ -52,7 +51,7 @@ def get_plano_usuario(usuario_id: int) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ── NOVO: Helper para chamadas à Evolution API
+# HELPERS EVOLUTION API
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _evolution_headers():
@@ -89,11 +88,11 @@ class StatusPayload(BaseModel):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ROTAS EXISTENTES (com ajustes para Evolution API)
+# ROTAS
 # ══════════════════════════════════════════════════════════════════════════════
 
 @router.post("/instancias/criar")
-async def criar(payload: InstanciaPayload, usuario: dict = Depends(get_usuario_atual)):  # ── ALTERADO: agora é async
+async def criar(payload: InstanciaPayload, usuario: dict = Depends(get_usuario_atual)):
     if str(payload.usuario_id) != str(usuario["sub"]):
         raise HTTPException(status_code=403, detail="Acesso negado.")
 
@@ -116,7 +115,6 @@ async def criar(payload: InstanciaPayload, usuario: dict = Depends(get_usuario_a
             detail=f"Limite de {limite} instância(s) atingido para o plano {plano.capitalize()}. Faça upgrade para o plano {upgrade}."
         )
 
-    # 1) Salva no banco local primeiro (sem evolution_instance_id por enquanto)
     instancia_id = salvar_instancia(
         usuario_id=payload.usuario_id,
         nome=payload.nome,
@@ -125,7 +123,6 @@ async def criar(payload: InstanciaPayload, usuario: dict = Depends(get_usuario_a
     if instancia_id is None:
         raise HTTPException(status_code=500, detail="Erro ao criar instância.")
 
-    # ── NOVO: 2) Cria a instância na Evolution API
     nome_evolution = _gerar_nome_evolution(instancia_id, payload.nome)
 
     if EVOLUTION_API_KEY:  # Só tenta se a Evolution estiver configurada
@@ -194,11 +191,10 @@ def atualizar(instancia_id: int, payload: StatusPayload, usuario: dict = Depends
 
 
 @router.delete("/instancias/{instancia_id}/{usuario_id}")
-async def deletar(instancia_id: int, usuario_id: int, usuario: dict = Depends(get_usuario_atual)):  # ── ALTERADO: agora é async
+async def deletar(instancia_id: int, usuario_id: int, usuario: dict = Depends(get_usuario_atual)):
     if str(usuario_id) != str(usuario["sub"]):
         raise HTTPException(status_code=403, detail="Acesso negado.")
 
-    # ── NOVO: Tenta deletar da Evolution API antes de remover do banco
     inst = buscar_instancia_por_id(instancia_id, usuario_id)
     if inst and inst.get("evolution_instance_id") and EVOLUTION_API_KEY:
         try:
@@ -218,7 +214,7 @@ async def deletar(instancia_id: int, usuario_id: int, usuario: dict = Depends(ge
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ── NOVO: Rota para gerar QR Code via Evolution API
+# ROTA: QR CODE
 # ══════════════════════════════════════════════════════════════════════════════
 
 @router.get("/instancias/{instancia_id}/qrcode/{usuario_id}")
@@ -387,7 +383,7 @@ async def obter_qrcode(instancia_id: int, usuario_id: int, usuario: dict = Depen
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ── NOVO: Rota para verificar status de conexão (polling do frontend)
+# ROTA: STATUS DE CONEXÃO (polling do frontend)
 # ══════════════════════════════════════════════════════════════════════════════
 
 @router.get("/instancias/{instancia_id}/status-evolution/{usuario_id}")

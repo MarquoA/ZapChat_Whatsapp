@@ -1,6 +1,4 @@
 # app/routes/admin_routes.py
-# ── NOVO ARQUIVO: Rotas administrativas do ZapChat
-# Funcionalidades: gestão de usuários, CRUD de templates, métricas globais
 
 import os
 import json
@@ -425,7 +423,7 @@ def metricas_globais(admin: dict = Depends(verificar_admin)):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ── NOVO: Promover um fluxo existente a template (drag-and-drop, sem JSON)
+# ROTA: PROMOVER FLUXO A TEMPLATE
 # ══════════════════════════════════════════════════════════════════════════════
 
 class PromoverTemplatePayload(BaseModel):

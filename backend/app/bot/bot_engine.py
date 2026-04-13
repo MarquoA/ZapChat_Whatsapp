@@ -46,19 +46,26 @@ class BotEngine:
         """
         Retorna dict padronizado com tudo que o frontend precisa.
         Campos: tipo_node, mensagem, image_url, opcoes, delay
+        Para iaNode: inclui ia_prompt e ia_modelo para o caller chamar a IA.
         """
         tipo   = self._tipo_no(node)
         label  = node["data"].get("label", "")
         opcoes = node["data"].get("options", [])
         delay  = node["data"].get("delay", 2)
 
-        return {
+        resultado = {
             "tipo_node": tipo,
             "mensagem":  label,
             "image_url": self._image_url(node) if tipo == TIPO_IMAGEM else "",
             "opcoes":    opcoes,
             "delay":     delay,
         }
+
+        if tipo == TIPO_IA:
+            # Agente é referenciado pelo ID; bot_routes busca os detalhes no banco
+            resultado["ia_agente_id"] = node["data"].get("agente_id")
+
+        return resultado
 
     def montar_mensagem_com_opcoes(self, node: dict) -> str:
         """Versão texto puro — usada pelo webhook WhatsApp real (Evolution API)."""

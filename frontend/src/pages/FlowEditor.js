@@ -22,6 +22,85 @@ const authFetch = (url, options = {}) => {
   });
 };
 
+// ─── TEMA DO EDITOR ───────────────────────────────────────────────────────────
+const FE_TEMAS = {
+  escuro: {
+    nodeBg: 'rgba(8,12,8,0.97)',
+    nodeShadow: '0 20px 40px rgba(0,0,0,0.5)',
+    canvasBg: '#0d1117',
+    bgDotColor: '#25D366',
+    navBg: 'rgba(6,10,6,0.98)',
+    navText: 'rgba(255,255,255,0.85)',
+    navBorder: 'rgba(255,255,255,0.06)',
+    sidebarBg: 'rgba(8,12,8,0.97)',
+    sidebarBorder: 'rgba(255,255,255,0.05)',
+    sidebarLabel: 'rgba(255,255,255,0.25)',
+    sidebarText: 'rgba(255,255,255,0.3)',
+    inputBg: 'rgba(255,255,255,0.03)',
+    inputBorder: 'rgba(255,255,255,0.08)',
+    inputText: '#ffffff',
+    textMuted: 'rgba(255,255,255,0.35)',
+    textSub: 'rgba(255,255,255,0.2)',
+    green: '#25D366',
+    greenDim: 'rgba(37,211,102,0.04)',
+    blue: '#63b3ed',
+    blueDim: 'rgba(99,179,237,0.04)',
+    purple: '#a78bfa',
+    purpleDim: 'rgba(167,139,250,0.04)',
+    cyan: '#34b7f1',
+    danger: '#ff4d4d',
+    warning: '#f0a500',
+    handleBorder: '#080c08',
+    overlay: 'rgba(8,12,8,0.85)',
+    minimapBg: 'rgba(8,12,8,0.9)',
+    minimapBorder: 'rgba(255,255,255,0.08)',
+    minimapMask: 'rgba(8,12,8,0.85)',
+    shortcutBg: 'rgba(255,255,255,0.05)',
+    shortcutText: 'rgba(255,255,255,0.2)',
+  },
+  claro: {
+    nodeBg: '#f5f8f4',
+    nodeShadow: '0 4px 18px rgba(0,0,0,0.13)',
+    canvasBg: '#e5ddd5',
+    bgDotColor: '#a09080',
+    navBg: '#eaede9',
+    navText: '#1a2a1a',
+    navBorder: 'rgba(45,75,45,0.15)',
+    sidebarBg: '#e2e6e1',
+    sidebarBorder: 'rgba(45,75,45,0.14)',
+    sidebarLabel: '#3a5a3a',
+    sidebarText: '#4d6b4d',
+    inputBg: 'rgba(22,55,22,0.08)',
+    inputBorder: 'rgba(22,55,22,0.22)',
+    inputText: '#1a2a1a',
+    textMuted: 'rgba(22,42,22,0.62)',
+    textSub: 'rgba(22,42,22,0.52)',
+    green: '#2e7a50',
+    greenDim: 'rgba(46,122,80,0.14)',
+    blue: '#3a6fa0',
+    blueDim: 'rgba(58,111,160,0.12)',
+    purple: '#6b4fa0',
+    purpleDim: 'rgba(107,79,160,0.12)',
+    cyan: '#2b7fa8',
+    danger: '#b53535',
+    warning: '#9a6a08',
+    handleBorder: '#e5ddd5',
+    overlay: 'rgba(229,221,213,0.88)',
+    minimapBg: 'rgba(226,230,225,0.97)',
+    minimapBorder: 'rgba(45,75,45,0.18)',
+    minimapMask: 'rgba(229,221,213,0.82)',
+    shortcutBg: 'rgba(22,55,22,0.09)',
+    shortcutText: 'rgba(22,42,22,0.58)',
+  },
+};
+
+// Atualizado em FlowContent a cada render com base no tema salvo
+let FE_T = FE_TEMAS.escuro;
+// Compartilhado com IANode para acesso ao usuário e navegação
+let FE_USUARIO_ID = 0;
+let FE_NAVIGATE = null;
+let FE_PUSH_HISTORY = () => {};
+
 // ─── SPINNER ─────────────────────────────────────────────────────────────────
 const Spinner = ({ size = 16, color = '#25D366' }) => (
   <span style={{ width: size, height: size, flexShrink: 0, border: `2px solid ${color}33`, borderTop: `2px solid ${color}`, borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
@@ -51,7 +130,7 @@ const BotNode = ({ id, data }) => {
   const handleDelayChange = (e) => { const v = e.target.value.replace(/\D/g,''); setDelay(v); updateNodeData(label, options, v); };
 
   const addOption = () => {
-    const newOpts = [...options, 'Nova Opcao'];
+    const newOpts = [...options, 'Nova Opção'];
     setOptions(newOpts);
     updateNodeData(label, newOpts, delay);
   };
@@ -73,63 +152,62 @@ const BotNode = ({ id, data }) => {
   const deleteNode = () => {
     setNodes(nds => nds.filter(n => n.id !== id));
     setEdges(eds => eds.filter(e => e.source !== id && e.target !== id));
+    FE_PUSH_HISTORY();
   };
 
   const charCount = label.length;
-  const charColor = charCount > 1000 ? '#ff4d4d' : charCount > 700 ? '#f0a500' : 'rgba(255,255,255,0.25)';
-
-  const boxBorder = '1px solid rgba(37,211,102,0.2)';
+  const charColor = charCount > 1000 ? FE_T.danger : charCount > 700 ? FE_T.warning : FE_T.textMuted;
 
   return (
-    <div style={{ background: 'rgba(8,12,8,0.97)', backdropFilter: 'blur(10px)', border: boxBorder, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(37,211,102,0.04)', borderRadius: '15px 15px 0 0' }}>
+    <div style={{ background: FE_T.nodeBg, border: `1px solid ${FE_T.green}33`, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: FE_T.nodeShadow }}>
+      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${FE_T.green}22`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: FE_T.greenDim, borderRadius: '15px 15px 0 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '7px', height: '7px', background: '#25D366', borderRadius: '50%', boxShadow: '0 0 6px #25D366' }} />
-          <span style={{ fontSize: '9px', color: '#25D366', fontWeight: '800', letterSpacing: '1px' }}>MENSAGEM DE TEXTO</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(37,211,102,0.08)', padding: '3px 7px', borderRadius: '6px', border: '1px solid rgba(37,211,102,0.15)' }}>
+          <div style={{ width: '7px', height: '7px', background: FE_T.green, borderRadius: '50%' }} />
+          <span style={{ fontSize: '9px', color: FE_T.green, fontWeight: '800', letterSpacing: '1px' }}>MENSAGEM DE TEXTO</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: `${FE_T.green}12`, padding: '3px 7px', borderRadius: '6px', border: `1px solid ${FE_T.green}22` }}>
             <input type="text" value={delay} onChange={handleDelayChange}
-              style={{ background: 'none', border: 'none', color: '#25D366', fontSize: '11px', width: '18px', fontWeight: '800', outline: 'none', textAlign: 'center' }} />
-            <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>S</span>
+              style={{ background: 'none', border: 'none', color: FE_T.green, fontSize: '11px', width: '18px', fontWeight: '800', outline: 'none', textAlign: 'center' }} />
+            <span style={{ fontSize: '8px', color: FE_T.textMuted, fontWeight: '700' }}>S</span>
           </div>
         </div>
         <button onClick={deleteNode} title="Apagar node"
-          style={{ background: 'rgba(255,77,77,0.08)', border: '1px solid rgba(255,77,77,0.2)', color: '#ff4d4d', cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px', transition: '0.2s' }}>
+          style={{ background: `${FE_T.danger}12`, border: `1px solid ${FE_T.danger}33`, color: FE_T.danger, cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px', transition: '0.2s' }}>
           APAGAR
         </button>
       </div>
       <div style={{ padding: '14px' }}>
-        <Handle type="target" position={Position.Top} style={{ background: '#25D366', width: '10px', height: '10px', border: '2px solid #080c08', top: '-6px' }} />
+        <Handle type="target" position={Position.Top} style={{ background: FE_T.green, width: '10px', height: '10px', border: `2px solid ${FE_T.handleBorder}`, top: '-6px' }} />
         <textarea value={label} onChange={handleLabelChange}
-          style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white', fontSize: '0.83rem', padding: '10px 12px', minHeight: '80px', outline: 'none', resize: 'none', marginBottom: '4px', boxSizing: 'border-box', lineHeight: '1.5' }}
+          style={{ width: '100%', background: FE_T.inputBg, border: `1px solid ${FE_T.inputBorder}`, borderRadius: '8px', color: FE_T.inputText, fontSize: '0.83rem', padding: '10px 12px', minHeight: '80px', outline: 'none', resize: 'none', marginBottom: '4px', boxSizing: 'border-box', lineHeight: '1.5' }}
           placeholder="Digite o texto da mensagem..." />
         <p style={{ fontSize: '0.55rem', color: charColor, textAlign: 'right', marginBottom: '12px', fontWeight: '600' }}>{charCount} caracteres</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', fontWeight: '800', letterSpacing: '1px' }}>OPCOES DE RESPOSTA</span>
+            <span style={{ fontSize: '0.58rem', color: FE_T.textMuted, fontWeight: '800', letterSpacing: '1px' }}>OPCOES DE RESPOSTA</span>
             <button onClick={addOption}
-              style={{ background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', color: '#25D366', fontSize: '0.6rem', cursor: 'pointer', fontWeight: '900', padding: '3px 8px', borderRadius: '5px' }}>
+              style={{ background: `${FE_T.green}14`, border: `1px solid ${FE_T.green}33`, color: FE_T.green, fontSize: '0.6rem', cursor: 'pointer', fontWeight: '900', padding: '3px 8px', borderRadius: '5px' }}>
               + ADD
             </button>
           </div>
           {options.map((opt, i) => (
-            <div key={i} style={{ position: 'relative', background: 'rgba(37,211,102,0.04)', padding: '9px 10px', borderRadius: '8px', border: '1px solid rgba(37,211,102,0.1)', display: 'flex', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontWeight: '800', marginRight: '6px', flexShrink: 0 }}>{i+1}.</span>
+            <div key={i} style={{ position: 'relative', background: `${FE_T.green}08`, padding: '9px 10px', borderRadius: '8px', border: `1px solid ${FE_T.green}18`, display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.6rem', color: FE_T.textMuted, fontWeight: '800', marginRight: '6px', flexShrink: 0 }}>{i+1}.</span>
               <input value={opt} onChange={e => updateOption(i, e.target.value)}
-                style={{ background: 'none', border: 'none', color: 'white', fontSize: '0.75rem', outline: 'none', flex: 1, minWidth: 0 }} />
+                style={{ background: 'none', border: 'none', color: FE_T.inputText, fontSize: '0.75rem', outline: 'none', flex: 1, minWidth: 0 }} />
               <button onClick={() => removeOption(i)}
-                style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '14px', marginLeft: '6px', flexShrink: 0, lineHeight: 1 }}>x</button>
+                style={{ background: 'none', border: 'none', color: FE_T.danger, cursor: 'pointer', fontSize: '14px', marginLeft: '6px', flexShrink: 0, lineHeight: 1 }}>x</button>
               <Handle type="source" position={Position.Right} id={`opt${i}`}
-                style={{ right: '-6px', background: '#25D366', width: '11px', height: '11px', border: '2px solid #080c08' }} />
+                style={{ right: '-6px', background: FE_T.green, width: '11px', height: '11px', border: `2px solid ${FE_T.handleBorder}` }} />
             </div>
           ))}
           {options.length === 0 && (
-            <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '6px 0', fontStyle: 'italic' }}>
-              Sem opcoes — saida unica pelo fundo
+            <div style={{ fontSize: '0.58rem', color: FE_T.textSub, textAlign: 'center', padding: '6px 0', fontStyle: 'italic' }}>
+              Sem opções — saída única pelo fundo
             </div>
           )}
           {options.length === 0 && (
             <Handle type="source" position={Position.Bottom} id="default"
-              style={{ bottom: '-6px', background: '#34b7f1', width: '11px', height: '11px', border: '2px solid #080c08' }} />
+              style={{ bottom: '-6px', background: FE_T.cyan, width: '11px', height: '11px', border: `2px solid ${FE_T.handleBorder}` }} />
           )}
         </div>
       </div>
@@ -169,49 +247,50 @@ const ImageNode = ({ id, data }) => {
   const deleteNode = () => {
     setNodes(nds => nds.filter(n => n.id !== id));
     setEdges(eds => eds.filter(e => e.source !== id && e.target !== id));
+    FE_PUSH_HISTORY();
   };
 
   return (
-    <div style={{ background: 'rgba(8,12,8,0.97)', border: '1px solid rgba(99,179,237,0.25)', borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(99,179,237,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(99,179,237,0.04)', borderRadius: '15px 15px 0 0' }}>
+    <div style={{ background: FE_T.nodeBg, border: `1px solid ${FE_T.blue}33`, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: FE_T.nodeShadow }}>
+      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${FE_T.blue}18`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: FE_T.blueDim, borderRadius: '15px 15px 0 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '7px', height: '7px', background: '#63b3ed', borderRadius: '50%', boxShadow: '0 0 6px #63b3ed' }} />
-          <span style={{ fontSize: '9px', color: '#63b3ed', fontWeight: '800', letterSpacing: '1px' }}>IMAGEM</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(99,179,237,0.08)', padding: '3px 7px', borderRadius: '6px', border: '1px solid rgba(99,179,237,0.15)' }}>
+          <div style={{ width: '7px', height: '7px', background: FE_T.blue, borderRadius: '50%' }} />
+          <span style={{ fontSize: '9px', color: FE_T.blue, fontWeight: '800', letterSpacing: '1px' }}>IMAGEM</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: `${FE_T.blue}12`, padding: '3px 7px', borderRadius: '6px', border: `1px solid ${FE_T.blue}22` }}>
             <input type="text" value={delay} onChange={e => { const v = e.target.value.replace(/\D/g,''); setDelay(v); update(caption, imageUrl, v); }}
-              style={{ background: 'none', border: 'none', color: '#63b3ed', fontSize: '11px', width: '18px', fontWeight: '800', outline: 'none', textAlign: 'center' }} />
-            <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>S</span>
+              style={{ background: 'none', border: 'none', color: FE_T.blue, fontSize: '11px', width: '18px', fontWeight: '800', outline: 'none', textAlign: 'center' }} />
+            <span style={{ fontSize: '8px', color: FE_T.textMuted, fontWeight: '700' }}>S</span>
           </div>
         </div>
         <button onClick={deleteNode}
-          style={{ background: 'rgba(255,77,77,0.08)', border: '1px solid rgba(255,77,77,0.2)', color: '#ff4d4d', cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px' }}>
+          style={{ background: `${FE_T.danger}12`, border: `1px solid ${FE_T.danger}33`, color: FE_T.danger, cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px' }}>
           APAGAR
         </button>
       </div>
       <div style={{ padding: '14px' }}>
-        <Handle type="target" position={Position.Top} style={{ background: '#63b3ed', width: '10px', height: '10px', border: '2px solid #080c08', top: '-6px' }} />
+        <Handle type="target" position={Position.Top} style={{ background: FE_T.blue, width: '10px', height: '10px', border: `2px solid ${FE_T.handleBorder}`, top: '-6px' }} />
         <div onClick={() => fileRef.current?.click()}
-          style={{ width: '100%', height: '130px', background: 'rgba(99,179,237,0.04)', border: `2px dashed ${imageUrl ? 'rgba(99,179,237,0.4)' : 'rgba(99,179,237,0.2)'}`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: '10px', overflow: 'hidden', transition: '0.2s' }}>
+          style={{ width: '100%', height: '130px', background: FE_T.blueDim, border: `2px dashed ${imageUrl ? FE_T.blue + '66' : FE_T.blue + '33'}`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: '10px', overflow: 'hidden', transition: '0.2s' }}>
           {imageUrl
             ? <img src={imageUrl} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
             : <div style={{ textAlign: 'center' }}>
-                <p style={{ color: 'rgba(99,179,237,0.6)', fontSize: '0.6rem', fontWeight: '700', margin: 0 }}>CLIQUE PARA ENVIAR</p>
-                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.55rem', margin: '4px 0 0' }}>PNG, JPG, GIF</p>
+                <p style={{ color: FE_T.blue + 'aa', fontSize: '0.6rem', fontWeight: '700', margin: 0 }}>CLIQUE PARA ENVIAR</p>
+                <p style={{ color: FE_T.textSub, fontSize: '0.55rem', margin: '4px 0 0' }}>PNG, JPG, GIF</p>
               </div>
           }
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
         </div>
         {imageUrl && (
           <button onClick={() => { setImageUrl(''); update(caption, '', delay); }}
-            style={{ background: 'none', border: 'none', color: 'rgba(255,77,77,0.6)', fontSize: '0.6rem', cursor: 'pointer', marginBottom: '8px', padding: 0 }}>
+            style={{ background: 'none', border: 'none', color: FE_T.danger + 'aa', fontSize: '0.6rem', cursor: 'pointer', marginBottom: '8px', padding: 0 }}>
             remover imagem
           </button>
         )}
         <input value={caption} onChange={e => { setCaption(e.target.value); update(e.target.value, imageUrl, delay); }}
           placeholder="Legenda (opcional)..."
-          style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white', fontSize: '0.78rem', padding: '9px 11px', outline: 'none', boxSizing: 'border-box' }} />
+          style={{ width: '100%', background: FE_T.inputBg, border: `1px solid ${FE_T.inputBorder}`, borderRadius: '8px', color: FE_T.inputText, fontSize: '0.78rem', padding: '9px 11px', outline: 'none', boxSizing: 'border-box' }} />
         <Handle type="source" position={Position.Bottom} id="default"
-          style={{ bottom: '-6px', background: '#63b3ed', width: '11px', height: '11px', border: '2px solid #080c08' }} />
+          style={{ bottom: '-6px', background: FE_T.blue, width: '11px', height: '11px', border: `2px solid ${FE_T.handleBorder}` }} />
       </div>
     </div>
   );
@@ -220,19 +299,30 @@ const ImageNode = ({ id, data }) => {
 // ─── NODE: IA COM CONTEXTO ────────────────────────────────────────────────────
 const IANode = ({ id, data }) => {
   const { setNodes, setEdges } = useReactFlow();
-  const [prompt, setPrompt] = useState(data.prompt || '');
-  const [modelo, setModelo] = useState(data.modelo || 'gemini-pro');
   const [delay, setDelay] = useState(data.delay ?? 3);
+  const [agentes, setAgentes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [detalhe, setDetalhe] = useState(null);
+  const [loadingDetalhe, setLoadingDetalhe] = useState(false);
+  const [agenteAtivo, setAgenteAtivo] = useState(
+    data.agenteId ? { id: data.agenteId, nome: data.agenteName || '', modelo: data.modelo || 'gpt-4o-mini' } : null
+  );
+  const [trocando, setTrocando] = useState(false);
+
+  useEffect(() => { setDelay(data.delay ?? 3); }, [data.delay]);
 
   useEffect(() => {
-    setPrompt(data.prompt || '');
-    setModelo(data.modelo || 'gemini-pro');
-    setDelay(data.delay ?? 3);
-  }, [data.prompt, data.modelo, data.delay]);
+    if (!FE_USUARIO_ID) { setLoading(false); return; }
+    authFetch(`${API_URL}/ia/agentes/listar/${FE_USUARIO_ID}`)
+      .then(r => r.json())
+      .then(d => setAgentes(d.agentes || []))
+      .catch(() => setAgentes([]))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const update = useCallback((newPrompt, newModelo, newDelay) => {
+  const updateNodeData = useCallback((agenteId, agenteName, modelo, prompt, d) => {
     setNodes(nds => nds.map(n => n.id === id
-      ? { ...n, data: { ...n.data, prompt: newPrompt, modelo: newModelo, delay: newDelay } }
+      ? { ...n, data: { ...n.data, agenteId, agenteName, modelo, prompt, delay: d } }
       : n
     ));
   }, [id, setNodes]);
@@ -240,47 +330,157 @@ const IANode = ({ id, data }) => {
   const deleteNode = () => {
     setNodes(nds => nds.filter(n => n.id !== id));
     setEdges(eds => eds.filter(e => e.source !== id && e.target !== id));
+    FE_PUSH_HISTORY();
   };
 
-  return (
-    <div style={{ background: 'rgba(8,12,8,0.97)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '15px', minWidth: '300px', maxWidth: '340px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(167,139,250,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(167,139,250,0.04)', borderRadius: '15px 15px 0 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '7px', height: '7px', background: '#a78bfa', borderRadius: '50%', boxShadow: '0 0 6px #a78bfa' }} />
-          <span style={{ fontSize: '9px', color: '#a78bfa', fontWeight: '800', letterSpacing: '1px' }}>IA COM CONTEXTO</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(167,139,250,0.08)', padding: '3px 7px', borderRadius: '6px', border: '1px solid rgba(167,139,250,0.15)' }}>
-            <input type="text" value={delay} onChange={e => { const v = e.target.value.replace(/\D/g,''); setDelay(v); update(prompt, modelo, v); }}
-              style={{ background: 'none', border: 'none', color: '#a78bfa', fontSize: '11px', width: '18px', fontWeight: '800', outline: 'none', textAlign: 'center' }} />
-            <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>S</span>
-          </div>
+  const verDetalhes = (ag) => {
+    if (!FE_USUARIO_ID) return;
+    setLoadingDetalhe(true);
+    setDetalhe(null);
+    authFetch(`${API_URL}/ia/agentes/${ag.id}/${FE_USUARIO_ID}`)
+      .then(r => r.json())
+      .then(d => setDetalhe(d))
+      .catch(() => setDetalhe(null))
+      .finally(() => setLoadingDetalhe(false));
+  };
+
+  const confirmarAgente = () => {
+    if (!detalhe) return;
+    const novo = { id: detalhe.id, nome: detalhe.nome, modelo: detalhe.modelo };
+    setAgenteAtivo(novo);
+    setDetalhe(null);
+    setTrocando(false);
+    updateNodeData(detalhe.id, detalhe.nome, detalhe.modelo, detalhe.prompt || '', delay);
+  };
+
+  const handleDelay = (v) => {
+    setDelay(v);
+    if (agenteAtivo) updateNodeData(agenteAtivo.id, agenteAtivo.nome, agenteAtivo.modelo, data.prompt || '', v);
+  };
+
+  const nodeHeader = (
+    <div style={{ padding: '10px 14px', borderBottom: `1px solid ${FE_T.purple}18`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: FE_T.purpleDim, borderRadius: '15px 15px 0 0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ width: '7px', height: '7px', background: FE_T.purple, borderRadius: '50%' }} />
+        <span style={{ fontSize: '9px', color: FE_T.purple, fontWeight: '800', letterSpacing: '1px' }}>IA COM CONTEXTO</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: `${FE_T.purple}12`, padding: '3px 7px', borderRadius: '6px', border: `1px solid ${FE_T.purple}22` }}>
+          <input type="text" value={delay} onChange={e => handleDelay(e.target.value.replace(/\D/g,''))}
+            style={{ background: 'none', border: 'none', color: FE_T.purple, fontSize: '11px', width: '18px', fontWeight: '800', outline: 'none', textAlign: 'center' }} />
+          <span style={{ fontSize: '8px', color: FE_T.textMuted, fontWeight: '700' }}>S</span>
         </div>
-        <button onClick={deleteNode}
-          style={{ background: 'rgba(255,77,77,0.08)', border: '1px solid rgba(255,77,77,0.2)', color: '#ff4d4d', cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px' }}>
-          APAGAR
-        </button>
       </div>
+      <button onClick={deleteNode}
+        style={{ background: `${FE_T.danger}12`, border: `1px solid ${FE_T.danger}33`, color: FE_T.danger, cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px' }}>
+        APAGAR
+      </button>
+    </div>
+  );
+
+  const topHandle = <Handle type="target" position={Position.Top} style={{ background: FE_T.purple, width: '10px', height: '10px', border: `2px solid ${FE_T.handleBorder}`, top: '-6px' }} />;
+  const botHandle = <Handle type="source" position={Position.Bottom} id="default" style={{ bottom: '-6px', background: FE_T.purple, width: '11px', height: '11px', border: `2px solid ${FE_T.handleBorder}` }} />;
+
+  // ── Estado: agente já configurado ──
+  if (agenteAtivo && !trocando) {
+    return (
+      <div style={{ background: FE_T.nodeBg, border: `1px solid ${FE_T.purple}44`, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: FE_T.nodeShadow }}>
+        {nodeHeader}
+        <div style={{ padding: '14px' }}>
+          {topHandle}
+          <div style={{ background: FE_T.purpleDim, border: `1px solid ${FE_T.purple}33`, borderRadius: '10px', padding: '12px', marginBottom: '10px' }}>
+            <p style={{ fontSize: '0.58rem', color: FE_T.purple, fontWeight: '800', marginBottom: '5px', letterSpacing: '0.5px' }}>AGENTE ATIVO</p>
+            <p style={{ fontSize: '0.88rem', color: FE_T.inputText, fontWeight: '700', marginBottom: '3px' }}>{agenteAtivo.nome}</p>
+            <p style={{ fontSize: '0.65rem', color: FE_T.textMuted, fontWeight: '600' }}>{agenteAtivo.modelo}</p>
+          </div>
+          <button onClick={() => { setTrocando(true); setDetalhe(null); }}
+            style={{ width: '100%', background: 'transparent', border: `1px solid ${FE_T.purple}44`, color: FE_T.purple, fontSize: '0.68rem', fontWeight: '800', padding: '8px', borderRadius: '8px', cursor: 'pointer', letterSpacing: '0.5px' }}>
+            TROCAR AGENTE
+          </button>
+          {botHandle}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Estado: visualizando detalhes de um agente ──
+  if (detalhe) {
+    const resumoPrompt = (detalhe.prompt || '').length > 140
+      ? (detalhe.prompt || '').substring(0, 140) + '...'
+      : (detalhe.prompt || '—');
+    return (
+      <div style={{ background: FE_T.nodeBg, border: `1px solid ${FE_T.purple}44`, borderRadius: '15px', minWidth: '300px', maxWidth: '340px', boxShadow: FE_T.nodeShadow }}>
+        {nodeHeader}
+        <div style={{ padding: '14px' }}>
+          {topHandle}
+          <p style={{ fontSize: '0.58rem', color: FE_T.purple, fontWeight: '800', letterSpacing: '0.5px', marginBottom: '8px' }}>DETALHES DO AGENTE</p>
+          <div style={{ background: FE_T.purpleDim, border: `1px solid ${FE_T.purple}22`, borderRadius: '8px', padding: '11px', marginBottom: '8px' }}>
+            <p style={{ fontSize: '0.85rem', color: FE_T.inputText, fontWeight: '700', marginBottom: '3px' }}>{detalhe.nome}</p>
+            <p style={{ fontSize: '0.62rem', color: FE_T.textMuted, marginBottom: '8px' }}>{detalhe.modelo} · Tom: {detalhe.tom}</p>
+            <p style={{ fontSize: '0.58rem', color: FE_T.purple, fontWeight: '800', marginBottom: '4px', letterSpacing: '0.5px' }}>INSTRUCAO</p>
+            <p style={{ fontSize: '0.68rem', color: FE_T.textMuted, lineHeight: '1.55', fontStyle: 'italic' }}>{resumoPrompt}</p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => setDetalhe(null)}
+              style={{ flex: 1, background: 'transparent', border: `1px solid ${FE_T.sidebarBorder}`, color: FE_T.textMuted, fontSize: '0.65rem', fontWeight: '700', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
+              VOLTAR
+            </button>
+            <button onClick={confirmarAgente}
+              style={{ flex: 2, background: FE_T.purpleDim, border: `1px solid ${FE_T.purple}55`, color: FE_T.purple, fontSize: '0.65rem', fontWeight: '800', padding: '8px', borderRadius: '8px', cursor: 'pointer', letterSpacing: '0.5px' }}>
+              USAR ESTE AGENTE
+            </button>
+          </div>
+          {botHandle}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Estado: lista de agentes (ou vazio) ──
+  return (
+    <div style={{ background: FE_T.nodeBg, border: `1px solid ${FE_T.purple}44`, borderRadius: '15px', minWidth: '300px', maxWidth: '340px', boxShadow: FE_T.nodeShadow }}>
+      {nodeHeader}
       <div style={{ padding: '14px' }}>
-        <Handle type="target" position={Position.Top} style={{ background: '#a78bfa', width: '10px', height: '10px', border: '2px solid #080c08', top: '-6px' }} />
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', fontSize: '0.58rem', color: 'rgba(167,139,250,0.7)', fontWeight: '800', marginBottom: '5px', letterSpacing: '0.5px' }}>MODELO DE IA</label>
-          <select value={modelo} onChange={e => { setModelo(e.target.value); update(prompt, e.target.value, delay); }}
-            style={{ width: '100%', background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '8px', color: 'white', fontSize: '0.78rem', padding: '8px 10px', outline: 'none' }}>
-            <option value="gemini-pro" style={{ background: '#0d140d' }}>Gemini Pro (recomendado)</option>
-            <option value="gpt-3.5-turbo" style={{ background: '#0d140d' }}>GPT-3.5 Turbo</option>
-            <option value="gpt-4" style={{ background: '#0d140d' }}>GPT-4</option>
-          </select>
-        </div>
-        <label style={{ display: 'block', fontSize: '0.58rem', color: 'rgba(167,139,250,0.7)', fontWeight: '800', marginBottom: '5px', letterSpacing: '0.5px' }}>INSTRUCAO DO BOT</label>
-        <textarea value={prompt} onChange={e => { setPrompt(e.target.value); update(e.target.value, modelo, delay); }}
-          placeholder="Ex: Voce e um atendente da empresa X. Responda de forma educada e objetiva sobre nossos produtos..."
-          style={{ width: '100%', background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '8px', color: 'white', fontSize: '0.78rem', padding: '10px', minHeight: '90px', outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: '10px', lineHeight: '1.5' }} />
-        <div style={{ background: 'rgba(167,139,250,0.05)', borderRadius: '8px', padding: '9px 11px', border: '1px solid rgba(167,139,250,0.1)' }}>
-          <p style={{ fontSize: '0.58rem', color: 'rgba(167,139,250,0.55)', margin: 0, lineHeight: '1.6' }}>
-            A IA responde com base nessa instrucao e no historico da conversa.
-          </p>
-        </div>
-        <Handle type="source" position={Position.Bottom} id="default"
-          style={{ bottom: '-6px', background: '#a78bfa', width: '11px', height: '11px', border: '2px solid #080c08' }} />
+        {topHandle}
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+            <Spinner size={18} color={FE_T.purple} />
+          </div>
+        ) : agentes.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '14px 8px' }}>
+            <p style={{ fontSize: '0.72rem', color: FE_T.textMuted, marginBottom: '14px', lineHeight: '1.6' }}>
+              Nenhuma I.A criada ainda.<br />Crie um agente no Dashboard.
+            </p>
+            <button onClick={() => FE_NAVIGATE && FE_NAVIGATE('/dashboard?aba=AgenteIA')}
+              style={{ background: FE_T.purpleDim, border: `1px solid ${FE_T.purple}44`, color: FE_T.purple, fontSize: '0.72rem', fontWeight: '800', padding: '10px 0', borderRadius: '8px', cursor: 'pointer', width: '100%', letterSpacing: '0.5px' }}>
+              CRIAR I.A
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p style={{ fontSize: '0.58rem', color: FE_T.purple, fontWeight: '800', letterSpacing: '0.5px', marginBottom: '10px' }}>
+              SELECIONAR AGENTE
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', maxHeight: '230px', overflowY: 'auto' }}>
+              {agentes.map(ag => (
+                <div key={ag.id} style={{ background: FE_T.purpleDim, border: `1px solid ${FE_T.purple}22`, borderRadius: '8px', padding: '9px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: '0.78rem', color: FE_T.inputText, fontWeight: '700', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ag.nome}</p>
+                    <p style={{ fontSize: '0.6rem', color: FE_T.textMuted }}>{ag.modelo} · {ag.tom}</p>
+                  </div>
+                  <button onClick={() => verDetalhes(ag)} disabled={loadingDetalhe}
+                    style={{ background: `${FE_T.purple}18`, border: `1px solid ${FE_T.purple}33`, color: FE_T.purple, fontSize: '0.6rem', fontWeight: '800', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', flexShrink: 0, opacity: loadingDetalhe ? 0.5 : 1 }}>
+                    VER
+                  </button>
+                </div>
+              ))}
+            </div>
+            {loadingDetalhe && (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+                <Spinner size={14} color={FE_T.purple} />
+              </div>
+            )}
+          </div>
+        )}
+        {botHandle}
       </div>
     </div>
   );
@@ -469,14 +669,14 @@ const autoLayout = (nodes, edges) => {
 // ─── ITEM DA SIDEBAR ──────────────────────────────────────────────────────────
 const ComponentItem = ({ title, desc, color, locked, onClick }) => (
   <div onClick={locked ? undefined : onClick}
-    style={{ position: 'relative', width: '100%', background: locked ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: `1px solid ${locked ? 'rgba(255,255,255,0.04)' : `${color}22`}`, color: 'white', padding: '12px 14px', borderRadius: '10px', textAlign: 'left', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.45 : 1, marginBottom: '8px', transition: '0.2s' }}>
+    style={{ position: 'relative', width: '100%', background: locked ? FE_T.inputBg : `${color}0a`, border: `1px solid ${locked ? FE_T.sidebarBorder : `${color}22`}`, color: FE_T.inputText, padding: '12px 14px', borderRadius: '10px', textAlign: 'left', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.45 : 1, marginBottom: '8px', transition: '0.2s' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-      <span style={{ color: locked ? 'rgba(255,255,255,0.25)' : color, fontWeight: '900', fontSize: '0.75rem' }}>
+      <span style={{ color: locked ? FE_T.textSub : color, fontWeight: '900', fontSize: '0.75rem' }}>
         {title}
       </span>
-      {locked && <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>PRO</span>}
+      {locked && <span style={{ fontSize: '0.58rem', color: FE_T.sidebarText, background: FE_T.inputBg, padding: '2px 6px', borderRadius: '4px' }}>PRO</span>}
     </div>
-    <div style={{ fontSize: '0.6rem', opacity: 0.4, lineHeight: '1.4' }}>{desc}</div>
+    <div style={{ fontSize: '0.6rem', color: FE_T.textSub, lineHeight: '1.4' }}>{desc}</div>
   </div>
 );
 
@@ -486,7 +686,52 @@ const FlowContent = () => {
   const navigate = useNavigate();
   const { fitView, setCenter } = useReactFlow();
 
+  // Lê o tema salvo e atualiza FE_T (módulo-level) para que os nodes o usem
+  FE_T = FE_TEMAS[localStorage.getItem('zapchat_tema') || 'escuro'];
+
   const usuarioId = parseInt(localStorage.getItem('usuario_id')) || 0;
+  FE_USUARIO_ID = usuarioId;
+  FE_NAVIGATE = navigate;
+
+  // ── Histórico de undo/redo ───────────────────────────────────────────────
+  const historyRef  = useRef([]);
+  const historyIdx  = useRef(-1);
+  const historyTimer = useRef(null);
+  const nodesRef    = useRef(nodes);
+  const edgesRef    = useRef(edges);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
+
+  const pushHistory = useCallback(() => {
+    const snap = { nodes: nodesRef.current, edges: edgesRef.current };
+    historyRef.current = historyRef.current.slice(0, historyIdx.current + 1);
+    historyRef.current.push(snap);
+    if (historyRef.current.length > 60) historyRef.current.shift();
+    historyIdx.current = historyRef.current.length - 1;
+  }, []);
+
+  const debouncedPush = useCallback(() => {
+    clearTimeout(historyTimer.current);
+    historyTimer.current = setTimeout(pushHistory, 350);
+  }, [pushHistory]);
+
+  FE_PUSH_HISTORY = debouncedPush;
+
+  const undo = useCallback(() => {
+    if (historyIdx.current <= 0) return;
+    clearTimeout(historyTimer.current);
+    historyIdx.current--;
+    const snap = historyRef.current[historyIdx.current];
+    if (snap) { setNodes(snap.nodes); setEdges(snap.edges); setAlterado(true); }
+  }, []); // eslint-disable-line
+
+  const redo = useCallback(() => {
+    if (historyIdx.current >= historyRef.current.length - 1) return;
+    clearTimeout(historyTimer.current);
+    historyIdx.current++;
+    const snap = historyRef.current[historyIdx.current];
+    if (snap) { setNodes(snap.nodes); setEdges(snap.edges); setAlterado(true); }
+  }, []); // eslint-disable-line
 
   const [plano, setPlano]         = useState(localStorage.getItem('usuario_plano') || 'starter');
   const [isPro, setIsPro]         = useState(['pro', 'business'].includes(localStorage.getItem('usuario_plano') || 'starter'));
@@ -595,7 +840,7 @@ const FlowContent = () => {
             caption:  node.data?.caption  ?? '',
             imageUrl: node.data?.imageUrl ?? '',
             prompt:   node.data?.prompt   ?? '',
-            modelo:   node.data?.modelo   ?? 'gemini-pro',
+            modelo:   (node.data?.modelo && node.data.modelo !== 'gemini-pro' && node.data.modelo !== 'gpt-4') ? node.data.modelo : 'gpt-4o-mini',
           }
         }));
 
@@ -605,9 +850,9 @@ const FlowContent = () => {
           : nodesCarregados;
         const edgesOrganizados = edgesNormalizados.map(edge => ({
           ...edge,
-          animated: true,
-          style: { stroke: '#25D366', strokeWidth: 2.5 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#25D366' },
+          animated: false,
+          style: { stroke: FE_T.green, strokeWidth: 2.5 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: FE_T.green },
         }));
 
         setNodes(nodesParaUsar);
@@ -632,23 +877,28 @@ const FlowContent = () => {
 
   const onNodesChange = useCallback((changes) => {
     setNodes(nds => applyNodeChanges(changes, nds));
+    if (changes.some(c => c.type === 'remove')) debouncedPush();
     setAlterado(true);
-  }, []);
+  }, [debouncedPush]);
 
   const onEdgesChange = useCallback((changes) => {
     setEdges(eds => applyEdgeChanges(changes, eds));
+    if (changes.some(c => c.type === 'remove')) debouncedPush();
     setAlterado(true);
-  }, []);
+  }, [debouncedPush]);
 
   const onConnect = useCallback((params) => {
     setEdges(eds => addEdge({
       ...params,
-      animated: true,
-      style: { stroke: '#25D366', strokeWidth: 2.5 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: '#25D366' }
+      animated: false,
+      style: { stroke: FE_T.green, strokeWidth: 2.5 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: FE_T.green }
     }, eds));
+    debouncedPush();
     setAlterado(true);
-  }, []);
+  }, [debouncedPush]); // eslint-disable-line
+
+  const onNodeDragStop = useCallback(() => { debouncedPush(); }, [debouncedPush]);
 
   const addNode = (type) => {
     const lastNode = nodes[nodes.length - 1];
@@ -657,7 +907,7 @@ const FlowContent = () => {
     const typeData = {
       botNode:   { label: 'Nova mensagem...', options: [], delay: 2 },
       imageNode: { caption: '', imageUrl: '', delay: 2 },
-      iaNode:    { prompt: '', modelo: 'gemini-pro', delay: 3 },
+      iaNode:    { agenteId: null, agenteName: '', prompt: '', modelo: 'gpt-4o-mini', delay: 3 },
     };
     const newNode = {
       id: Date.now().toString(),
@@ -666,6 +916,7 @@ const FlowContent = () => {
       position: { x: newX, y: newY }
     };
     setNodes(nds => [...nds, newNode]);
+    debouncedPush();
     setAlterado(true);
     setSidebarAberta(false);
     setTimeout(() => setCenter(newX + 150, newY + 150, { zoom: 1, duration: 700 }), 150);
@@ -702,13 +953,12 @@ const FlowContent = () => {
     }
   };
 
-  // Atalho Ctrl+S
+  // Atalhos de teclado
   useEffect(() => {
     const handler = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        salvarFluxo();
-      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); salvarFluxo(); return; }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); return; }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); return; }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -718,76 +968,86 @@ const FlowContent = () => {
   const statsEdges = edges.length;
 
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#0d1117', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ width: '100vw', height: '100vh', background: FE_T.canvasBg, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* ── NAVBAR ── */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(8,12,8,0.96)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', zIndex: 100, gap: '10px', flexShrink: 0 }}>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: FE_T.navBg, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${FE_T.navBorder}`, zIndex: 100, gap: '10px', flexShrink: 0 }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
           {/* Hamburger — visivel so no mobile via CSS injetado */}
           <button
             onClick={() => setSidebarAberta(!sidebarAberta)}
             className="hamburger-flow"
-            style={{ display: 'none', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontSize: '1rem', padding: '6px 10px', borderRadius: '8px', flexShrink: 0 }}>
+            style={{ display: 'none', background: FE_T.inputBg, border: `1px solid ${FE_T.navBorder}`, color: FE_T.navText, cursor: 'pointer', fontSize: '1rem', padding: '6px 10px', borderRadius: '8px', flexShrink: 0 }}>
             &#9776;
           </button>
 
-          <h2 style={{ fontSize: '1.1rem', fontWeight: '900', letterSpacing: '-1px', margin: 0, color: 'white', flexShrink: 0 }}>
-            ZAP<span style={{ color: '#25D366' }}>CHAT</span>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: '900', letterSpacing: '-1px', margin: 0, color: FE_T.navText, flexShrink: 0 }}>
+            ZAP<span style={{ color: FE_T.green }}>CHAT</span>
           </h2>
 
-          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+          <div style={{ width: '1px', height: '20px', background: FE_T.navBorder, flexShrink: 0 }} />
 
           <input
             value={nomeFluxo}
             onChange={e => { setNomeFluxo(e.target.value); setAlterado(true); }}
             className="nav-nome"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', fontWeight: '700', padding: '6px 12px', outline: 'none', width: '200px', minWidth: 0 }}
+            style={{ background: FE_T.inputBg, border: `1px solid ${FE_T.inputBorder}`, borderRadius: '8px', color: FE_T.navText, fontSize: '0.78rem', fontWeight: '700', padding: '6px 12px', outline: 'none', width: '200px', minWidth: 0 }}
           />
 
-          <div className="nav-stats" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: '6px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-              {statsNodes} nodes · {statsEdges} conexoes
+          <div className="nav-stats" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '0.65rem', color: FE_T.textSub, background: FE_T.inputBg, padding: '4px 10px', borderRadius: '6px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+              {statsNodes} blocos · {statsEdges} conexões
             </span>
-            {alterado && (
-              <span style={{ fontSize: '0.62rem', color: '#f0a500', fontWeight: '700', animation: 'fadeIn 0.3s ease' }}>
-                nao salvo
-              </span>
-            )}
+            <span title={alterado ? 'Alterações não salvas' : 'Tudo salvo'} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alterado ? FE_T.warning : FE_T.textSub, transition: 'color 0.3s', position: 'relative' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                <polyline points="13 2 13 9 20 9"/>
+              </svg>
+              {alterado && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: FE_T.warning, position: 'absolute', top: '-2px', right: '-3px' }} />}
+            </span>
+            <button onClick={undo} title="Desfazer (Ctrl+Z)"
+              style={{ background: 'transparent', border: 'none', color: FE_T.textSub, cursor: 'pointer', fontSize: '1rem', padding: '2px 5px', lineHeight: 1, opacity: historyIdx.current > 0 ? 1 : 0.35 }}>
+              ↩
+            </button>
+            <button onClick={redo} title="Refazer (Ctrl+Y)"
+              style={{ background: 'transparent', border: 'none', color: FE_T.textSub, cursor: 'pointer', fontSize: '1rem', padding: '2px 5px', lineHeight: 1, opacity: historyIdx.current < historyRef.current.length - 1 ? 1 : 0.35 }}>
+              ↪
+            </button>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
           {carregando && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Spinner size={13} color="rgba(255,255,255,0.4)" />
-              <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)' }}>Carregando...</span>
+              <Spinner size={13} color={FE_T.textMuted} />
+              <span style={{ fontSize: '0.68rem', color: FE_T.textMuted }}>Carregando...</span>
             </div>
           )}
           {statusMsg && (
-            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: statusTipo === 'ok' ? '#25D366' : '#ff6b6b', animation: 'fadeIn 0.3s ease', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: statusTipo === 'ok' ? FE_T.green : FE_T.danger, animation: 'fadeIn 0.3s ease', whiteSpace: 'nowrap' }}>
               {statusMsg}
             </span>
           )}
 
           <button onClick={handleFitView} title="Ver tudo"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.8rem', padding: '7px 10px', borderRadius: '8px', transition: '0.2s' }}>
+            style={{ background: FE_T.inputBg, border: `1px solid ${FE_T.inputBorder}`, color: FE_T.textMuted, cursor: 'pointer', fontSize: '0.8rem', padding: '7px 10px', borderRadius: '8px', transition: '0.2s' }}>
             [ ]
           </button>
 
           <button onClick={() => setMinimapVisivel(v => !v)} title="Mini-mapa"
-            style={{ background: minimapVisivel ? 'rgba(37,211,102,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${minimapVisivel ? 'rgba(37,211,102,0.25)' : 'rgba(255,255,255,0.08)'}`, color: minimapVisivel ? '#25D366' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.65rem', padding: '7px 10px', borderRadius: '8px', fontWeight: '700', whiteSpace: 'nowrap', transition: '0.2s' }}>
+            style={{ background: minimapVisivel ? `${FE_T.green}14` : FE_T.inputBg, border: `1px solid ${minimapVisivel ? FE_T.green + '44' : FE_T.inputBorder}`, color: minimapVisivel ? FE_T.green : FE_T.textMuted, cursor: 'pointer', fontSize: '0.65rem', padding: '7px 10px', borderRadius: '8px', fontWeight: '700', whiteSpace: 'nowrap', transition: '0.2s' }}>
             MAPA
           </button>
 
           <button onClick={handleVoltar}
-            style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '8px', fontWeight: '700', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', transition: '0.2s' }}>
+            style={{ background: 'transparent', color: FE_T.textMuted, border: `1px solid ${FE_T.navBorder}`, padding: '8px 16px', borderRadius: '8px', fontWeight: '700', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap', transition: '0.2s' }}>
             VOLTAR
           </button>
 
           <button onClick={salvarFluxo} disabled={salvando}
-            style={{ background: salvando ? 'rgba(37,211,102,0.4)' : '#25D366', color: '#0d140d', border: 'none', padding: '8px 20px', borderRadius: '8px', fontWeight: '900', fontSize: '0.75rem', cursor: salvando ? 'not-allowed' : 'pointer', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '7px', whiteSpace: 'nowrap' }}>
-            {salvando ? <><Spinner size={12} color="#0d140d" /> SALVANDO...</> : 'SALVAR'}
+            style={{ background: salvando ? FE_T.green + '66' : FE_T.green, color: salvando ? FE_T.navBg : FE_T.navBg, border: 'none', padding: '8px 20px', borderRadius: '8px', fontWeight: '900', fontSize: '0.75rem', cursor: salvando ? 'not-allowed' : 'pointer', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '7px', whiteSpace: 'nowrap' }}>
+            {salvando ? <><Spinner size={12} color={FE_T.navBg} /> SALVANDO...</> : 'SALVAR'}
           </button>
         </div>
       </nav>
@@ -806,44 +1066,44 @@ const FlowContent = () => {
         {/* ── SIDEBAR ── */}
         <aside
           className={`flow-sidebar${sidebarAberta ? ' aberta' : ''}`}
-          style={{ width: '240px', minWidth: '240px', background: 'rgba(8,12,8,0.97)', backdropFilter: 'blur(20px)', borderRight: '1px solid rgba(255,255,255,0.05)', padding: '20px 14px', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
+          style={{ width: '240px', minWidth: '240px', background: FE_T.sidebarBg, backdropFilter: 'blur(20px)', borderRight: `1px solid ${FE_T.sidebarBorder}`, padding: '20px 14px', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
 
-          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.58rem', fontWeight: '800', letterSpacing: '2px', marginBottom: '14px', textTransform: 'uppercase' }}>ADICIONAR BLOCO</p>
+          <p style={{ color: FE_T.sidebarLabel, fontSize: '0.58rem', fontWeight: '800', letterSpacing: '2px', marginBottom: '14px', textTransform: 'uppercase' }}>ADICIONAR BLOCO</p>
 
-          <ComponentItem title="TEXTO" desc="Mensagem com delay e opcoes de resposta ramificada." color="#25D366" locked={false} onClick={() => addNode('botNode')} />
-          <ComponentItem title="IMAGEM" desc="Envie uma imagem com legenda opcional." color="#63b3ed" locked={!isPro} onClick={() => addNode('imageNode')} />
-          <ComponentItem title="IA COM CONTEXTO" desc="Bot responde com IA baseado no historico da conversa." color="#a78bfa" locked={!isPro} onClick={() => addNode('iaNode')} />
+          <ComponentItem title="TEXTO" desc="Mensagem com delay e opções de resposta ramificada." color={FE_T.green} locked={false} onClick={() => addNode('botNode')} />
+          <ComponentItem title="IMAGEM" desc="Envie uma imagem com legenda opcional." color={FE_T.blue} locked={!isPro} onClick={() => addNode('imageNode')} />
+          <ComponentItem title="IA COM CONTEXTO" desc="Bot responde com IA baseado no histórico da conversa." color={FE_T.purple} locked={!isPro} onClick={() => addNode('iaNode')} />
 
           {!isPro && (
-            <div style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.15)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
-              <p style={{ fontSize: '0.62rem', color: '#a78bfa', fontWeight: '800', marginBottom: '5px' }}>BLOCOS PRO</p>
-              <p style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)', lineHeight: '1.6', marginBottom: '10px' }}>Faca upgrade para desbloquear imagens e IA.</p>
+            <div style={{ background: FE_T.purpleDim, border: `1px solid ${FE_T.purple}22`, borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
+              <p style={{ fontSize: '0.62rem', color: FE_T.purple, fontWeight: '800', marginBottom: '5px' }}>BLOCOS PRO</p>
+              <p style={{ fontSize: '0.58rem', color: FE_T.sidebarText, lineHeight: '1.6', marginBottom: '10px' }}>Faca upgrade para desbloquear imagens e IA.</p>
               <button onClick={() => navigate('/assinar')}
-                style={{ width: '100%', background: '#25D366', color: '#0d140d', border: 'none', borderRadius: '7px', padding: '8px', fontSize: '0.62rem', fontWeight: '900', cursor: 'pointer' }}>
+                style={{ width: '100%', background: FE_T.green, color: FE_T.navBg, border: 'none', borderRadius: '7px', padding: '8px', fontSize: '0.62rem', fontWeight: '900', cursor: 'pointer' }}>
                 VER PLANOS
               </button>
             </div>
           )}
 
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', margin: '10px 0' }} />
+          <div style={{ borderTop: `1px solid ${FE_T.sidebarBorder}`, margin: '10px 0' }} />
 
-          <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.58rem', fontWeight: '800', letterSpacing: '1.5px', marginBottom: '10px' }}>LEGENDA</p>
+          <p style={{ color: FE_T.sidebarText, fontSize: '0.58rem', fontWeight: '800', letterSpacing: '1.5px', marginBottom: '10px' }}>LEGENDA</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
             {[
-              { cor: '#25D366', label: 'Opcoes de resposta' },
-              { cor: '#34b7f1', label: 'Fluxo padrao (sem opcoes)' },
-              { cor: '#63b3ed', label: 'Saida de imagem' },
-              { cor: '#a78bfa', label: 'Saida de IA' },
+              { cor: FE_T.green, label: 'Opcoes de resposta' },
+              { cor: FE_T.cyan, label: 'Fluxo padrao (sem opcoes)' },
+              { cor: FE_T.blue, label: 'Saida de imagem' },
+              { cor: FE_T.purple, label: 'Saida de IA' },
             ].map(({ cor, label }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cor, flexShrink: 0, boxShadow: `0 0 5px ${cor}` }} />
-                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1 }}>{label}</span>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cor, flexShrink: 0 }} />
+                <span style={{ fontSize: '0.6rem', color: FE_T.sidebarText, lineHeight: 1 }}>{label}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ marginTop: 'auto', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.58rem', fontWeight: '800', marginBottom: '8px', letterSpacing: '1px' }}>ATALHOS</p>
+          <div style={{ marginTop: 'auto', background: FE_T.inputBg, padding: '12px', borderRadius: '10px', border: `1px solid ${FE_T.sidebarBorder}` }}>
+            <p style={{ color: FE_T.sidebarText, fontSize: '0.58rem', fontWeight: '800', marginBottom: '8px', letterSpacing: '1px' }}>ATALHOS</p>
             {[
               ['Ctrl+S', 'Salvar'],
               ['Scroll', 'Zoom in/out'],
@@ -851,8 +1111,8 @@ const FlowContent = () => {
               ['[ ] nav', 'Ver tudo'],
             ].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>{k}</span>
-                <span style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.25)' }}>{v}</span>
+                <span style={{ fontSize: '0.58rem', color: FE_T.sidebarText, background: FE_T.shortcutBg, padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>{k}</span>
+                <span style={{ fontSize: '0.58rem', color: FE_T.shortcutText }}>{v}</span>
               </div>
             ))}
           </div>
@@ -861,9 +1121,9 @@ const FlowContent = () => {
         {/* ── CANVAS ── */}
         <div className="reactflow-wrapper" style={{ flexGrow: 1, position: 'relative' }}>
           {carregando && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,12,8,0.85)', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', backdropFilter: 'blur(4px)' }}>
-              <Spinner size={36} color="#25D366" />
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', fontWeight: '600' }}>Carregando fluxo...</p>
+            <div style={{ position: 'absolute', inset: 0, background: FE_T.overlay, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', backdropFilter: 'blur(4px)' }}>
+              <Spinner size={36} color={FE_T.green} />
+              <p style={{ color: FE_T.textMuted, fontSize: '0.85rem', fontWeight: '600' }}>Carregando fluxo...</p>
             </div>
           )}
 
@@ -873,6 +1133,7 @@ const FlowContent = () => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onNodeDragStop={onNodeDragStop}
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.25, minZoom: 0.2, maxZoom: 1.2 }}
@@ -880,13 +1141,13 @@ const FlowContent = () => {
             maxZoom={2}
             proOptions={{ hideAttribution: true }}
             deleteKeyCode="Delete">
-            <Background color="#25D366" gap={36} size={1} variant="dots" opacity={0.08} />
-            <Controls style={{ filter: 'invert(1) grayscale(1) opacity(0.6)', bottom: 16, left: 16 }} />
+            <Background color={FE_T.bgDotColor} gap={36} size={1} variant="dots" opacity={0.12} />
+            <Controls style={{ filter: FE_T === FE_TEMAS.claro ? 'none' : 'invert(1) grayscale(1) opacity(0.6)', bottom: 16, left: 16 }} />
             {minimapVisivel && (
               <MiniMap
-                nodeColor={(node) => node.type === 'iaNode' ? '#a78bfa' : node.type === 'imageNode' ? '#63b3ed' : '#25D366'}
-                maskColor="rgba(8,12,8,0.85)"
-                style={{ background: 'rgba(8,12,8,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', bottom: 16, right: 16 }}
+                nodeColor={(node) => node.type === 'iaNode' ? FE_T.purple : node.type === 'imageNode' ? FE_T.blue : FE_T.green}
+                maskColor={FE_T.minimapMask}
+                style={{ background: FE_T.minimapBg, border: `1px solid ${FE_T.minimapBorder}`, borderRadius: '10px', bottom: 16, right: 16 }}
               />
             )}
           </ReactFlow>

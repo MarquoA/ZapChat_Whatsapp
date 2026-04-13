@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from typing import List
 import asyncio, random, httpx
 from app.database import get_db_connection
-import json, os
+import os
 
 router = APIRouter()
 security = HTTPBearer()
@@ -65,14 +65,6 @@ class DisparoPayload(BaseModel):
     contatos: List[str]       # lista de números: ["5511999999999", ...]
     mensagem: str
     instancia_id: int
-
-class ContatoItem(BaseModel):
-    numero: str
-    nome: str = ""
-
-class ListaContatosPayload(BaseModel):
-    usuario_id: int
-    contatos: List[ContatoItem]
 
 @router.post("/disparos/enviar")
 async def enviar_disparos(

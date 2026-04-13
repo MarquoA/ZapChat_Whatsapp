@@ -3,6 +3,7 @@ load_dotenv()
 
 import logging
 import logging.config
+import asyncio
 
 # ─── LOGGING GLOBAL ───────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -27,6 +28,7 @@ from app.routes.metricas_routes import router as metricas_router
 from app.routes.usuario_routes import router as usuario_router
 from app.routes.template_routes import router as template_router
 from app.routes.admin_routes import router as admin_router
+from app.routes.ia_routes import router as ia_router
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -34,7 +36,6 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import threading
 import time
-import json
 import os
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
@@ -162,6 +163,91 @@ app.include_router(metricas_router)
 app.include_router(usuario_router)
 app.include_router(template_router, prefix="/templates", tags=["Templates"])
 app.include_router(admin_router)
+app.include_router(ia_router)
+
+
+# ─── TIMEOUT IA ──────────────────────────────────────────────────────────────
+# A cada 2 minutos verifica sessões de IA inativas:
+#   - Inativas há 25 min → envia mensagem de aviso (usa o campo "finalizacao" do agente)
+#   - Inativas há 45 min COM aviso já enviado → encerra a sessão
+
+async def _verificar_timeouts_ia():
+    EVOLUTION_API_URL = os.getenv("EVOLUTION_API_URL", "")
+    EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "")
+    if not EVOLUTION_API_URL or not EVOLUTION_API_KEY:
+        return
+
+    conn = get_db_connection()
+    if not conn:
+        return
+    try:
+        from app.routes.bot_routes import _enviar_texto_evolution
+        cursor = conn.cursor(dictionary=True)
+
+        # Sessões em IA, inativas há 25+ min, aviso ainda não enviado
+        cursor.execute("""
+            SELECT sb.instancia_id, sb.contato,
+                   COALESCE(i.evolution_instance_id, i.nome, CAST(i.id AS CHAR)) AS nome_inst,
+                   COALESCE(a.finalizacao, '') AS finalizacao
+            FROM sessoes_bot sb
+            JOIN instancias i ON i.id = sb.instancia_id
+            LEFT JOIN agentes_ia a ON a.id = sb.ia_agente_id
+            WHERE sb.modo_ia = 1
+              AND sb.timeout_aviso_enviado = 0
+              AND sb.atualizado_em < NOW() - INTERVAL 25 MINUTE
+        """)
+        para_avisar = cursor.fetchall()
+
+        for s in para_avisar:
+            finalizacao = (s.get("finalizacao") or "").strip()
+            msg = finalizacao if finalizacao else (
+                "Olá! Percebi que ficou um tempo sem responder. "
+                "Ainda posso te ajudar com algo? Se não, podemos encerrar nossa conversa. 😊"
+            )
+            try:
+                await _enviar_texto_evolution(
+                    EVOLUTION_API_URL, EVOLUTION_API_KEY,
+                    s["nome_inst"], s["contato"], msg, 1,
+                )
+            except Exception as e:
+                logger.warning(f"Timeout IA: falha ao enviar aviso para {s['contato']}: {e}")
+
+            cursor.execute("""
+                UPDATE sessoes_bot SET timeout_aviso_enviado = 1
+                WHERE instancia_id = %s AND contato = %s
+            """, (s["instancia_id"], s["contato"]))
+
+        if para_avisar:
+            conn.commit()
+
+        # Sessões em IA, inativas há 45+ min COM aviso enviado → encerrar
+        cursor.execute("""
+            DELETE FROM sessoes_bot
+            WHERE modo_ia = 1
+              AND timeout_aviso_enviado = 1
+              AND atualizado_em < NOW() - INTERVAL 45 MINUTE
+        """)
+        conn.commit()
+        cursor.close()
+
+    except Exception as e:
+        logger.error(f"Erro em _verificar_timeouts_ia: {e}")
+    finally:
+        conn.close()
+
+
+async def _loop_timeout_ia():
+    while True:
+        await asyncio.sleep(120)   # verifica a cada 2 minutos
+        try:
+            await _verificar_timeouts_ia()
+        except Exception as e:
+            logger.error(f"Loop timeout IA: {e}")
+
+
+@app.on_event("startup")
+async def startup():
+    asyncio.create_task(_loop_timeout_ia())
 
 
 # ─── MODELS ───────────────────────────────────────────────────────────────────
@@ -174,12 +260,6 @@ class UsuarioCreate(BaseModel):
 class UsuarioLogin(BaseModel):
     email: str
     senha: str
-
-class FluxoDados(BaseModel):
-    usuario_id: int
-    nome_fluxo: str
-    fluxo: dict
-
 
 # ─── ROTAS PÚBLICAS ───────────────────────────────────────────────────────────
 
@@ -262,56 +342,6 @@ async def login(usuario: UsuarioLogin, request: Request):
 @app.get("/me")
 async def me(usuario: dict = Depends(get_usuario_atual)):
     return {"usuario_id": usuario["sub"], "nome": usuario["nome"]}
-
-
-@app.post("/salvar-fluxo")
-async def salvar_fluxo(dados: FluxoDados, usuario: dict = Depends(get_usuario_atual)):
-    if str(dados.usuario_id) != str(usuario["sub"]):
-        raise HTTPException(status_code=403, detail="Acesso negado.")
-    conn = get_db_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
-    cursor = conn.cursor()
-    try:
-        fluxo_json = json.dumps(dados.fluxo)
-        cursor.execute(
-            "INSERT INTO fluxos (usuario_id, nome_fluxo, dados_json) VALUES (%s, %s, %s)",
-            (dados.usuario_id, dados.nome_fluxo, fluxo_json)
-        )
-        conn.commit()
-        return {"message": "Fluxograma salvo com sucesso!"}
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Erro ao salvar fluxo: {e}")
-        raise HTTPException(status_code=400, detail="Erro ao salvar fluxo. Tente novamente.")
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.get("/carregar-fluxo/{usuario_id}")
-async def carregar_fluxo(usuario_id: int, usuario: dict = Depends(get_usuario_atual)):
-    if str(usuario_id) != str(usuario["sub"]):
-        raise HTTPException(status_code=403, detail="Acesso negado.")
-    conn = get_db_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            "SELECT dados_json FROM fluxos WHERE usuario_id = %s ORDER BY data_criacao DESC LIMIT 1",
-            (usuario_id,)
-        )
-        resultado = cursor.fetchone()
-        if resultado:
-            return json.loads(resultado['dados_json'])
-        return {"nodes": [], "edges": []}
-    except Exception as e:
-        logger.error(f"Erro ao carregar fluxo: {e}")
-        raise HTTPException(status_code=400, detail="Erro ao carregar fluxo.")
-    finally:
-        cursor.close()
-        conn.close()
 
 
 if __name__ == "__main__":
