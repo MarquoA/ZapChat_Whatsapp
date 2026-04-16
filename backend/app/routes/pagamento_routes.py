@@ -42,8 +42,8 @@ PLANOS = {
     },
     "business": {
         "nome": "ZapChat Business",
-        "preco_mensal": 797.00,
-        "preco_anual":  664.00,
+        "preco_mensal": 597.00,
+        "preco_anual":  497.00,
         "trial_dias": 0,
     },
 }
@@ -161,12 +161,20 @@ def assinar(payload: AssinarPayload, usuario: dict = Depends(get_usuario_atual))
     try:
         cursor = conn.cursor(dictionary=True)
 
-        # Verifica se já tem assinatura ativa ou trial
+        # Verifica assinatura atual (ativa ou trial em curso)
         cursor.execute("""
             SELECT status, plano FROM assinaturas
             WHERE usuario_id = %s ORDER BY id DESC LIMIT 1
         """, (usuario_id,))
         existente = cursor.fetchone()
+
+        # Verifica se o usuário JÁ usou trial alguma vez (mesmo que expirado)
+        cursor.execute("""
+            SELECT COUNT(*) AS total FROM assinaturas
+            WHERE usuario_id = %s AND trial_fim IS NOT NULL
+        """, (usuario_id,))
+        ja_usou_trial = (cursor.fetchone() or {}).get("total", 0) > 0
+
         cursor.close()
     finally:
         conn.close()
@@ -177,8 +185,13 @@ def assinar(payload: AssinarPayload, usuario: dict = Depends(get_usuario_atual))
             detail=f"Você já possui o plano {existente['plano']} ativo."
         )
 
-    # Starter: ativa trial direto sem MP
+    # Starter: ativa trial direto sem MP — mas bloqueia reativação
     if payload.plano == "starter" and dados["trial_dias"] > 0:
+        if ja_usou_trial:
+            raise HTTPException(
+                status_code=400,
+                detail="Você já utilizou o período de trial gratuito. Para continuar, assine um plano pago."
+            )
         return _ativar_trial(usuario_id, payload.plano)
 
     # Busca o plan_id no .env
@@ -344,7 +357,7 @@ async def webhook(request: Request):
         finally:
             conn.close()
 
-    # Registra no histórico se pagamento foi aprovado
+    # Registra no histórico e reseta tokens quando pagamento é aprovado
     if novo_status == "ativo":
         valor = mp_data.get("auto_recurring", {}).get("transaction_amount", 0)
         plano_dados = mp_data.get("reason", "").lower()
@@ -362,6 +375,27 @@ async def webhook(request: Request):
             """, (ext_ref, subscription_id, subscription_id, plano, periodo, valor))
             conn.commit()
             cursor.close()
+        finally:
+            conn.close()
+
+        # Reseta saldo de tokens para o novo ciclo de cobrança
+        _LIMITE_CICLO = {"pro": 2_000_000, "business": 3_000_000}
+        limite_ciclo = _LIMITE_CICLO.get(plano, 2_000_000)
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO tokens_ia (usuario_id, saldo, total_usado, ultimo_reset)
+                VALUES (%s, %s, 0, NOW())
+                ON DUPLICATE KEY UPDATE
+                    saldo        = %s,
+                    total_usado  = 0,
+                    ultimo_reset = NOW()
+            """, (ext_ref, limite_ciclo, limite_ciclo))
+            conn.commit()
+            cursor.close()
+        except Exception as e:
+            logger.error(f"[WEBHOOK] Erro ao resetar tokens_ia para usuario {ext_ref}: {e}")
         finally:
             conn.close()
 

@@ -4,14 +4,14 @@ import json
 
 logger = logging.getLogger(__name__)
 
-def salvar_fluxo(usuario_id: int, fluxo_id: int, nome_fluxo: str, nodes: list, edges: list):
+def salvar_fluxo(usuario_id: int, fluxo_id: int, nome_fluxo: str, nodes: list, edges: list, custom_vars: list = None):
     conn = get_db_connection()
     if not conn:
         return None
     cursor = conn.cursor(dictionary=True)
 
-    # Junta nodes e edges em um único dados_json, como sua tabela espera
-    dados_json = json.dumps({"nodes": nodes, "edges": edges})
+    # Junta nodes, edges e customVars em um único dados_json
+    dados_json = json.dumps({"nodes": nodes, "edges": edges, "customVars": custom_vars or []})
 
     try:
         if fluxo_id and fluxo_id != 0:

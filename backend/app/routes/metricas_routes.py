@@ -98,10 +98,17 @@ async def metricas_dashboard(usuario: dict = Depends(get_usuario_atual)):
         """, (uid,))
         sessoes_ativas = (cursor.fetchone() or {}).get("total", 0)
 
-        # ── 5. Total de conversas (sessões históricas) ────────────────────────
-        # Não temos histórico de sessões encerradas ainda, usamos disparos como proxy
-        # TROCAR: quando criar tabela historico_sessoes, usar COUNT(*) dela
-        total_conversas = disparos.get("total", 0)
+        # ── 5. Total de conversas (histórico real de conversas finalizadas) ──────
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN DATE(finalizado_em) = CURDATE() THEN 1 ELSE 0 END) AS hoje
+            FROM historico_conversas
+            WHERE usuario_id = %s
+        """, (uid,))
+        conv_row = cursor.fetchone() or {}
+        total_conversas = int(conv_row.get("total", 0) or 0)
+        conversas_hoje  = int(conv_row.get("hoje",  0) or 0)
 
         # ── 6. Fluxos mais usados ─────────────────────────────────────────────
         # Conta por número de sessões ativas por fluxo
@@ -140,6 +147,33 @@ async def metricas_dashboard(usuario: dict = Depends(get_usuario_atual)):
         """, (uid,))
         instancias = cursor.fetchone() or {"total": 0, "conectadas": 0}
 
+        # ── 9. Tokens de IA (saldo e uso real da tabela tokens_ia) ───────────
+        cursor.execute("""
+            SELECT saldo, total_usado, ultimo_reset
+            FROM tokens_ia
+            WHERE usuario_id = %s
+        """, (uid,))
+        tokens_row = cursor.fetchone()
+
+        tokens_usados  = int(tokens_row["total_usado"] or 0) if tokens_row else None
+        tokens_saldo   = int(tokens_row["saldo"] or 0)       if tokens_row else None
+        tokens_limite  = 1_000_000
+        tokens_reset   = str(tokens_row["ultimo_reset"]) if tokens_row and tokens_row.get("ultimo_reset") else None
+
+        # ── 10. Tokens usados nos últimos 30 dias (por modelo) ───────────────
+        cursor.execute("""
+            SELECT modelo, SUM(tokens_usados) AS total
+            FROM historico_tokens_ia
+            WHERE usuario_id = %s
+              AND criado_em >= NOW() - INTERVAL 30 DAY
+            GROUP BY modelo
+            ORDER BY total DESC
+        """, (uid,))
+        tokens_por_modelo = [
+            {"modelo": r["modelo"], "total": int(r["total"] or 0)}
+            for r in cursor.fetchall()
+        ]
+
         # ── Monta resposta final ──────────────────────────────────────────────
         return {
             # Contadores principais
@@ -150,7 +184,8 @@ async def metricas_dashboard(usuario: dict = Depends(get_usuario_atual)):
             "disparos_pendentes":int(disparos.get("pendentes", 0) or 0),
             "total_fluxos":      int(total_fluxos or 0),
             "sessoes_ativas":    int(sessoes_ativas or 0),
-            "total_conversas":   int(total_conversas or 0),
+            "total_conversas":   total_conversas,
+            "conversas_hoje":    conversas_hoje,
             "instancias_total":  int(instancias.get("total", 0) or 0),
             "instancias_conectadas": int(instancias.get("conectadas", 0) or 0),
 
@@ -164,13 +199,17 @@ async def metricas_dashboard(usuario: dict = Depends(get_usuario_atual)):
             "plano":    assinatura["plano"],
             "periodo":  assinatura["periodo"],
 
-            # Métricas que precisam da Evolution API — null até lá
-            # Quando tiver: popular via webhook ou tabela dedicada
-            "tmr_segundos":          None,  # TROCAR: calcular de historico_mensagens
-            "tma_segundos":          None,  # TROCAR: calcular de historico_mensagens
-            "taxa_resolucao":        None,  # TROCAR: coluna resolvido em sessoes_bot
-            "tokens_usados":         None,  # TROCAR: coluna tokens em sessoes_bot
-            "tokens_limite":         None,  # TROCAR: definir por plano
+            # Tokens de IA (dados reais da tabela tokens_ia)
+            "tokens_usados":      tokens_usados,
+            "tokens_saldo":       tokens_saldo,
+            "tokens_limite":      tokens_limite,
+            "tokens_reset":       tokens_reset,
+            "tokens_por_modelo":  tokens_por_modelo,
+
+            # Métricas que dependem de Evolution API — null até implementar
+            "tmr_segundos":    None,
+            "tma_segundos":    None,
+            "taxa_resolucao":  None,
         }
 
     except Exception as e:

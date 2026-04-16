@@ -29,6 +29,8 @@ from app.routes.usuario_routes import router as usuario_router
 from app.routes.template_routes import router as template_router
 from app.routes.admin_routes import router as admin_router
 from app.routes.ia_routes import router as ia_router
+from app.routes.seguranca_routes import router as seguranca_router
+from app.routes.historico_routes import router as historico_router
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -108,9 +110,9 @@ def hash_senha(senha: str) -> str:
 def verificar_senha(senha: str, hash: str) -> bool:
     return pwd_context.verify(senha, hash)
 
-def criar_token(data: dict) -> str:
+def criar_token(data: dict, horas: int = None) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+    payload["exp"] = datetime.utcnow() + timedelta(hours=horas or ACCESS_TOKEN_EXPIRE_HOURS)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def verificar_token(token: str) -> dict:
@@ -164,6 +166,8 @@ app.include_router(usuario_router)
 app.include_router(template_router, prefix="/templates", tags=["Templates"])
 app.include_router(admin_router)
 app.include_router(ia_router)
+app.include_router(seguranca_router)
+app.include_router(historico_router)
 
 
 # ─── TIMEOUT IA ──────────────────────────────────────────────────────────────
@@ -300,6 +304,9 @@ async def register(usuario: UsuarioCreate, request: Request):
 
 @app.post("/login")
 async def login(usuario: UsuarioLogin, request: Request):
+    import secrets as _secrets
+    from app.routes.seguranca_routes import _enviar_email_2fa
+
     ip = get_client_ip(request)
     checar_rate_limit(ip)
 
@@ -324,6 +331,24 @@ async def login(usuario: UsuarioLogin, request: Request):
             raise HTTPException(status_code=401, detail="E-mail ou senha incorretos.")
 
         liberar_ip(ip)
+
+        # ── 2FA: se ativo, não retorna token ainda ─────────────────────────────
+        if user.get("dois_fatores_ativo"):
+            codigo = str(_secrets.randbelow(900000) + 100000)
+            expira = datetime.utcnow() + timedelta(minutes=10)
+            cursor.execute(
+                "INSERT INTO codigos_2fa (usuario_id, codigo, expira_em, usado) VALUES (%s, %s, %s, 0)",
+                (user["id"], codigo, expira)
+            )
+            conn.commit()
+            try:
+                _enviar_email_2fa(user["email"], user["nome"], codigo)
+            except Exception:
+                pass  # Não bloqueia o login se o e-mail falhar
+            # Retorna token temporário (tipo 2fa_pending) sem privilégios de API
+            temp_token = criar_token({"sub": str(user["id"]), "tipo": "2fa_pending"}, horas=1)
+            return {"requer_2fa": True, "temp_token": temp_token}
+
         token = criar_token({"sub": str(user["id"]), "nome": user["nome"]})
         return {
             "message": "Login realizado com sucesso!",
@@ -334,6 +359,55 @@ async def login(usuario: UsuarioLogin, request: Request):
         }
     finally:
         cursor.close()
+        conn.close()
+
+
+@app.post("/login/verificar-2fa")
+async def verificar_2fa(payload: dict, request: Request):
+    temp_token = payload.get("temp_token", "")
+    codigo     = payload.get("codigo", "").strip()
+
+    try:
+        dados = jwt.decode(temp_token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado.")
+
+    if dados.get("tipo") != "2fa_pending":
+        raise HTTPException(status_code=401, detail="Token inválido.")
+
+    usuario_id = int(dados["sub"])
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id FROM codigos_2fa
+            WHERE usuario_id = %s AND codigo = %s AND usado = 0 AND expira_em > NOW()
+            ORDER BY id DESC LIMIT 1
+        """, (usuario_id, codigo))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=400, detail="Código inválido ou expirado.")
+
+        cursor.execute("UPDATE codigos_2fa SET usado = 1 WHERE id = %s", (row["id"],))
+        cursor.execute("""
+            SELECT u.nome, COALESCE(a.plano, 'starter') AS plano
+            FROM usuarios u
+            LEFT JOIN assinaturas a ON a.usuario_id = u.id AND a.status IN ('ativo', 'trial')
+            WHERE u.id = %s ORDER BY a.id DESC LIMIT 1
+        """, (usuario_id,))
+        user = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+
+        token = criar_token({"sub": str(usuario_id), "nome": user["nome"]})
+        return {
+            "message": "Login realizado com sucesso!",
+            "token": token,
+            "user": user["nome"],
+            "id": usuario_id,
+            "plano": user["plano"],
+        }
+    finally:
         conn.close()
 
 

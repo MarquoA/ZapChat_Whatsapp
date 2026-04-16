@@ -24,6 +24,7 @@ class FluxoPayload(BaseModel):
     nome_fluxo: str = "Novo Fluxo"
     nodes: list
     edges: list
+    customVars: list = []
 
 @router.post("/fluxos/salvar")
 def salvar(payload: FluxoPayload, usuario: dict = Depends(get_usuario_atual)):
@@ -36,7 +37,8 @@ def salvar(payload: FluxoPayload, usuario: dict = Depends(get_usuario_atual)):
             fluxo_id=payload.id,
             nome_fluxo=payload.nome_fluxo,
             nodes=payload.nodes,
-            edges=payload.edges
+            edges=payload.edges,
+            custom_vars=payload.customVars,
         )
         if fluxo_id is None:
             raise HTTPException(status_code=500, detail="Erro ao salvar fluxo no banco.")
@@ -73,6 +75,7 @@ def carregar(fluxo_id: int, usuario_id: int, usuario: dict = Depends(get_usuario
         "nome_fluxo": fluxo["nome_fluxo"],
         "nodes": dados.get("nodes", []),
         "edges": dados.get("edges", []),
+        "customVars": dados.get("customVars", []),
         "data_criacao": str(fluxo["data_criacao"]),
     }
 

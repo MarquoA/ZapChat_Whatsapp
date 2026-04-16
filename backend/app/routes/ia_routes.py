@@ -20,11 +20,16 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 MODELOS_PERMITIDOS = {"gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"}
 
-# Limite de tokens por mensagem por plano
-# (no futuro: limite mensal de ~1M tokens por usuário)
+# Limite de tokens por mensagem por plano (controla o slider no dashboard)
 LIMITE_TOKENS_PLANO = {
-    "pro":      2000,   # respostas detalhadas
-    "business": 4000,   # respostas máximas
+    "pro":      10000,
+    "business": 10000,
+}
+
+# Limite de créditos mensais por plano
+LIMITE_CICLO_PLANO = {
+    "pro":      2_000_000,
+    "business": 3_000_000,
 }
 
 
@@ -95,13 +100,22 @@ def limites_ia(usuario: dict = Depends(get_usuario_atual)):
 
 @router.get("/ia/tokens")
 def saldo_tokens(usuario: dict = Depends(get_usuario_atual)):
-    """Retorna o saldo de tokens disponível e o total usado no ciclo atual."""
+    """Retorna o saldo de tokens disponível, o total usado e o limite do plano atual."""
     uid = int(usuario["sub"])
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
     cursor = conn.cursor(dictionary=True)
     try:
+        cursor.execute("""
+            SELECT plano FROM assinaturas
+            WHERE usuario_id = %s AND status IN ('ativo', 'trial')
+            ORDER BY id DESC LIMIT 1
+        """, (uid,))
+        plano_row = cursor.fetchone()
+        plano = plano_row["plano"] if plano_row else "pro"
+        limite = LIMITE_CICLO_PLANO.get(plano, 2_000_000)
+
         _garantir_saldo_ia(conn, uid)
         cursor.execute(
             "SELECT saldo, total_usado, ultimo_reset FROM tokens_ia WHERE usuario_id = %s",
@@ -113,12 +127,12 @@ def saldo_tokens(usuario: dict = Depends(get_usuario_atual)):
         conn.close()
 
     if not row:
-        return {"saldo": 1_000_000, "total_usado": 0, "limite_ciclo": 1_000_000, "ultimo_reset": None}
+        return {"saldo": limite, "total_usado": 0, "limite_ciclo": limite, "ultimo_reset": None}
 
     return {
         "saldo": row["saldo"],
         "total_usado": row["total_usado"],
-        "limite_ciclo": 1_000_000,
+        "limite_ciclo": limite,
         "ultimo_reset": str(row["ultimo_reset"]) if row["ultimo_reset"] else None,
     }
 
@@ -155,11 +169,11 @@ class AgentePayload(BaseModel):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _garantir_saldo_ia(conn, usuario_id: int):
-    """Garante que o usuário tem linha na tabela tokens_ia. Cria com saldo inicial se não existir."""
+    """Garante que o usuário tem linha na tabela tokens_ia. Cria com saldo inicial de 2M se não existir."""
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT IGNORE INTO tokens_ia (usuario_id, saldo, total_usado, ultimo_reset) VALUES (%s, 1000000, 0, NOW())",
+            "INSERT IGNORE INTO tokens_ia (usuario_id, saldo, total_usado, ultimo_reset) VALUES (%s, 2000000, 0, NOW())",
             (usuario_id,)
         )
         conn.commit()
@@ -208,8 +222,8 @@ def _debitar_tokens_ia(conn, usuario_id: int, tokens: int, modelo: str):
 async def chat_ia(payload: ChatPayload, usuario: dict = Depends(get_usuario_atual)):
     """
     Envia mensagens ao modelo OpenAI e retorna a resposta.
-    A OPENAI_API_KEY fica segura no backend — nunca exposta ao browser.
-    Controla saldo de tokens por usuário (1M tokens/ciclo mensal).
+    A OPENAI_API_KEY fica segura no backend, nunca exposta ao browser.
+    Controla saldo de tokens por usuário (Pro: 2M, Business: 3M por ciclo mensal).
     """
     if not OPENAI_API_KEY:
         raise HTTPException(

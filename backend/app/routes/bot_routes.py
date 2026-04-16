@@ -9,6 +9,7 @@ from app.database import get_db_connection
 from app.bot.bot_engine import BotEngine
 from jose import JWTError, jwt
 from openai import AsyncOpenAI
+from app.bot.variaveis import substituir_variaveis, montar_resumo_sessao, listar_variaveis_por_categoria
 
 router = APIRouter()
 security = HTTPBearer()
@@ -56,23 +57,25 @@ def salvar_sessao(
     modo_ia: int = 0,
     ia_agente_id: int | None = None,
     ia_historico: str | None = None,
+    dados_sessao: str | None = None,
 ):
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO sessoes_bot
             (instancia_id, contato, fluxo_id, node_id_atual,
-             modo_ia, ia_agente_id, ia_historico)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+             modo_ia, ia_agente_id, ia_historico, dados_sessao)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             fluxo_id              = VALUES(fluxo_id),
             node_id_atual         = VALUES(node_id_atual),
             modo_ia               = VALUES(modo_ia),
             ia_agente_id          = VALUES(ia_agente_id),
             ia_historico          = VALUES(ia_historico),
+            dados_sessao          = IF(VALUES(dados_sessao) IS NULL, dados_sessao, VALUES(dados_sessao)),
             timeout_aviso_enviado = 0,
             atualizado_em         = NOW()
     """, (instancia_id, contato, fluxo_id, node_id,
-          modo_ia, ia_agente_id, ia_historico))
+          modo_ia, ia_agente_id, ia_historico, dados_sessao))
     conn.commit()
     cursor.close()
 
@@ -84,6 +87,34 @@ def deletar_sessao(conn, instancia_id: int, contato: str):
     )
     conn.commit()
     cursor.close()
+
+def salvar_historico_conversa(
+    conn,
+    instancia_id: int,
+    usuario_id: int,
+    contato: str,
+    fluxo_id: int,
+    dados_sessao: dict,
+):
+    """Persiste a conversa finalizada na tabela historico_conversas."""
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO historico_conversas
+                (instancia_id, usuario_id, contato, fluxo_id, dados_sessao)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (
+            instancia_id,
+            usuario_id,
+            contato,
+            fluxo_id,
+            json.dumps(dados_sessao, ensure_ascii=False) if dados_sessao else None,
+        ))
+        conn.commit()
+    except Exception as e:
+        logger.error(f"Erro ao salvar histórico da conversa (instância {instancia_id}, contato {contato}): {e}")
+    finally:
+        cursor.close()
 
 def get_instancia(conn, instancia_id: int) -> dict | None:
     cursor = conn.cursor(dictionary=True)
@@ -189,13 +220,16 @@ async def _enviar_resposta_evolution(
                 },
             )
         else:
-            proximo_id = resposta.get("proximo_node_id")
-            node = engine.get_no(proximo_id) if proximo_id else None
-            texto = (
-                engine.montar_mensagem_com_opcoes(node)
-                if node and resposta.get("opcoes")
-                else resposta.get("mensagem", "")
-            )
+            mensagem_base = resposta.get("mensagem", "")
+            opcoes = resposta.get("opcoes", [])
+            if opcoes:
+                opcoes_texto = "\n".join([
+                    f"{i+1} - {opt.split('-', 1)[-1].strip() if ' - ' in opt else opt}"
+                    for i, opt in enumerate(opcoes)
+                ])
+                texto = f"{mensagem_base}\n\n{opcoes_texto}"
+            else:
+                texto = mensagem_base
             await client.post(
                 f"{api_url}/message/sendText/{nome_inst}",
                 headers=headers,
@@ -246,6 +280,14 @@ async def _processar_mensagem_bg(instancia_id: int, contato: str, texto_recebido
 
         engine    = BotEngine(fluxo["dados_json"])
         sessao    = get_sessao(conn, instancia_id, contato)
+
+        # Dados coletados na sessão (variáveis dinâmicas)
+        raw_dados = sessao.get("dados_sessao") if sessao else None
+        if isinstance(raw_dados, str):
+            dados_sessao = json.loads(raw_dados) if raw_dados else {}
+        else:
+            dados_sessao = raw_dados or {}
+
         nome_inst = (
             instancia.get("evolution_instance_id")
             or instancia.get("nome", str(instancia_id))
@@ -289,15 +331,24 @@ async def _processar_mensagem_bg(instancia_id: int, contato: str, texto_recebido
                     proximo_node = engine.get_no(proximo_id)
                     if proximo_node:
                         prox_resp = engine.montar_resposta_no(proximo_node)
-                        salvar_sessao(conn, instancia_id, contato, fluxo["id"], proximo_id)
+                        salvar_sessao(conn, instancia_id, contato, fluxo["id"], proximo_id,
+                                      dados_sessao=json.dumps(dados_sessao, ensure_ascii=False))
                         if EVOLUTION_API_URL and EVOLUTION_API_KEY:
                             await _enviar_resposta_evolution(
                                 EVOLUTION_API_URL, EVOLUTION_API_KEY,
                                 nome_inst, contato, prox_resp, engine,
                             )
                     else:
+                        salvar_historico_conversa(
+                            conn, instancia_id, instancia["usuario_id"],
+                            contato, fluxo["id"], dados_sessao,
+                        )
                         deletar_sessao(conn, instancia_id, contato)
                 else:
+                    salvar_historico_conversa(
+                        conn, instancia_id, instancia["usuario_id"],
+                        contato, fluxo["id"], dados_sessao,
+                    )
                     deletar_sessao(conn, instancia_id, contato)
             else:
                 # Continua no mesmo nó — atualiza histórico
@@ -308,10 +359,20 @@ async def _processar_mensagem_bg(instancia_id: int, contato: str, texto_recebido
                     modo_ia=1,
                     ia_agente_id=sessao.get("ia_agente_id"),
                     ia_historico=json.dumps(historico, ensure_ascii=False),
+                    dados_sessao=json.dumps(dados_sessao, ensure_ascii=False),
                 )
             return
 
         # ── MODO NORMAL ───────────────────────────────────────────────────────
+
+        # Capturar variável do nó atual antes de avançar
+        if sessao:
+            node_atual_obj = engine.get_no(sessao["node_id_atual"])
+            if node_atual_obj:
+                captura_key = (node_atual_obj["data"].get("capturaVariavel") or "").strip()
+                if captura_key:
+                    dados_sessao = {**dados_sessao, captura_key: texto_recebido.strip()}
+
         if not sessao:
             no_inicial = engine.get_no_inicial()
             if not no_inicial:
@@ -321,6 +382,16 @@ async def _processar_mensagem_bg(instancia_id: int, contato: str, texto_recebido
         else:
             resposta      = engine.processar_resposta(sessao["node_id_atual"], texto_recebido)
             node_id_atual = resposta.get("proximo_node_id", sessao["node_id_atual"])
+
+        # Substituição de variáveis na mensagem do próximo nó
+        resposta["mensagem"] = substituir_variaveis(resposta["mensagem"], dados_sessao)
+
+        # Resumo de sessão — prepend se o nó destino tiver resumoSessao=True
+        proximo_node_obj = engine.get_no(node_id_atual) if node_id_atual else None
+        if proximo_node_obj and proximo_node_obj["data"].get("resumoSessao"):
+            campos_resumo = proximo_node_obj["data"].get("camposResumo") or None
+            resumo_texto  = montar_resumo_sessao(dados_sessao, campos_resumo)
+            resposta["mensagem"] = resumo_texto + "\n\n" + resposta["mensagem"]
 
         # ── Nó IA: entrar em modo IA ──────────────────────────────────────────
         if resposta.get("tipo_node") == "ia":
@@ -357,6 +428,7 @@ async def _processar_mensagem_bg(instancia_id: int, contato: str, texto_recebido
                     modo_ia=1,
                     ia_agente_id=agente_id,
                     ia_historico=json.dumps(historico_init, ensure_ascii=False),
+                    dados_sessao=json.dumps(dados_sessao, ensure_ascii=False),
                 )
 
             if EVOLUTION_API_URL and EVOLUTION_API_KEY:
@@ -368,9 +440,14 @@ async def _processar_mensagem_bg(instancia_id: int, contato: str, texto_recebido
 
         # ── Nó normal ─────────────────────────────────────────────────────────
         if resposta.get("fim_fluxo"):
+            salvar_historico_conversa(
+                conn, instancia_id, instancia["usuario_id"],
+                contato, fluxo["id"], dados_sessao,
+            )
             deletar_sessao(conn, instancia_id, contato)
         else:
-            salvar_sessao(conn, instancia_id, contato, fluxo["id"], node_id_atual)
+            salvar_sessao(conn, instancia_id, contato, fluxo["id"], node_id_atual,
+                         dados_sessao=json.dumps(dados_sessao, ensure_ascii=False))
 
         if EVOLUTION_API_URL and EVOLUTION_API_KEY:
             await _enviar_resposta_evolution(
@@ -484,6 +561,14 @@ async def simular_resposta(dados: SimularResposta, usuario: dict = Depends(get_u
         conn.close()
 
 
+# ── /bot/variaveis ────────────────────────────────────────────────────────────
+
+@router.get("/bot/variaveis")
+async def listar_variaveis_endpoint():
+    """Retorna todas as variáveis disponíveis agrupadas por categoria."""
+    return listar_variaveis_por_categoria()
+
+
 # ── /bot/webhook ──────────────────────────────────────────────────────────────
 
 @router.post("/bot/webhook/{instancia_id}")
@@ -498,12 +583,17 @@ async def bot_webhook(
     O processamento completo (incluindo chamadas à IA) ocorre em background.
     """
     EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "")
+    AMBIENTE          = os.getenv("AMBIENTE", "dev")
 
     if EVOLUTION_API_KEY:
         if request.headers.get("apikey", "") != EVOLUTION_API_KEY:
             raise HTTPException(status_code=401, detail="Não autorizado.")
+    elif AMBIENTE == "producao":
+        # Em produção sem a chave configurada, rejeita qualquer requisição ao webhook.
+        logger.error("EVOLUTION_API_KEY não configurada em produção — requisição rejeitada.")
+        raise HTTPException(status_code=503, detail="Webhook não disponível: EVOLUTION_API_KEY ausente.")
     else:
-        logger.warning("EVOLUTION_API_KEY não configurada — webhook sem autenticação.")
+        logger.warning("EVOLUTION_API_KEY não configurada — webhook sem autenticação (apenas dev).")
 
     event = payload.get("event", "")
     if event not in ["messages.upsert", "message"]:

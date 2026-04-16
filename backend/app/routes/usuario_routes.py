@@ -99,6 +99,63 @@ async def atualizar_nome(
         conn.close()
 
 
+# ── DELETE /usuarios/{id} — Exclui a conta do usuário e todos os dados ───────
+
+@router.delete("/usuarios/{usuario_id}")
+async def deletar_conta(
+    usuario_id: int,
+    usuario: dict = Depends(get_usuario_atual)
+):
+    if str(usuario_id) != str(usuario["sub"]):
+        raise HTTPException(status_code=403, detail="Acesso negado.")
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Erro ao conectar ao banco.")
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Confirma que o usuário existe
+        cursor.execute("SELECT id FROM usuarios WHERE id = %s", (usuario_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+        # Remove dados em ordem para não violar foreign keys
+        tabelas_dependentes = [
+            "historico_tokens_ia",
+            "tokens_ia",
+            "agentes_ia",
+            "disparos",
+            "sessoes_bot",
+            "assinaturas",
+            "historico_pagamentos",
+            "tokens_redefinicao",
+            "fluxos",
+        ]
+        # Instâncias têm subconsulta pois sessoes_bot depende delas
+        cursor.execute("DELETE FROM sessoes_bot WHERE instancia_id IN (SELECT id FROM instancias WHERE usuario_id = %s)", (usuario_id,))
+        cursor.execute("DELETE FROM instancias WHERE usuario_id = %s", (usuario_id,))
+
+        for tabela in tabelas_dependentes:
+            try:
+                cursor.execute(f"DELETE FROM {tabela} WHERE usuario_id = %s", (usuario_id,))
+            except Exception:
+                pass  # Tabela pode não ter coluna usuario_id
+
+        # Por último, remove o usuário
+        cursor.execute("DELETE FROM usuarios WHERE id = %s", (usuario_id,))
+        conn.commit()
+
+        return {"message": "Conta excluída com sucesso. Todos os dados foram removidos."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao excluir conta: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
 # ── PUT /usuarios/{id}/senha ──────────────────────────────────────────────────
 
 @router.put("/usuarios/{usuario_id}/senha")
