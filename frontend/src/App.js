@@ -21,7 +21,8 @@ import AdminPanel from './pages/AdminPanel';
 
 const RotaProtegida = ({ children }) => {
   const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
+  const location = useLocation();
+  if (!token) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   return children;
 };
 
@@ -42,11 +43,7 @@ function AnimatedRoutes() {
         <Route path="/termos" element={<Termos />} />
         <Route path="/privacidade" element={<Privacidade />} />
 
-        <Route path="/assinar" element={
-          <RotaProtegida>
-            <PageTransition><Assinar /></PageTransition>
-          </RotaProtegida>
-        } />
+        <Route path="/assinar" element={<PageTransition><Assinar /></PageTransition>} />
         <Route path="/dashboard" element={
           <RotaProtegida>
             <PageTransition><Dashboard /></PageTransition>

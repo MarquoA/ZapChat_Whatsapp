@@ -51,28 +51,30 @@ const FAQItem = ({ question, answer, index }) => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [vagasRestantes] = useState(47);
   const [billingAnual, setBillingAnual] = useState(false);
 
   const faqs = [
-    { q: "É seguro contra banimento?",            a: "Sim. Utilizamos exclusivamente a API Cloud oficial da Meta. Seu número opera dentro das regras com estabilidade garantida e proteção total contra banimentos." },
+    { q: "Meu número corre risco de ser bloqueado?", a: "O ZapChat opera em servidor dedicado com boas práticas de automação: delays entre mensagens, simulação de digitação humana e limites de disparo. Seguindo as orientações da plataforma, a conta fica estável. Recomendamos não usar disparos agressivos em massa para manter a saúde do número." },
     { q: "Preciso deixar o celular ligado?",       a: "Não. A conexão é realizada via servidor dedicado. Seu celular pode estar desligado que o bot continua atendendo 24 horas por dia, 7 dias por semana." },
     { q: "Quanto tempo leva para configurar?",     a: "Em menos de 10 minutos você conecta seu número, cria seu primeiro fluxo e ativa o bot. Nossa interface foi desenhada para ser intuitiva, sem necessidade de conhecimento técnico." },
     { q: "Posso cancelar quando quiser?",          a: "Sim, sem fidelidade e sem multas. Você pode cancelar a qualquer momento direto pelo dashboard. Oferecemos também 7 dias de garantia incondicional." },
     { q: "A IA fala em nome da minha empresa?",    a: "Exatamente. Você configura o nome, tom de voz e as informações do seu negócio. A IA se apresenta como parte da sua equipe e responde com base no que você definir." },
     { q: "Funciona para qual tipo de negócio?",    a: "Para qualquer negócio que usa WhatsApp para atender clientes: lojas, clínicas, imobiliárias, academias, prestadores de serviço, e-commerce e muito mais." },
-    { q: "Preciso de conhecimento técnico?",       a: "Nenhum. O editor de fluxos é visual — você arrasta e conecta blocos como montar um fluxograma. Se você sabe usar um celular, você sabe usar o ZapChat." },
-    { q: "Como funciona o trial de 7 dias?",       a: "Você cria sua conta e tem acesso completo ao plano escolhido por 7 dias. Após o período, basta assinar para continuar usando — sem interrupção no atendimento dos seus clientes." },
+    { q: "Preciso de conhecimento técnico?",       a: "Nenhum. O editor de fluxos é visual: você arrasta e conecta blocos como montar um fluxograma. Se você sabe usar um celular, você sabe usar o ZapChat." },
+    { q: "Como funciona o trial de 7 dias?",       a: "O plano Starter inclui 7 dias grátis para você testar a plataforma sem cartão de crédito. Após o período, basta assinar para continuar, sem interrupção no atendimento dos seus clientes." },
     { q: "Posso trocar de plano depois?",          a: "Sim. Você pode fazer upgrade ou downgrade do seu plano a qualquer momento direto pelo dashboard. A cobrança é ajustada proporcionalmente ao período restante." },
     { q: "Quais formas de pagamento são aceitas?", a: "Aceitamos cartão de crédito, boleto bancário e Pix. Os pagamentos são processados com segurança pelo Mercado Pago." },
     { q: "O plano anual tem desconto?",            a: "Sim. Ao escolher o plano anual você economiza 2 meses, pagando apenas 10 parcelas pelo preço de 12. O desconto é aplicado automaticamente no checkout." },
     { q: "O que acontece se eu cancelar?",         a: "Você mantém o acesso até o fim do período pago. Após o vencimento, sua conta é desativada e seus dados ficam armazenados por 30 dias caso queira reativar." },
+    { q: "Meu cliente vai saber que é um bot?",    a: "Só se você quiser. O bot simula delays de digitação realistas e usa o nome e tom de voz que você definiu. Na prática, a maioria dos clientes não percebe a diferença, especialmente com a IA respondendo perguntas abertas no plano Pro." },
+    { q: "E se eu não souber configurar?",         a: "O setup leva menos de 10 minutos e não exige nenhum conhecimento técnico. O editor é visual: você arrasta blocos como montar um fluxograma. Se tiver dúvidas, nossa equipe atende pelo WhatsApp e te acompanha até o primeiro bot estar no ar." },
+    { q: "Funciona para negócio pequeno que recebe poucas mensagens?", a: "É exatamente onde mais faz diferença. Com volume baixo, cada mensagem sem resposta representa uma venda perdida. O ZapChat garante que nenhum cliente fique sem retorno, mesmo quando você está ocupado, dormindo ou no fim de semana." },
   ];
 
   const planos = [
-    { name: "Starter",  priceM: "127", priceA: "106", description: "Para quem quer organizar o atendimento e não perder clientes.",        features: ["1 Conexão Oficial Meta","Editor visual de fluxos","Atendimento 24h automático","Dashboard de métricas","Suporte via e-mail"],                                                              highlight: false, cta: "COMEÇAR — 7 DIAS GRÁTIS" },
-    { name: "Pro",      priceM: "297", priceA: "248", description: "Para operações que buscam escala e conversão agressiva.",             features: ["Tudo do Starter, mais:","3 Conexões simultâneas","IA com memória de contexto","Blocos avançados (imagem, IA)","Disparos em massa","Suporte VIP via WhatsApp"],          highlight: true,  cta: "COMEÇAR AGORA" },
-    { name: "Business", priceM: "797", priceA: "664", description: "A solução definitiva para grandes empresas e agências.",              features: ["Tudo do Pro, mais:","Conexões ilimitadas","Treinamento de IA customizado","Remoção da marca ZapChat","Gerente de conta exclusivo","Acesso antecipado a novidades"], highlight: false, cta: "FALAR COM A EQUIPE" },
+    { name: "Starter",  priceM: "127", priceA: "106", description: "Para autônomos e pequenos negócios que recebem até 200 mensagens por dia.",        features: ["1 Conexão Oficial Meta","Editor visual de fluxos","Atendimento 24h automático","Dashboard de métricas","Suporte via e-mail"],                                                              highlight: false, cta: "COMEÇAR — 7 DIAS GRÁTIS" },
+    { name: "Pro",      priceM: "297", priceA: "248", description: "Para quem quer escalar vendas e parar de responder manualmente.",             features: ["Tudo do Starter, mais:","3 Conexões simultâneas","IA com memória de contexto","2.000.000 créditos de IA/mês","Disparos em massa","Suporte VIP via WhatsApp"],          highlight: true,  cta: "COMEÇAR AGORA" },
+    { name: "Business", priceM: "597", priceA: "497", description: "Para agências e empresas com múltiplos atendentes e números.",              features: ["Tudo do Pro, mais:","Conexões ilimitadas","3.000.000 créditos de IA/mês","Treinamento de IA com PDF","Relatórios exportáveis","White Label e até 5 operadores","Gerente de conta exclusivo"], highlight: false, cta: "FALAR COM A EQUIPE" },
   ];
 
   const compareRows = [
@@ -87,7 +89,7 @@ const Home = () => {
     { feature: "White label (sem marca)",  starter: false,    pro: false,          business: true },
     { feature: "Gerente de conta",         starter: false,    pro: false,          business: true },
     { feature: "Suporte",                  starter: "E-mail", pro: "WhatsApp VIP", business: "Dedicado" },
-    { feature: "Trial grátis",             starter: "7 dias", pro: "7 dias",       business: "7 dias" },
+    { feature: "Trial grátis",             starter: "7 dias", pro: false,           business: false },
   ];
 
   const renderCell = (val) => {
@@ -146,31 +148,18 @@ const Home = () => {
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 13px', borderRadius: '20px', marginBottom: '28px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.22)', color: '#25D366', fontSize: '0.62rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '2px' }}
             >
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25D366', animation: 'pulse-dot 2s infinite' }} />
-              API Oficial Meta · Anti-Ban · Beta Aberto
+              Servidor Dedicado · Sem Celular Ligado · Beta Aberto
             </motion.div>
 
             <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)', lineHeight: '1.05', fontWeight: '900', margin: '0 0 22px', letterSpacing: '-2.5px' }}>
-              Seu WhatsApp trabalhando<br />
+              Seu WhatsApp trabalhando,<br />
               <span style={{ color: '#25D366' }}>
-                <Typewriter
-                  options={{ autoStart: true, loop: false, cursor: '' }}
-                  onInit={(tw) => {
-                    tw
-                      .typeString('enquanto você dorme.')
-                      .pauseFor(1800)
-                      .deleteAll(30)
-                      .typeString('vendendo 24h por dia.')
-                      .pauseFor(1800)
-                      .deleteAll(30)
-                      .typeString('sem você precisar de nada.')
-                      .start();
-                  }}
-                />
+                convertendo vendas que você perderia.
               </span>
             </h1>
 
             <p style={{ fontSize: '1.02rem', opacity: 0.58, lineHeight: '1.75', maxWidth: '450px', margin: '0 0 36px' }}>
-              Crie fluxos de atendimento automático com nosso editor visual e ative o bot no seu WhatsApp em menos de 10 minutos. Sem código. Sem técnico.
+              Monte seu atendimento automático em minutos. Sem código, sem técnico. Seu bot responde enquanto você faz outra coisa.
             </p>
 
             <div className="cta-btns" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '36px' }}>
@@ -219,7 +208,7 @@ const Home = () => {
         <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '18px', overflow: 'hidden' }}>
           {[
             { value: 10, suffix: ' min', label: 'Para ativar o bot', prefix: '<' },
-            { value: 99, suffix: '.9%',  label: 'Uptime garantido',  prefix: '' },
+            { value: 3,  suffix: 's',     label: 'Para o bot responder o cliente', prefix: '<' },
             { value: 24, suffix: '/7',   label: 'Horas de operação', prefix: '' },
             { value: 7,  suffix: ' dias',label: 'De teste grátis',   prefix: '' },
           ].map((stat, i) => (
@@ -275,7 +264,22 @@ const Home = () => {
             Tudo sob controle em um só painel.
           </h2>
           <p style={{ opacity: 0.48, lineHeight: '1.75', fontSize: '0.93rem', maxWidth: 520, margin: '0 auto' }}>
-            Veja em tempo real sessões ativas, fluxos performando e status de cada conexão WhatsApp — sem precisar perguntar para ninguém.
+            Veja em tempo real sessões ativas, fluxos performando e status de cada conexão WhatsApp. Sem precisar perguntar para ninguém.
+          </p>
+          <p style={{ marginTop: 14, fontSize: '0.88rem', color: '#25D366', fontWeight: 600, minHeight: 24 }}>
+            <Typewriter
+              options={{ autoStart: true, loop: true, cursor: '|', delay: 40, deleteSpeed: 20 }}
+              onInit={(tw) => {
+                tw
+                  .typeString('Veja quantas conversas estão acontecendo agora.')
+                  .pauseFor(2000).deleteAll(25)
+                  .typeString('Acompanhe cada atendimento em tempo real.')
+                  .pauseFor(2000).deleteAll(25)
+                  .typeString('Saiba exatamente o que seu bot está fazendo.')
+                  .pauseFor(2000).deleteAll(25)
+                  .start();
+              }}
+            />
           </p>
         </motion.div>
 
@@ -295,7 +299,7 @@ const Home = () => {
 
           <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.15 }} style={{ flex: '1 1 340px', maxWidth: 420 }}>
             {[
-              { num: '01', titulo: 'Métricas de disparos', desc: 'Total enviado, erros e taxa de entrega por hora — tudo em gráficos claros.' },
+              { num: '01', titulo: 'Métricas de disparos', desc: 'Total enviado, erros e taxa de entrega por hora. Tudo em gráficos claros.' },
               { num: '02', titulo: 'Sessões ativas',       desc: 'Veja quantos clientes estão em atendimento agora, por fluxo e instância.' },
               { num: '03', titulo: 'Status da conexão',    desc: 'Saiba em tempo real se seu WhatsApp está conectado e operando.' },
               { num: '04', titulo: 'Controle de plano',    desc: 'Gerencie instâncias, histórico de pagamentos e assinatura em um lugar.' },
@@ -329,9 +333,9 @@ const Home = () => {
         </div>
         <div className="feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '18px' }}>
           {[
-            { accent: '01', t: "API Oficial Meta",        d: "Conexão direta com a infraestrutura da Meta. Zero emuladores, zero risco de banimento." },
+            { accent: '01', t: "Servidor Dedicado",        d: "Seu bot roda em servidor 24/7, sem celular ligado, sem quedas, sem você precisar fazer nada." },
             { accent: '02', t: "Delay de Digitação",      d: "O bot simula digitação humana com delays configuráveis. Seus clientes não percebem a diferença." },
-            { accent: '03', t: "Fluxos Ilimitados",       d: "Crie quantos fluxos quiser. Atendimento, vendas, suporte — tudo no mesmo painel." },
+            { accent: '03', t: "Fluxos Ilimitados",       d: "Crie quantos fluxos quiser. Atendimento, vendas e suporte no mesmo painel." },
             { accent: '04', t: "Dashboard em Tempo Real", d: "Sessões ativas, fluxos criados e status da conexão sempre visíveis." },
             { accent: '05', t: "Dados Criptografados",    d: "JWT + Bcrypt. Suas senhas e tokens protegidos com padrão bancário." },
             { accent: '06', t: "IA Generativa (Pro)",     d: "Quando o cliente sai do fluxo, a IA entra respondendo com contexto do seu negócio." },
@@ -492,19 +496,20 @@ const Home = () => {
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#25D366', animation: 'pulse-dot 2s infinite' }} />
                 <span style={{ color: '#25D366', fontSize: '0.62rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>Acesso Beta</span>
               </div>
-              <h2 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2rem)', fontWeight: '900', letterSpacing: '-1px', marginBottom: '14px', lineHeight: '1.15' }}>Seja um dos primeiros a usar o ZapChat.</h2>
+              <h2 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2rem)', fontWeight: '900', letterSpacing: '-1px', marginBottom: '14px', lineHeight: '1.15' }}>Preço de lançamento. Não vai durar.</h2>
               <p style={{ opacity: 0.48, lineHeight: '1.72', fontSize: '0.92rem', margin: 0 }}>
-                Estamos no período beta e abrindo vagas para os primeiros usuários. Quem entrar agora garante preço de lançamento e acesso direto à equipe fundadora para reportar melhorias.
+                Estamos em beta e os preços atuais são de lançamento. Quando sairmos do beta, os valores sobem. Quem assinar agora trava o preço pelo tempo que ficar, com acesso direto à equipe fundadora para influenciar as próximas features.
               </p>
             </div>
             <div style={{ flexShrink: 0, textAlign: 'center' }}>
               <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(37,211,102,0.18)', borderRadius: '18px', padding: '28px 38px', marginBottom: '18px', animation: 'glow-pulse 3s infinite' }}>
-                <div style={{ fontSize: '3.2rem', fontWeight: '900', color: '#25D366', lineHeight: 1 }}>{vagasRestantes}</div>
-                <div style={{ opacity: 0.45, fontSize: '0.78rem', marginTop: '5px' }}>vagas restantes</div>
+                <div style={{ fontSize: '0.6rem', fontWeight: '800', color: '#25D366', letterSpacing: '2px', textTransform: 'uppercase', opacity: 0.7, marginBottom: '8px' }}>A PARTIR DE</div>
+                <div style={{ fontSize: '2.6rem', fontWeight: '900', color: '#25D366', lineHeight: 1 }}>R$ 127<span style={{ fontSize: '1rem', fontWeight: '400', opacity: 0.55 }}>/mês</span></div>
+                <div style={{ opacity: 0.42, fontSize: '0.72rem', marginTop: '8px' }}>Preço travado enquanto estiver no beta</div>
               </div>
               <motion.button whileHover={{ scale: 1.05, boxShadow: '0 0 35px rgba(37,211,102,0.28)' }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/cadastrar')}
                 style={{ background: '#25D366', color: '#0a0f0a', padding: '15px 34px', borderRadius: '11px', fontWeight: '900', border: 'none', cursor: 'pointer', fontSize: '0.88rem' }}
-              >GARANTIR MINHA VAGA</motion.button>
+              >TRAVAR MEU PREÇO AGORA</motion.button>
             </div>
           </div>
         </motion.div>
@@ -547,7 +552,7 @@ const Home = () => {
         <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1fr', gap: '36px', marginBottom: '44px' }}>
           <div>
             <h3 style={{ color: '#25D366', marginBottom: '12px', fontWeight: '900', fontSize: '1.05rem', letterSpacing: '-0.5px' }}>ZAPCHAT</h3>
-            <p style={{ opacity: 0.32, fontSize: '0.82rem', lineHeight: '1.75', maxWidth: '210px', margin: 0 }}>Automação de WhatsApp com API oficial da Meta. Anti-ban, sem código, pronto em 10 minutos.</p>
+            <p style={{ opacity: 0.32, fontSize: '0.82rem', lineHeight: '1.75', maxWidth: '210px', margin: 0 }}>Automação de WhatsApp com servidor dedicado. Sem celular ligado, sem código, pronto em 10 minutos.</p>
           </div>
           {[
             { title: 'Produto',  items: [{ label: 'Como Funciona', action: () => navigate('/tecnologia') }, { label: 'Planos', action: () => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }) }, { label: 'Criar Conta', action: () => navigate('/cadastrar') }, { label: 'Fazer Login', action: () => navigate('/login') }] },

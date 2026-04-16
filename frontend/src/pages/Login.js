@@ -13,6 +13,11 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
+  // 2FA
+  const [etapa, setEtapa] = useState('login'); // login | 2fa
+  const [tempToken, setTempToken] = useState('');
+  const [codigo2fa, setCodigo2fa] = useState('');
+
   const redirectTo = searchParams.get('redirect') || '/dashboard';
 
   const handleLogin = async (e) => {
@@ -21,13 +26,36 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/login`, { email, senha });
+      if (response.data.requer_2fa) {
+        setTempToken(response.data.temp_token);
+        setEtapa('2fa');
+        return;
+      }
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('usuario_id', response.data.id);
       localStorage.setItem('usuario_nome', response.data.user);
-      localStorage.setItem('usuario_plano', response.data.plano); // ← NOVO
+      localStorage.setItem('usuario_plano', response.data.plano);
       navigate(redirectTo, { replace: true });
     } catch (error) {
       setErro(error.response?.data?.detail || 'Erro ao fazer login. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerificar2fa = async (e) => {
+    e.preventDefault();
+    setErro('');
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API_URL}/login/verificar-2fa`, { temp_token: tempToken, codigo: codigo2fa });
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('usuario_id', response.data.id);
+      localStorage.setItem('usuario_nome', response.data.user);
+      localStorage.setItem('usuario_plano', response.data.plano);
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      setErro(error.response?.data?.detail || 'Código inválido. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -53,6 +81,33 @@ const Login = () => {
             <p style={{ opacity: 0.4, fontSize: '0.9rem' }}>Insira seus dados para acessar o painel.</p>
           </div>
 
+          {etapa === '2fa' ? (
+            <form onSubmit={handleVerificar2fa} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ textAlign: 'center', marginBottom: 8 }}>
+                <div style={{ fontSize: '2rem', marginBottom: 8 }}>🔐</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: 8 }}>Verificação em duas etapas</h3>
+                <p style={{ opacity: 0.45, fontSize: '0.85rem', lineHeight: 1.6 }}>
+                  Enviamos um código de 6 dígitos para o seu e-mail. Insira-o abaixo.
+                </p>
+              </div>
+              <input
+                type="text" maxLength={6} placeholder="000000" value={codigo2fa}
+                onChange={(e) => setCodigo2fa(e.target.value.replace(/\D/g, ''))} required
+                style={{ width: '100%', padding: '18px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.3)', color: 'white', outline: 'none', fontSize: '1.8rem', fontWeight: 900, letterSpacing: '12px', textAlign: 'center', boxSizing: 'border-box' }}
+              />
+              {erro && (
+                <div style={{ background: 'rgba(255,75,75,0.1)', border: '1px solid rgba(255,75,75,0.3)', borderRadius: '10px', padding: '12px', fontSize: '0.82rem', color: '#ff4b4b' }}>{erro}</div>
+              )}
+              <motion.button type="submit" disabled={loading} whileHover={{ scale: loading ? 1 : 1.02 }}
+                style={{ marginTop: '8px', padding: '20px', borderRadius: '15px', border: 'none', background: loading ? 'rgba(37,211,102,0.5)' : '#25D366', color: '#0d140d', fontWeight: '900', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem' }}>
+                {loading ? 'VERIFICANDO...' : 'CONFIRMAR CÓDIGO'}
+              </motion.button>
+              <button type="button" onClick={() => { setEtapa('login'); setCodigo2fa(''); setErro(''); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline', marginTop: 4 }}>
+                Voltar ao login
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ textAlign: 'left' }}>
               <label style={{ fontSize: '0.7rem', fontWeight: '700', opacity: 0.3, textTransform: 'uppercase', marginLeft: '5px', display: 'block', marginBottom: '8px' }}>E-mail</label>
@@ -85,6 +140,7 @@ const Login = () => {
               {loading ? 'ENTRANDO...' : 'ACESSAR DASHBOARD'}
             </motion.button>
           </form>
+          )}
 
           <div style={{ marginTop: '35px', paddingTop: '25px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <p style={{ fontSize: '0.85rem', opacity: 0.4 }}>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
+import ConfirmModal from '../components/ConfirmModal';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -709,6 +710,14 @@ const UsuariosAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('');
   const [filtroPlano, setFiltroPlano] = useState('todos');
+  const [modal, setModal] = useState(null);
+  const coresTemaU = { bg: T.bgAlt, border: T.border, text: T.text, muted: T.muted, accent: T.green, danger: T.red };
+  const confirmarU = (mensagem, opcoes = {}) => new Promise(resolve => {
+    setModal({ mensagem, ...opcoes, coresTema: coresTemaU, tipo: 'confirmar', onSim: () => { setModal(null); resolve(true); }, onNao: () => { setModal(null); resolve(false); } });
+  });
+  const alertarU = (mensagem) => new Promise(resolve => {
+    setModal({ mensagem, coresTema: coresTemaU, tipo: 'alerta', onSim: () => { setModal(null); resolve(); } });
+  });
 
   const carregar = useCallback(() => {
     setLoading(true);
@@ -724,7 +733,7 @@ const UsuariosAdmin = () => {
   }, [carregar]);
 
   const toggleRole = async (uid, role) => {
-    if (!window.confirm(`Alterar role para "${role === 'admin' ? 'user' : 'admin'}"?`)) return;
+    if (!await confirmarU(`Alterar role para "${role === 'admin' ? 'user' : 'admin'}"?`)) return;
     try {
       const res = await authFetch(`${API_URL}/admin/usuarios/${uid}/role`, {
         method: 'PUT',
@@ -733,10 +742,10 @@ const UsuariosAdmin = () => {
       if (res.ok) carregar();
       else {
         const d = await res.json();
-        alert(d.detail);
+        await alertarU(d.detail);
       }
     } catch {
-      alert('Erro ao atualizar role.');
+      await alertarU('Erro ao atualizar role.');
     }
   };
 
@@ -760,6 +769,7 @@ const UsuariosAdmin = () => {
 
   return (
     <motion.div {...fadeUp}>
+      <ConfirmModal modal={modal} />
       {/* Filters */}
       <div
         style={{
@@ -963,6 +973,11 @@ const UsuariosAdmin = () => {
 /* ── Templates ── */
 const TemplatesAdmin = () => {
   const navigate = useNavigate();
+  const [modal, setModal] = useState(null);
+  const coresTemaT = { bg: T.bgAlt, border: T.border, text: T.text, muted: T.muted, accent: T.green, danger: T.red };
+  const confirmarT = (mensagem, opcoes = {}) => new Promise(resolve => {
+    setModal({ mensagem, ...opcoes, coresTema: coresTemaT, tipo: 'confirmar', onSim: () => { setModal(null); resolve(true); }, onNao: () => { setModal(null); resolve(false); } });
+  });
   const [templates, setTemplates] = useState([]);
   const [fluxos, setFluxos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1008,7 +1023,7 @@ const TemplatesAdmin = () => {
   };
 
   const deletar = async (id) => {
-    if (!window.confirm('Deletar permanentemente este template?')) return;
+    if (!await confirmarT('Deletar permanentemente este template?', { perigo: true })) return;
     try {
       await authFetch(`${API_URL}/admin/templates/${id}`, { method: 'DELETE' });
       carregar();
@@ -1305,6 +1320,7 @@ const TemplatesAdmin = () => {
 
   return (
     <motion.div {...fadeUp}>
+      <ConfirmModal modal={modal} />
       <div
         style={{
           display: 'flex',

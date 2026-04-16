@@ -12,22 +12,22 @@ const Tech = () => {
     {
       step: "01",
       title: "Conecte seu número WhatsApp",
-      description: "Escaneie o QR Code gerado pelo ZapChat com seu WhatsApp. A conexão é feita via API Cloud oficial da Meta — sem emuladores, sem ferramentas não autorizadas.",
-      detail: "Leva menos de 2 minutos. Seu número é validado pela infraestrutura da Meta e protegido contra suspensões por uso inadequado.",
-      badge: "API Oficial Meta"
+      description: "Escaneie o QR Code gerado pelo ZapChat com seu WhatsApp. A conexão é feita via servidor dedicado. Seu número fica ativo 24 horas por dia sem precisar do celular ligado.",
+      detail: "Leva menos de 2 minutos. E nunca mais você vai perder um cliente por falta de resposta.",
+      badge: "Servidor Dedicado"
     },
     {
       step: "02",
       title: "Crie seus fluxos no editor visual",
       description: "Use o editor de arrastar e soltar para montar o caminho que seu bot vai seguir. Defina mensagens, opções de resposta e delays para simular digitação humana.",
-      detail: "Não é necessário saber programar. O editor funciona como um fluxograma — você conecta blocos e define as rotas de conversa visualmente.",
+      detail: "Não é necessário saber programar. Se você sabe usar um celular, você consegue criar seu primeiro fluxo.",
       badge: "Sem código"
     },
     {
       step: "03",
-      title: "Configure as respostas e a IA",
+      title: "Ensine a IA sobre seu negócio",
       description: "Adicione as informações da sua empresa, produtos e tom de voz. A IA aprende com o que você define e responde fora do fluxo principal de forma contextual.",
-      detail: "A IA entra em ação quando o cliente faz uma pergunta fora do menu padrão. Disponível nos planos Pro e Business.",
+      detail: "Configure uma vez. Ela atende por você para sempre, sem precisar repetir a mesma resposta manualmente. Disponível nos planos Pro e Business.",
       badge: "Plano Pro"
     },
     {
@@ -40,19 +40,19 @@ const Tech = () => {
   ];
 
   const techs = [
-    { label: "API Cloud Meta",      desc: "Conexão direta e oficial com a Meta. Conformidade total com as políticas da plataforma." },
+    { label: "Servidor Dedicado",    desc: "Seu bot roda em servidor próprio. Sem celular ligado, disponível 24/7 com reconexão automática." },
     { label: "Criptografia E2E",    desc: "Dados protegidos de ponta a ponta. JWT e Bcrypt no controle de autenticação." },
-    { label: "Uptime 99.9%",        desc: "Servidor dedicado com monitoramento contínuo. Disponibilidade garantida por contrato." },
+    { label: "Resposta em Segundos", desc: "O bot responde o cliente em menos de 3 segundos, sem delay humano, sem mensagem ignorada." },
     { label: "IA Generativa",       desc: "Respostas contextuais e humanizadas quando o cliente sai do fluxo configurado." },
     { label: "Multi-instância",     desc: "Vários números WhatsApp gerenciados em um único painel centralizado." },
     { label: "Webhooks e API",      desc: "Integração com sistemas externos via endpoints documentados e webhooks configuráveis." },
   ];
 
   const antiBanItems = [
-    { title: "Conexão Direta",    desc: "Sem emuladores ou ferramentas não oficiais. Seu número opera dentro das diretrizes da Meta." },
-    { title: "Criptografia",      desc: "Todos os dados trafegam criptografados. Informações dos seus clientes protegidas por padrão." },
-    { title: "Aprovado pela Meta", desc: "Operamos dentro das políticas de uso da API Cloud. Sem risco de suspensão por uso indevido." },
-    { title: "Uptime 99.9%",      desc: "Infraestrutura dedicada com redundância. Disponível 24 horas por dia, 7 dias por semana." },
+    { title: "Servidor Dedicado",    desc: "Seu bot roda em servidor próprio, independente do seu celular. Disponível 24/7 sem interrupções." },
+    { title: "Criptografia",         desc: "Todos os dados trafegam criptografados. Informações dos seus clientes protegidas por padrão." },
+    { title: "Reconexão Automática", desc: "Se a conexão cair por qualquer motivo, o sistema reconecta sozinho sem precisar da sua intervenção." },
+    { title: "Atende 24/7",           desc: "O bot nunca dorme, nunca está ocupado e nunca esquece de responder. Fim de semana, feriado, madrugada." },
   ];
 
   return (
@@ -87,7 +87,7 @@ const Tech = () => {
               De zero ao bot ativo<br /><span style={{ color: '#25D366' }}>em menos de 10 minutos.</span>
             </h1>
             <p style={{ fontSize: '1rem', opacity: 0.5, maxWidth: '520px', margin: '0 auto', lineHeight: '1.75' }}>
-              Sem código. Sem técnico. Sem complicação. Veja o passo a passo de como o ZapChat funciona na prática — do cadastro ao primeiro atendimento automatizado.
+              Sem código. Sem técnico. Sem complicação. Veja o passo a passo de como o ZapChat funciona, do cadastro ao primeiro atendimento automatizado.
             </p>
           </motion.div>
         </section>
@@ -140,7 +140,7 @@ const Tech = () => {
             <span style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>Tecnologia</span>
             <h2 style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.6rem)', fontWeight: '900', letterSpacing: '-1.5px', margin: '0 0 16px' }}>O que tem por baixo do capô.</h2>
             <p style={{ opacity: 0.45, fontSize: '0.92rem', maxWidth: '520px', lineHeight: '1.7', margin: 0 }}>
-              Cada componente do ZapChat foi escolhido para garantir estabilidade, segurança e escalabilidade — da conexão com o WhatsApp até o armazenamento dos dados.
+              Cada componente do ZapChat foi escolhido para garantir estabilidade, segurança e escalabilidade. Da conexão com o WhatsApp até o armazenamento dos dados.
             </p>
           </div>
           <div className="tech-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '900px' }}>
@@ -163,13 +163,13 @@ const Tech = () => {
             <div style={{ flex: 1, minWidth: '260px' }}>
               <div style={{ color: '#25D366', fontWeight: '800', fontSize: '0.7rem', letterSpacing: '2px', marginBottom: '16px', textTransform: 'uppercase' }}>Segurança</div>
               <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: '900', marginBottom: '16px', letterSpacing: '-1px', lineHeight: '1.1' }}>
-                Risco zero<br />de banimento.
+                Conexão estável,<br />24 horas por dia.
               </h2>
               <p style={{ opacity: 0.48, lineHeight: '1.75', fontSize: '0.92rem', margin: '0 0 20px' }}>
-                O ZapChat usa a <strong style={{ color: 'white' }}>API Cloud Oficial da Meta</strong>. Isso significa que seu número opera dentro das regras da plataforma — com estabilidade garantida e sem o risco de suspensões por uso de ferramentas não autorizadas.
+                O ZapChat roda em <strong style={{ color: 'white' }}>servidor dedicado</strong>. Seu número fica conectado 24 horas por dia, sem precisar do celular ligado, sem quedas manuais e com reconexão automática em caso de instabilidade.
               </p>
               <p style={{ opacity: 0.38, lineHeight: '1.7', fontSize: '0.85rem', margin: 0 }}>
-                Diferente de soluções baseadas em QR Code com emuladores de navegador, nossa integração é reconhecida pela Meta como um parceiro de negócios oficial.
+                A configuração é feita uma vez. Depois disso, o bot atende sozinho: de madrugada, no fim de semana ou quando você estiver em reunião.
               </p>
             </div>
             <div className="security-grid" style={{ flex: 1, minWidth: '260px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -192,31 +192,45 @@ const Tech = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', overflowX: 'auto' }}
           >
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px', fontSize: '0.85rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '740px', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                  <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.35, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>Critério</th>
-                  <th style={{ padding: '18px 24px', textAlign: 'center', fontSize: '0.82rem', fontWeight: '900', borderBottom: '1px solid rgba(255,255,255,0.07)', color: '#25D366' }}>ZapChat<span style={{ display: 'block', fontSize: '0.55rem', opacity: 0.7, marginTop: '2px' }}>NOSSA SOLUÇÃO</span></th>
-                  <th style={{ padding: '18px 24px', textAlign: 'center', fontSize: '0.82rem', fontWeight: '900', borderBottom: '1px solid rgba(255,255,255,0.07)', opacity: 0.5 }}>QR Code / Unofficial</th>
-                  <th style={{ padding: '18px 24px', textAlign: 'center', fontSize: '0.82rem', fontWeight: '900', borderBottom: '1px solid rgba(255,255,255,0.07)', opacity: 0.5 }}>Chatbot genérico</th>
+                  <th style={{ padding: '18px 20px', textAlign: 'left', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.35, borderBottom: '1px solid rgba(255,255,255,0.07)', width: '26%' }}>Critério</th>
+                  <th style={{ padding: '18px 20px', textAlign: 'center', fontSize: '0.82rem', fontWeight: '900', borderBottom: '1px solid rgba(255,255,255,0.07)', color: '#25D366' }}>
+                    ZapChat
+                    <span style={{ display: 'block', fontSize: '0.55rem', opacity: 0.7, marginTop: '2px' }}>R$ 127/MÊS</span>
+                  </th>
+                  <th style={{ padding: '18px 20px', textAlign: 'center', fontSize: '0.82rem', fontWeight: '900', borderBottom: '1px solid rgba(255,255,255,0.07)', opacity: 0.5 }}>
+                    Plataforma A
+                    <span style={{ display: 'block', fontSize: '0.55rem', marginTop: '2px' }}>R$ 299/MÊS</span>
+                  </th>
+                  <th style={{ padding: '18px 20px', textAlign: 'center', fontSize: '0.82rem', fontWeight: '900', borderBottom: '1px solid rgba(255,255,255,0.07)', opacity: 0.5 }}>
+                    Plataforma B
+                    <span style={{ display: 'block', fontSize: '0.55rem', marginTop: '2px' }}>R$ 600/MÊS</span>
+                  </th>
+                  <th style={{ padding: '18px 20px', textAlign: 'center', fontSize: '0.82rem', fontWeight: '900', borderBottom: '1px solid rgba(255,255,255,0.07)', opacity: 0.5 }}>
+                    Plataforma C
+                    <span style={{ display: 'block', fontSize: '0.55rem', marginTop: '2px' }}>R$ 692/MÊS</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { feature: "Risco de banimento",    zapchat: "Nenhum",         qr: "Alto",          generic: "Médio" },
-                  { feature: "Setup inicial",         zapchat: "< 10 minutos",   qr: "30-60 minutos", generic: "Horas ou dias" },
-                  { feature: "Precisa de técnico",    zapchat: "Não",            qr: "Frequente",     generic: "Sim" },
-                  { feature: "Celular ligado 24h",    zapchat: "Não",            qr: "Sim",           generic: "Não" },
-                  { feature: "Editor visual",         zapchat: "Nativo",         qr: "Varia",         generic: "Limitado" },
-                  { feature: "IA com contexto",       zapchat: "Plano Pro+",     qr: "Raramente",     generic: "Add-on caro" },
-                  { feature: "Disparos em massa",     zapchat: "Plano Pro+",     qr: "Instável",      generic: "Separado" },
-                  { feature: "Suporte",               zapchat: "WhatsApp/E-mail", qr: "Fórum",        generic: "Ticket" },
+                  { feature: "Preço inicial",          zapchat: "R$ 127/mês",     blip: "R$ 299/mês",   zenvia: "R$ 600/mês",    chatguru: "~R$ 692/mês" },
+                  { feature: "Trial grátis",            zapchat: "7 dias",         blip: "Freemium",     zenvia: "Não",           chatguru: "Não" },
+                  { feature: "Setup inicial",           zapchat: "< 10 minutos",   blip: "30-60 min",    zenvia: "Horas",         chatguru: "30-60 min" },
+                  { feature: "Precisa de técnico",      zapchat: "Não",            blip: "Não",          zenvia: "Frequente",     chatguru: "Não" },
+                  { feature: "IA sem custo extra",      zapchat: "Plano Pro",      blip: "Add-on pago",  zenvia: "Add-on caro",   chatguru: "Não" },
+                  { feature: "Foco no WhatsApp",        zapchat: "Exclusivo",      blip: "Multi-canal",  zenvia: "Multi-canal",   chatguru: "WhatsApp" },
+                  { feature: "Preços públicos no site", zapchat: "Sim",            blip: "Sim",          zenvia: "Parcial",       chatguru: "Não" },
+                  { feature: "Suporte",                 zapchat: "WhatsApp + e-mail", blip: "Chat/e-mail", zenvia: "Ticket",     chatguru: "Ticket" },
                 ].map((row, i, arr) => (
                   <tr key={i} style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <td style={{ padding: '14px 24px', opacity: 0.6 }}>{row.feature}</td>
-                    <td style={{ padding: '14px 24px', textAlign: 'center', background: 'rgba(37,211,102,0.02)', color: '#25D366', fontWeight: '700' }}>{row.zapchat}</td>
-                    <td style={{ padding: '14px 24px', textAlign: 'center', opacity: 0.45 }}>{row.qr}</td>
-                    <td style={{ padding: '14px 24px', textAlign: 'center', opacity: 0.45 }}>{row.generic}</td>
+                    <td style={{ padding: '14px 20px', opacity: 0.6 }}>{row.feature}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', background: 'rgba(37,211,102,0.02)', color: '#25D366', fontWeight: '700' }}>{row.zapchat}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', opacity: 0.45 }}>{row.blip}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', opacity: 0.45 }}>{row.zenvia}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', opacity: 0.45 }}>{row.chatguru}</td>
                   </tr>
                 ))}
               </tbody>
@@ -233,7 +247,7 @@ const Tech = () => {
               <motion.button whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(37,211,102,0.25)' }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/cadastrar')}
                 style={{ background: '#25D366', color: '#0a0f0a', padding: '16px 44px', borderRadius: '11px', fontWeight: '900', fontSize: '0.92rem', border: 'none', cursor: 'pointer' }}
               >COMEÇAR — 7 DIAS GRÁTIS</motion.button>
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/')}
+              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/assinar')}
                 style={{ background: 'transparent', color: 'white', padding: '16px 44px', borderRadius: '11px', fontWeight: '600', fontSize: '0.92rem', border: '1px solid rgba(255,255,255,0.14)', cursor: 'pointer', transition: '0.3s' }}
               >Ver planos →</motion.button>
             </div>

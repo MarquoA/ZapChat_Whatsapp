@@ -7,6 +7,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [menuAberto, setMenuAberto] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [logado, setLogado] = useState(false);
+  const [nomeUsuario, setNomeUsuario] = useState('');
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const nome  = localStorage.getItem('usuario_nome');
+    setLogado(!!token);
+    setNomeUsuario(nome || '');
+  }, [location.pathname]);
 
   useEffect(() => { setMenuAberto(false); }, [location.pathname]);
 
@@ -75,18 +84,34 @@ const Navbar = () => {
 
         {/* ── BOTÕES DESKTOP ── */}
         <div className="nav-btns-desktop" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <Link to="/login" style={{ textDecoration: 'none' }}>
-            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              style={{ background: 'transparent', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)', padding: '9px 20px', borderRadius: '8px', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer', transition: '0.25s' }}>
-              Entrar
-            </motion.button>
-          </Link>
-          <Link to="/cadastrar" style={{ textDecoration: 'none' }}>
-            <motion.button whileHover={{ scale: 1.04, boxShadow: '0 0 20px rgba(37,211,102,0.3)' }} whileTap={{ scale: 0.96 }}
-              style={{ background: '#25D366', color: '#060a06', border: 'none', padding: '9px 22px', borderRadius: '8px', fontWeight: '800', fontSize: '0.8rem', cursor: 'pointer', letterSpacing: '0.2px' }}>
-              Começar grátis
-            </motion.button>
-          </Link>
+          {logado ? (
+            <>
+              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+                Olá, {nomeUsuario.split(' ')[0]}
+              </span>
+              <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                <motion.button whileHover={{ scale: 1.04, boxShadow: '0 0 20px rgba(37,211,102,0.3)' }} whileTap={{ scale: 0.96 }}
+                  style={{ background: '#25D366', color: '#060a06', border: 'none', padding: '9px 22px', borderRadius: '8px', fontWeight: '800', fontSize: '0.8rem', cursor: 'pointer', letterSpacing: '0.2px' }}>
+                  Acessar Painel
+                </motion.button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/login" style={{ textDecoration: 'none' }}>
+                <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                  style={{ background: 'transparent', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)', padding: '9px 20px', borderRadius: '8px', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer', transition: '0.25s' }}>
+                  Entrar
+                </motion.button>
+              </Link>
+              <Link to="/cadastrar" style={{ textDecoration: 'none' }}>
+                <motion.button whileHover={{ scale: 1.04, boxShadow: '0 0 20px rgba(37,211,102,0.3)' }} whileTap={{ scale: 0.96 }}
+                  style={{ background: '#25D366', color: '#060a06', border: 'none', padding: '9px 22px', borderRadius: '8px', fontWeight: '800', fontSize: '0.8rem', cursor: 'pointer', letterSpacing: '0.2px' }}>
+                  Começar grátis
+                </motion.button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* ── HAMBURGER MOBILE ── */}
@@ -119,16 +144,26 @@ const Navbar = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <Link to="/cadastrar" style={{ textDecoration: 'none' }}>
-                <button style={{ width: '100%', background: '#25D366', color: '#060a06', border: 'none', padding: '15px', borderRadius: '10px', fontWeight: '900', fontSize: '0.92rem', cursor: 'pointer' }}>
-                  COMEÇAR — 7 DIAS GRÁTIS
-                </button>
-              </Link>
-              <Link to="/login" style={{ textDecoration: 'none' }}>
-                <button style={{ width: '100%', background: 'transparent', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)', padding: '14px', borderRadius: '10px', fontWeight: '600', fontSize: '0.88rem', cursor: 'pointer' }}>
-                  Já tenho conta — Entrar
-                </button>
-              </Link>
+              {logado ? (
+                <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                  <button style={{ width: '100%', background: '#25D366', color: '#060a06', border: 'none', padding: '15px', borderRadius: '10px', fontWeight: '900', fontSize: '0.92rem', cursor: 'pointer' }}>
+                    ACESSAR MEU PAINEL
+                  </button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/cadastrar" style={{ textDecoration: 'none' }}>
+                    <button style={{ width: '100%', background: '#25D366', color: '#060a06', border: 'none', padding: '15px', borderRadius: '10px', fontWeight: '900', fontSize: '0.92rem', cursor: 'pointer' }}>
+                      COMEÇAR — 7 DIAS GRÁTIS
+                    </button>
+                  </Link>
+                  <Link to="/login" style={{ textDecoration: 'none' }}>
+                    <button style={{ width: '100%', background: 'transparent', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)', padding: '14px', borderRadius: '10px', fontWeight: '600', fontSize: '0.88rem', cursor: 'pointer' }}>
+                      Já tenho conta — Entrar
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

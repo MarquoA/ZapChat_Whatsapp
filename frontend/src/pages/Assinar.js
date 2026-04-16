@@ -16,16 +16,16 @@ const PLANOS = {
   },
   pro: {
     nome: 'Pro', precoM: 297, precoA: 248,
-    descricao: 'Para operações que buscam escala, conversão e automação de verdade.',
+    descricao: 'Para quem quer escalar vendas e parar de responder manualmente.',
     cor: '#25D366', highlight: true, trial: false, badge: 'Mais popular',
-    features: ['Tudo do Starter', '3 Conexões simultâneas', 'IA com memória de contexto', 'Disparos em massa (200/dia)', 'Suporte VIP via WhatsApp'],
+    features: ['Tudo do Starter', '3 Conexões simultâneas', 'IA com memória de contexto', '2.000.000 créditos de IA/mês', 'Disparos em massa (200/dia)', 'Suporte VIP via WhatsApp'],
     nao_tem: ['Treinamento com PDF', 'White label'],
   },
   business: {
-    nome: 'Business', precoM: 797, precoA: 664,
-    descricao: 'A solução definitiva para agências, grandes empresas e revendedores.',
+    nome: 'Business', precoM: 597, precoA: 497,
+    descricao: 'Para agências e empresas com múltiplos atendentes e números.',
     cor: '#a78bfa', highlight: false, trial: false, badge: 'Máximo poder',
-    features: ['Tudo do Pro', 'Conexões ilimitadas', 'Treinamento de IA com PDF', 'White Label (sem marca ZapChat)', 'Gerente de conta exclusivo'],
+    features: ['Tudo do Pro', 'Conexões ilimitadas', '3.000.000 créditos de IA/mês', 'Treinamento de IA com PDF', 'Relatórios avançados exportáveis', 'White Label (sem marca ZapChat)', 'Até 5 operadores no painel', 'Gerente de conta exclusivo'],
     nao_tem: [],
   },
 };
@@ -36,10 +36,13 @@ const COMPARACAO = [
   { recurso: 'Atendimento 24/7',        starter: true,     pro: true,           business: true },
   { recurso: 'Dashboard de métricas',   starter: true,     pro: true,           business: true },
   { recurso: 'Blocos de imagem',        starter: false,    pro: true,           business: true },
-  { recurso: 'IA com contexto',         starter: false,    pro: true,           business: true },
+  { recurso: 'IA com contexto',          starter: false,    pro: true,           business: true },
+  { recurso: 'Créditos de IA/mês',      starter: false,    pro: '2.000.000',    business: '3.000.000' },
   { recurso: 'Disparos em massa',       starter: false,    pro: '200/dia',      business: '1.000/dia' },
   { recurso: 'Treinamento com PDF',     starter: false,    pro: false,          business: true },
+  { recurso: 'Relatórios exportáveis',  starter: false,    pro: false,          business: true },
   { recurso: 'White Label',             starter: false,    pro: false,          business: true },
+  { recurso: 'Operadores no painel',    starter: '1',      pro: '1',            business: 'Até 5' },
   { recurso: 'Suporte',                 starter: 'E-mail', pro: 'WhatsApp VIP', business: 'Gerente exclusivo' },
 ];
 
@@ -96,22 +99,17 @@ const Assinar = () => {
   const preco  = periodo === 'mensal' ? plano.precoM : plano.precoA;
 
   useEffect(() => {
-    if (!token) {
-      navigate(`/login?redirect=/assinar?plano=${planoSelecionado}&periodo=${periodo}`);
-      return;
-    }
-    const checar = async () => {
-      try {
-        const resp = await fetch(`${API}/pagamentos/minha-assinatura`, { headers: { Authorization: `Bearer ${token}` } });
-        const data = await resp.json();
-        if (data.tem_assinatura && ['ativo', 'trial'].includes(data.status)) navigate('/dashboard');
-      } catch {}
-      finally { setVerificando(false); }
-    };
-    checar();
-  }, [token, navigate, planoSelecionado, periodo]);
+    setVerificando(false);
+    // Página pública — qualquer usuário (logado ou não) pode ver e selecionar planos.
+    // O handleAssinar cuida de redirecionar para login se necessário.
+  }, []);
 
   const handleAssinar = async () => {
+    if (!token) {
+      const destino = `/assinar?plano=${planoSelecionado}&periodo=${periodo}`;
+      navigate(`/login?redirect=${encodeURIComponent(destino)}`);
+      return;
+    }
     setErro(''); setLoading(true);
     try {
       const resp = await fetch(`${API}/pagamentos/assinar`, {

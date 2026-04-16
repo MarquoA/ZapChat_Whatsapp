@@ -7,8 +7,36 @@ import ReactFlow, {
 } from 'reactflow';
 import { useNavigate, useParams } from 'react-router-dom';
 import 'reactflow/dist/style.css';
+import ConfirmModal from '../components/ConfirmModal';
+import ChipTextarea from '../components/ChipTextarea';
+import NodeSidePanel from '../components/NodeSidePanel';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
+// ─── VARIÁVEIS PRÉ-DEFINIDAS ──────────────────────────────────────────────────
+const VARIAVEIS_PREDEFINIDAS = [
+  // Contato
+  { key: 'nome',             label: 'Nome',           color: '#25D366', category: 'Contato' },
+  { key: 'sobrenome',        label: 'Sobrenome',      color: '#25D366', category: 'Contato' },
+  { key: 'nome_completo',    label: 'Nome Completo',  color: '#25D366', category: 'Contato' },
+  { key: 'telefone',         label: 'Telefone',       color: '#25D366', category: 'Contato' },
+  { key: 'email',            label: 'E-mail',         color: '#25D366', category: 'Contato' },
+  { key: 'cpf',              label: 'CPF',            color: '#25D366', category: 'Contato' },
+  // Atendimento
+  { key: 'protocolo',        label: 'Protocolo',      color: '#a78bfa', category: 'Atendimento' },
+  { key: 'data_hoje',        label: 'Data Hoje',      color: '#a78bfa', category: 'Atendimento' },
+  { key: 'hora_atual',       label: 'Hora Atual',     color: '#a78bfa', category: 'Atendimento' },
+  { key: 'dia_semana',       label: 'Dia da Semana',  color: '#a78bfa', category: 'Atendimento' },
+  // Agendamento
+  { key: 'data_agendamento', label: 'Data',           color: '#63b3ed', category: 'Agendamento' },
+  { key: 'hora_agendamento', label: 'Horário',        color: '#63b3ed', category: 'Agendamento' },
+  { key: 'servico',          label: 'Serviço',        color: '#63b3ed', category: 'Agendamento' },
+  { key: 'profissional',     label: 'Profissional',   color: '#63b3ed', category: 'Agendamento' },
+  // Pedido
+  { key: 'produto',          label: 'Produto',        color: '#34b7f1', category: 'Pedido' },
+  { key: 'valor',            label: 'Valor',          color: '#34b7f1', category: 'Pedido' },
+  { key: 'numero_pedido',    label: 'Nº Pedido',      color: '#34b7f1', category: 'Pedido' },
+];
 
 const authFetch = (url, options = {}) => {
   const token = localStorage.getItem('token');
@@ -100,6 +128,8 @@ let FE_T = FE_TEMAS.escuro;
 let FE_USUARIO_ID = 0;
 let FE_NAVIGATE = null;
 let FE_PUSH_HISTORY = () => {};
+// Variáveis disponíveis (pré-definidas + capturadas + personalizadas)
+let FE_OPEN_PANEL = null; // (nodeId: string) => void — abre o painel para um nó específico
 
 // ─── SPINNER ─────────────────────────────────────────────────────────────────
 const Spinner = ({ size = 16, color = '#25D366' }) => (
@@ -109,6 +139,7 @@ const Spinner = ({ size = 16, color = '#25D366' }) => (
 // ─── NODE: TEXTO ─────────────────────────────────────────────────────────────
 const BotNode = ({ id, data }) => {
   const { setNodes, setEdges } = useReactFlow();
+  const chipRef = useRef(null);
   const [label, setLabel] = useState(data.label || '');
   const [options, setOptions] = useState(data.options || []);
   const [delay, setDelay] = useState(data.delay ?? 2);
@@ -126,8 +157,11 @@ const BotNode = ({ id, data }) => {
     ));
   }, [id, setNodes]);
 
-  const handleLabelChange = (e) => { setLabel(e.target.value); updateNodeData(e.target.value, options, delay); };
-  const handleDelayChange = (e) => { const v = e.target.value.replace(/\D/g,''); setDelay(v); updateNodeData(label, options, v); };
+  const handleDelayChange = (e) => {
+    const v = e.target.value.replace(/\D/g, '');
+    setDelay(v);
+    updateNodeData(label, options, v);
+  };
 
   const addOption = () => {
     const newOpts = [...options, 'Nova Opção'];
@@ -155,17 +189,21 @@ const BotNode = ({ id, data }) => {
     FE_PUSH_HISTORY();
   };
 
-  const charCount = label.length;
+  const charCount = label.replace(/\([^)]+\)/g, 'x').length;
   const charColor = charCount > 1000 ? FE_T.danger : charCount > 700 ? FE_T.warning : FE_T.textMuted;
 
   return (
-    <div style={{ background: FE_T.nodeBg, border: `1px solid ${FE_T.green}33`, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: FE_T.nodeShadow }}>
-      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${FE_T.green}22`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: FE_T.greenDim, borderRadius: '15px 15px 0 0' }}>
+    <div
+      style={{ background: FE_T.nodeBg, border: `1px solid ${FE_T.green}33`, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: FE_T.nodeShadow }}
+    >
+
+<div style={{ padding: '10px 14px', borderBottom: `1px solid ${FE_T.green}22`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: FE_T.greenDim, borderRadius: '15px 15px 0 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '7px', height: '7px', background: FE_T.green, borderRadius: '50%' }} />
           <span style={{ fontSize: '9px', color: FE_T.green, fontWeight: '800', letterSpacing: '1px' }}>MENSAGEM DE TEXTO</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: `${FE_T.green}12`, padding: '3px 7px', borderRadius: '6px', border: `1px solid ${FE_T.green}22` }}>
             <input type="text" value={delay} onChange={handleDelayChange}
+              className="nodrag" onMouseDown={e => e.stopPropagation()}
               style={{ background: 'none', border: 'none', color: FE_T.green, fontSize: '11px', width: '18px', fontWeight: '800', outline: 'none', textAlign: 'center' }} />
             <span style={{ fontSize: '8px', color: FE_T.textMuted, fontWeight: '700' }}>S</span>
           </div>
@@ -175,12 +213,35 @@ const BotNode = ({ id, data }) => {
           APAGAR
         </button>
       </div>
+
       <div style={{ padding: '14px' }}>
         <Handle type="target" position={Position.Top} style={{ background: FE_T.green, width: '10px', height: '10px', border: `2px solid ${FE_T.handleBorder}`, top: '-6px' }} />
-        <textarea value={label} onChange={handleLabelChange}
-          style={{ width: '100%', background: FE_T.inputBg, border: `1px solid ${FE_T.inputBorder}`, borderRadius: '8px', color: FE_T.inputText, fontSize: '0.83rem', padding: '10px 12px', minHeight: '80px', outline: 'none', resize: 'none', marginBottom: '4px', boxSizing: 'border-box', lineHeight: '1.5' }}
-          placeholder="Digite o texto da mensagem..." />
-        <p style={{ fontSize: '0.55rem', color: charColor, textAlign: 'right', marginBottom: '12px', fontWeight: '600' }}>{charCount} caracteres</p>
+
+        {/* Dica de variáveis */}
+        <p style={{ fontSize: '0.55rem', color: FE_T.textSub, marginBottom: '6px', lineHeight: '1.4' }}>
+          Digite <span style={{ color: FE_T.green, fontWeight: '700' }}>/</span> para inserir variáveis. Backspace apaga o chip inteiro.
+        </p>
+
+        <ChipTextarea
+          ref={chipRef}
+          value={label}
+          onChange={newVal => {
+            setLabel(newVal);
+            updateNodeData(newVal, options, delay);
+            FE_PUSH_HISTORY();
+          }}
+          onRegisterInsert={fn => { window._zapInsertToFocused = fn; }}
+          placeholder="Digite o texto da mensagem..."
+          style={{
+            background: FE_T.inputBg,
+            border: `1px solid ${FE_T.inputBorder}`,
+            borderRadius: '8px',
+            color: FE_T.inputText,
+            marginBottom: '4px',
+          }}
+        />
+        <p style={{ fontSize: '0.55rem', color: charColor, textAlign: 'right', marginBottom: '10px', fontWeight: '600' }}>{charCount} caracteres</p>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.58rem', color: FE_T.textMuted, fontWeight: '800', letterSpacing: '1px' }}>OPCOES DE RESPOSTA</span>
@@ -191,8 +252,9 @@ const BotNode = ({ id, data }) => {
           </div>
           {options.map((opt, i) => (
             <div key={i} style={{ position: 'relative', background: `${FE_T.green}08`, padding: '9px 10px', borderRadius: '8px', border: `1px solid ${FE_T.green}18`, display: 'flex', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.6rem', color: FE_T.textMuted, fontWeight: '800', marginRight: '6px', flexShrink: 0 }}>{i+1}.</span>
+              <span style={{ fontSize: '0.6rem', color: FE_T.textMuted, fontWeight: '800', marginRight: '6px', flexShrink: 0 }}>{i + 1}.</span>
               <input value={opt} onChange={e => updateOption(i, e.target.value)}
+                className="nodrag" onMouseDown={e => e.stopPropagation()}
                 style={{ background: 'none', border: 'none', color: FE_T.inputText, fontSize: '0.75rem', outline: 'none', flex: 1, minWidth: 0 }} />
               <button onClick={() => removeOption(i)}
                 style={{ background: 'none', border: 'none', color: FE_T.danger, cursor: 'pointer', fontSize: '14px', marginLeft: '6px', flexShrink: 0, lineHeight: 1 }}>x</button>
@@ -295,6 +357,18 @@ const ImageNode = ({ id, data }) => {
     </div>
   );
 };
+
+const AMBER = '#f59e0b'; // cor das variáveis capturadas
+const SLATE = '#6b7280'; // cor do nó de fim de conversa
+
+function gerarChave(nome) {
+  return nome
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
 
 // ─── NODE: IA COM CONTEXTO ────────────────────────────────────────────────────
 const IANode = ({ id, data }) => {
@@ -486,7 +560,176 @@ const IANode = ({ id, data }) => {
   );
 };
 
-const nodeTypes = { botNode: BotNode, imageNode: ImageNode, iaNode: IANode };
+// ─── NODE: CAPTURAR RESPOSTA ──────────────────────────────────────────────────
+const PegarRespostaNode = ({ id, data }) => {
+  const { setNodes, setEdges } = useReactFlow();
+  const chipRef = useRef(null);
+  const [label, setLabel] = useState(data.label || '');
+  const [capturaNome, setCapturaNome] = useState(data.capturaVariavel ? data.capturaVariavel.replace(/_/g, ' ') : '');
+
+  useEffect(() => {
+    setLabel(data.label || '');
+    setCapturaNome(data.capturaVariavel ? data.capturaVariavel.replace(/_/g, ' ') : '');
+  }, [data.label, data.capturaVariavel]);
+
+  const update = useCallback((newLabel, novaChave) => {
+    setNodes(nds => nds.map(n => n.id === id
+      ? { ...n, data: { ...n.data, label: newLabel, capturaVariavel: novaChave } }
+      : n
+    ));
+  }, [id, setNodes]);
+
+  const handleCapturaNome = nome => {
+    setCapturaNome(nome);
+    update(label, gerarChave(nome));
+  };
+
+  const deleteNode = () => {
+    setNodes(nds => nds.filter(n => n.id !== id));
+    setEdges(eds => eds.filter(e => e.source !== id && e.target !== id));
+    FE_PUSH_HISTORY();
+  };
+
+  return (
+    <div style={{ background: FE_T.nodeBg, border: `1px solid ${AMBER}33`, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: FE_T.nodeShadow }}>
+      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${AMBER}22`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${AMBER}0a`, borderRadius: '15px 15px 0 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '7px', height: '7px', background: AMBER, borderRadius: '50%' }} />
+          <span style={{ fontSize: '9px', color: AMBER, fontWeight: '800', letterSpacing: '1px' }}>CAPTURAR RESPOSTA</span>
+        </div>
+        <button onClick={deleteNode}
+          style={{ background: `${FE_T.danger}12`, border: `1px solid ${FE_T.danger}33`, color: FE_T.danger, cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px' }}>
+          APAGAR
+        </button>
+      </div>
+      <div style={{ padding: '14px' }}>
+        <Handle type="target" position={Position.Top} style={{ background: AMBER, width: '10px', height: '10px', border: `2px solid ${FE_T.handleBorder}`, top: '-6px' }} />
+
+        <p style={{ fontSize: '0.55rem', color: FE_T.textSub, marginBottom: '8px', lineHeight: '1.4' }}>
+          Mensagem enviada antes de capturar. Digite <span style={{ color: AMBER, fontWeight: '700' }}>/</span> para variáveis.
+        </p>
+
+        <ChipTextarea
+          ref={chipRef}
+          value={label}
+          onChange={newVal => {
+            setLabel(newVal);
+            update(newVal, gerarChave(capturaNome));
+            FE_PUSH_HISTORY();
+          }}
+          onRegisterInsert={fn => { window._zapInsertToFocused = fn; }}
+          placeholder="Qual é o seu CPF?"
+          style={{
+            background: FE_T.inputBg,
+            border: `1px solid ${AMBER}33`,
+            borderRadius: '8px',
+            color: FE_T.inputText,
+            marginBottom: '10px',
+          }}
+        />
+
+        <div style={{ background: `${AMBER}08`, border: `1px solid ${AMBER}22`, borderRadius: '8px', padding: '10px' }}>
+          <p style={{ fontSize: '0.55rem', color: AMBER, fontWeight: '800', letterSpacing: '1px', marginBottom: '6px' }}>SALVAR COMO</p>
+          <input
+            value={capturaNome}
+            onChange={e => handleCapturaNome(e.target.value)}
+            placeholder="Ex: CPF, Nome, Horário..."
+            className="nodrag"
+            onMouseDown={e => e.stopPropagation()}
+            style={{ width: '100%', background: FE_T.inputBg, border: `1px solid ${AMBER}33`, borderRadius: '7px', color: FE_T.inputText, fontSize: '0.73rem', padding: '7px 9px', outline: 'none', boxSizing: 'border-box' }}
+          />
+          {capturaNome && (
+            <p style={{ fontSize: '0.58rem', color: AMBER, marginTop: '5px', fontWeight: '600' }}>
+              Variável: <strong>({gerarChave(capturaNome) || '...'})</strong>
+            </p>
+          )}
+        </div>
+
+        <Handle type="source" position={Position.Bottom} id="default"
+          style={{ bottom: '-6px', background: AMBER, width: '11px', height: '11px', border: `2px solid ${FE_T.handleBorder}` }} />
+      </div>
+    </div>
+  );
+};
+
+// ─── NODE: FIM DE CONVERSA ────────────────────────────────────────────────────
+const FimNode = ({ id, data }) => {
+  const { setNodes, setEdges } = useReactFlow();
+  const chipRef = useRef(null);
+  const [label, setLabel] = useState(data.label || '');
+  const [resumo, setResumo] = useState(!!data.resumoSessao);
+
+  useEffect(() => {
+    setLabel(data.label || '');
+    setResumo(!!data.resumoSessao);
+  }, [data.label, data.resumoSessao]);
+
+  const update = useCallback((newLabel, newResumo) => {
+    setNodes(nds => nds.map(n => n.id === id
+      ? { ...n, data: { ...n.data, label: newLabel, resumoSessao: newResumo } }
+      : n
+    ));
+  }, [id, setNodes]);
+
+  const deleteNode = () => {
+    setNodes(nds => nds.filter(n => n.id !== id));
+    setEdges(eds => eds.filter(e => e.source !== id && e.target !== id));
+    FE_PUSH_HISTORY();
+  };
+
+  return (
+    <div style={{ background: FE_T.nodeBg, border: `1px solid ${SLATE}33`, borderRadius: '15px', minWidth: '280px', maxWidth: '320px', boxShadow: FE_T.nodeShadow }}>
+      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${SLATE}22`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${SLATE}0a`, borderRadius: '15px 15px 0 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '7px', height: '7px', background: SLATE, borderRadius: '50%' }} />
+          <span style={{ fontSize: '9px', color: SLATE, fontWeight: '800', letterSpacing: '1px' }}>FIM DE CONVERSA</span>
+        </div>
+        <button onClick={deleteNode}
+          style={{ background: `${FE_T.danger}12`, border: `1px solid ${FE_T.danger}33`, color: FE_T.danger, cursor: 'pointer', fontSize: '9px', fontWeight: '800', padding: '3px 8px', borderRadius: '5px' }}>
+          APAGAR
+        </button>
+      </div>
+      <div style={{ padding: '14px' }}>
+        <Handle type="target" position={Position.Top} style={{ background: SLATE, width: '10px', height: '10px', border: `2px solid ${FE_T.handleBorder}`, top: '-6px' }} />
+
+        <p style={{ fontSize: '0.55rem', color: FE_T.textSub, marginBottom: '8px', lineHeight: '1.4' }}>
+          Mensagem final enviada ao encerrar o fluxo. Use <span style={{ color: SLATE, fontWeight: '700' }}>/</span> para variáveis.
+        </p>
+
+        <ChipTextarea
+          ref={chipRef}
+          value={label}
+          onChange={newVal => {
+            setLabel(newVal);
+            update(newVal, resumo);
+            FE_PUSH_HISTORY();
+          }}
+          onRegisterInsert={fn => { window._zapInsertToFocused = fn; }}
+          placeholder="Obrigado pelo contato! Até logo."
+          style={{
+            background: FE_T.inputBg,
+            border: `1px solid ${SLATE}33`,
+            borderRadius: '8px',
+            color: FE_T.inputText,
+            marginBottom: '10px',
+          }}
+        />
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <div
+            onClick={() => { const v = !resumo; setResumo(v); update(label, v); }}
+            style={{ width: '36px', height: '20px', borderRadius: '10px', background: resumo ? SLATE : `${FE_T.textMuted}40`, position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s' }}
+          >
+            <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '3px', left: resumo ? '19px' : '3px', transition: 'left 0.2s' }} />
+          </div>
+          <span style={{ fontSize: '0.65rem', color: resumo ? SLATE : FE_T.textMuted, fontWeight: '700' }}>Enviar resumo antes</span>
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const nodeTypes = { botNode: BotNode, imageNode: ImageNode, iaNode: IANode, pegarRespostaNode: PegarRespostaNode, fimNode: FimNode };
 
 const normalizeEdgesForHandles = (nodes, edges) => {
   const normalized = (edges || []).map(e => ({ ...e }));
@@ -665,8 +908,6 @@ const autoLayout = (nodes, edges) => {
 };
 
 // ─── ITEM DA SIDEBAR ──────────────────────────────────────────────────────────
-
-// ─── ITEM DA SIDEBAR ──────────────────────────────────────────────────────────
 const ComponentItem = ({ title, desc, color, locked, onClick }) => (
   <div onClick={locked ? undefined : onClick}
     style={{ position: 'relative', width: '100%', background: locked ? FE_T.inputBg : `${color}0a`, border: `1px solid ${locked ? FE_T.sidebarBorder : `${color}22`}`, color: FE_T.inputText, padding: '12px 14px', borderRadius: '10px', textAlign: 'left', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.45 : 1, marginBottom: '8px', transition: '0.2s' }}>
@@ -680,6 +921,53 @@ const ComponentItem = ({ title, desc, color, locked, onClick }) => (
   </div>
 );
 
+// Item expansível: clique no título adiciona o nó principal; seta '›' expande sub-itens
+const ComponentItemExpandable = ({ title, desc, color, locked, onClick, subItems = [] }) => {
+  const [hovered, setHovered] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div style={{ marginBottom: '8px' }}>
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={locked ? undefined : onClick}
+        style={{ position: 'relative', width: '100%', background: locked ? FE_T.inputBg : `${color}0a`, border: `1px solid ${locked ? FE_T.sidebarBorder : `${color}22`}`, color: FE_T.inputText, padding: '12px 14px', borderRadius: expanded ? '10px 10px 0 0' : '10px', textAlign: 'left', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.45 : 1, transition: '0.2s', boxSizing: 'border-box' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+          <span style={{ color: locked ? FE_T.textSub : color, fontWeight: '900', fontSize: '0.75rem' }}>{title}</span>
+          {subItems.length > 0 && (hovered || expanded) && (
+            <button
+              onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
+              style={{ background: `${color}18`, border: `1px solid ${color}33`, color, borderRadius: '5px', padding: '2px 8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '900', lineHeight: 1, flexShrink: 0 }}
+            >
+              {expanded ? '‹' : '›'}
+            </button>
+          )}
+        </div>
+        <div style={{ fontSize: '0.6rem', color: FE_T.textSub, lineHeight: '1.4' }}>{desc}</div>
+      </div>
+
+      {expanded && (
+        <div style={{ background: `${color}06`, border: `1px solid ${color}22`, borderTop: 'none', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
+          {subItems.map((item, i) => (
+            <div
+              key={i}
+              onMouseDown={e => { e.stopPropagation(); item.onClick(); setExpanded(false); }}
+              style={{ padding: '9px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', borderTop: i > 0 ? `1px solid ${color}12` : 'none' }}
+              onMouseEnter={e => e.currentTarget.style.background = `${item.color || color}14`}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <div style={{ width: '6px', height: '6px', background: item.color || color, borderRadius: '50%', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.7rem', color: item.color || color, fontWeight: '800' }}>{item.label}</span>
+              {item.desc && <span style={{ fontSize: '0.58rem', color: FE_T.textSub, marginLeft: 'auto' }}>{item.desc}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── FLOW CONTENT ─────────────────────────────────────────────────────────────
 const FlowContent = () => {
   const { id } = useParams();
@@ -689,19 +977,21 @@ const FlowContent = () => {
   // Lê o tema salvo e atualiza FE_T (módulo-level) para que os nodes o usem
   FE_T = FE_TEMAS[localStorage.getItem('zapchat_tema') || 'escuro'];
 
+  const [modal, setModal] = useState(null);
+  const coresTemaFE = { bg: FE_T.navBg, border: FE_T.navBorder, text: FE_T.navText, muted: FE_T.textMuted, accent: FE_T.green, danger: FE_T.danger };
+  const confirmarFE = (mensagem, opcoes = {}) => new Promise(resolve => {
+    setModal({ mensagem, ...opcoes, coresTema: coresTemaFE, tipo: 'confirmar', onSim: () => { setModal(null); resolve(true); }, onNao: () => { setModal(null); resolve(false); } });
+  });
+
   const usuarioId = parseInt(localStorage.getItem('usuario_id')) || 0;
   FE_USUARIO_ID = usuarioId;
   FE_NAVIGATE = navigate;
+  FE_OPEN_PANEL = (nodeId) => { setActivePanelNodeId(nodeId || null); setPanelOpen(true); };
 
   // ── Histórico de undo/redo ───────────────────────────────────────────────
   const historyRef  = useRef([]);
   const historyIdx  = useRef(-1);
   const historyTimer = useRef(null);
-  const nodesRef    = useRef(nodes);
-  const edgesRef    = useRef(edges);
-  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
-  useEffect(() => { edgesRef.current = edges; }, [edges]);
-
   const pushHistory = useCallback(() => {
     const snap = { nodes: nodesRef.current, edges: edgesRef.current };
     historyRef.current = historyRef.current.slice(0, historyIdx.current + 1);
@@ -737,6 +1027,14 @@ const FlowContent = () => {
   const [isPro, setIsPro]         = useState(['pro', 'business'].includes(localStorage.getItem('usuario_plano') || 'starter'));
   const [nodes, setNodes]         = useState([{ id: '1', type: 'botNode', data: { label: 'Ola! Como posso te ajudar?', options: [], delay: 2 }, position: { x: 400, y: 100 } }]);
   const [edges, setEdges]         = useState([]);
+  const [customVars, setCustomVars] = useState([]);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [activePanelNodeId, setActivePanelNodeId] = useState(null);
+  const nodesRef    = useRef(nodes);
+  const edgesRef    = useRef(edges);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
+
   const [nomeFluxo, setNomeFluxo] = useState('Novo Fluxo');
   const [salvando, setSalvando]   = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
@@ -746,11 +1044,20 @@ const FlowContent = () => {
   const [alterado, setAlterado]   = useState(false);
   const [sidebarAberta, setSidebarAberta] = useState(false);
   const [minimapVisivel, setMinimapVisivel] = useState(true);
-  const nodesRef = useRef(nodes);
-  const edgesRef = useRef(edges);
 
-  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
-  useEffect(() => { edgesRef.current = edges; }, [edges]);
+  // Compute all available variables and publish globally (runs on every render)
+  // Any botNode with capturaVariavel set becomes a "Capturada" variable
+  const varsDosNos = nodes
+    .filter(n => n.data?.capturaVariavel?.trim())
+    .map(n => ({ key: n.data.capturaVariavel.trim(), label: n.data.capturaVariavel.trim(), color: '#f59e0b', category: 'Capturadas' }))
+    .filter((v, i, arr) => arr.findIndex(x => x.key === v.key) === i); // deduplicate
+  const customVarsFormatted = customVars.map(v => ({
+    key: v.key,
+    label: v.label || v.key,
+    color: '#34b7f1',
+    category: 'Personalizadas',
+  }));
+  window._zapAllVars = [...VARIAVEIS_PREDEFINIDAS, ...varsDosNos, ...customVarsFormatted];
 
   // ── CSS do editor: injeta ao montar, remove ao desmontar ─────────────────
   // Isso evita que os estilos do FlowEditor vazem para o Dashboard ao voltar
@@ -834,15 +1141,17 @@ const FlowContent = () => {
         const nodesCarregados = (data.nodes || []).map(node => ({
           ...node,
           data: {
-            label:    node.data?.label    ?? '',
-            options:  node.data?.options  ?? [],
-            delay:    node.data?.delay    ?? 2,
-            caption:  node.data?.caption  ?? '',
-            imageUrl: node.data?.imageUrl ?? '',
-            prompt:   node.data?.prompt   ?? '',
-            modelo:   (node.data?.modelo && node.data.modelo !== 'gemini-pro' && node.data.modelo !== 'gpt-4') ? node.data.modelo : 'gpt-4o-mini',
+            label:           node.data?.label           ?? '',
+            options:         node.data?.options         ?? [],
+            delay:           node.data?.delay           ?? 2,
+            caption:         node.data?.caption         ?? '',
+            imageUrl:        node.data?.imageUrl        ?? '',
+            prompt:          node.data?.prompt          ?? '',
+            modelo:          (node.data?.modelo && node.data.modelo !== 'gemini-pro' && node.data.modelo !== 'gpt-4') ? node.data.modelo : 'gpt-4o-mini',
+            capturaVariavel: node.data?.capturaVariavel ?? '',
           }
         }));
+        if (data.customVars?.length) setCustomVars(data.customVars);
 
         const edgesNormalizados = normalizeEdgesForHandles(nodesCarregados, data.edges || []);
         const nodesParaUsar = shouldAutoLayout(nodesCarregados)
@@ -924,8 +1233,8 @@ const FlowContent = () => {
 
   const handleFitView = () => fitView({ padding: 0.25, duration: 500, minZoom: 0.2 });
 
-  const handleVoltar = () => {
-    if (alterado && !window.confirm('Voce tem alteracoes nao salvas. Deseja sair mesmo assim?')) return;
+  const handleVoltar = async () => {
+    if (alterado && !await confirmarFE('Você tem alterações não salvas. Deseja sair mesmo assim?')) return;
     navigate('/dashboard');
   };
 
@@ -935,7 +1244,7 @@ const FlowContent = () => {
     try {
       const res = await authFetch(`${API_URL}/fluxos/salvar`, {
         method: 'POST',
-        body: JSON.stringify({ id: fluxoId, usuario_id: usuarioId, nome_fluxo: nomeFluxo, nodes, edges }),
+        body: JSON.stringify({ id: fluxoId, usuario_id: usuarioId, nome_fluxo: nomeFluxo, nodes, edges, customVars }),
       });
       if (res.status === 401) { localStorage.clear(); window.location.href = '/login'; return; }
       if (!res.ok) throw new Error();
@@ -962,13 +1271,14 @@ const FlowContent = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [nodes, edges, nomeFluxo, fluxoId]); // eslint-disable-line
+  }, [nodes, edges, nomeFluxo, fluxoId, customVars]); // eslint-disable-line
 
   const statsNodes = nodes.length;
   const statsEdges = edges.length;
 
   return (
     <div style={{ width: '100vw', height: '100vh', background: FE_T.canvasBg, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <ConfirmModal modal={modal} />
 
       {/* ── NAVBAR ── */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: FE_T.navBg, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${FE_T.navBorder}`, zIndex: 100, gap: '10px', flexShrink: 0 }}>
@@ -1070,7 +1380,7 @@ const FlowContent = () => {
 
           <p style={{ color: FE_T.sidebarLabel, fontSize: '0.58rem', fontWeight: '800', letterSpacing: '2px', marginBottom: '14px', textTransform: 'uppercase' }}>ADICIONAR BLOCO</p>
 
-          <ComponentItem title="TEXTO" desc="Mensagem com delay e opções de resposta ramificada." color={FE_T.green} locked={false} onClick={() => addNode('botNode')} />
+          <ComponentItem title="TEXTO" desc="Mensagem com delay, opções de resposta e captura de dados." color={FE_T.green} locked={false} onClick={() => addNode('botNode')} />
           <ComponentItem title="IMAGEM" desc="Envie uma imagem com legenda opcional." color={FE_T.blue} locked={!isPro} onClick={() => addNode('imageNode')} />
           <ComponentItem title="IA COM CONTEXTO" desc="Bot responde com IA baseado no histórico da conversa." color={FE_T.purple} locked={!isPro} onClick={() => addNode('iaNode')} />
 
@@ -1119,7 +1429,7 @@ const FlowContent = () => {
         </aside>
 
         {/* ── CANVAS ── */}
-        <div className="reactflow-wrapper" style={{ flexGrow: 1, position: 'relative' }}>
+        <div className="reactflow-wrapper" style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
           {carregando && (
             <div style={{ position: 'absolute', inset: 0, background: FE_T.overlay, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', backdropFilter: 'blur(4px)' }}>
               <Spinner size={36} color={FE_T.green} />
@@ -1152,6 +1462,21 @@ const FlowContent = () => {
             )}
           </ReactFlow>
         </div>
+
+        {/* ── PAINEL DO NÓ ── */}
+        <NodeSidePanel
+          open={panelOpen}
+          onClose={() => setPanelOpen(false)}
+          customVars={customVars}
+          onCustomVarsChange={newVars => { setCustomVars(newVars); setAlterado(true); }}
+          tema={FE_T}
+          activeNodeId={activePanelNodeId}
+          nodes={nodes}
+          onUpdateNodeData={(nodeId, field, value) => {
+            setNodes(nds => nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, [field]: value } } : n));
+            setAlterado(true);
+          }}
+        />
       </div>
     </div>
   );

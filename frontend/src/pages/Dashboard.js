@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import AdminPanel from './AdminPanel';
+import ConfirmModal from '../components/ConfirmModal';
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -460,6 +461,15 @@ const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
   const t = TEMAS[tema];
   const bloqueado = !PLANO_LIMITES[plano]?.ia;
 
+  const [modal, setModal] = useState(null);
+  const coresTema = { bg: t.selectBg, border: t.cardBorder, text: t.text, muted: t.textMuted, accent: t.accent, danger: t.danger };
+  const confirmar = (mensagem, opcoes = {}) => new Promise(resolve => {
+    setModal({ mensagem, ...opcoes, coresTema, tipo: 'confirmar', onSim: () => { setModal(null); resolve(true); }, onNao: () => { setModal(null); resolve(false); } });
+  });
+  const alertar = (mensagem) => new Promise(resolve => {
+    setModal({ mensagem, coresTema, tipo: 'alerta', onSim: () => { setModal(null); resolve(); } });
+  });
+
   // ── Estado: lista de agentes ──
   const [agentes, setAgentes]                     = useState([]);
   const [carregandoAgentes, setCarregandoAgentes] = useState(true);
@@ -566,13 +576,13 @@ const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
   };
 
   const deletarAgente = async (id) => {
-    if (!window.confirm('Excluir este agente? Esta acao nao pode ser desfeita.')) return;
+    if (!await confirmar('Excluir este agente? Esta ação não pode ser desfeita.', { perigo: true })) return;
     try {
       const res = await authFetch(`${API_URL}/ia/agentes/${id}/${usuarioId}`, { method: 'DELETE' });
       if (!res.ok) { const d = await res.json(); throw new Error(d.detail); }
       setAgentes(prev => prev.filter(a => a.id !== id));
       if (agenteId === id) novoAgente();
-    } catch (e) { alert(`Erro ao excluir: ${e.message}`); }
+    } catch (e) { await alertar(`Erro ao excluir: ${e.message}`); }
   };
 
   const salvarAgente = async () => {
@@ -671,6 +681,7 @@ const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
 
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
+      <ConfirmModal modal={modal} />
 
       {/* Painel: seus agentes */}
       <div style={{ marginBottom: 32 }}>
@@ -718,7 +729,7 @@ const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
                   </div>
                 </div>
                 <p style={{ fontSize: '0.62rem', color: t.textMuted, marginBottom: 12 }}>
-                  Criado em {new Date(a.criado_em).toLocaleDateString('pt-BR')} — {a.max_tokens} créditos de I.A máx.
+                  Criado em {new Date(a.criado_em).toLocaleDateString('pt-BR')} · {a.max_tokens} créditos de I.A máx.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => editarAgente(a.id)} style={{
@@ -762,12 +773,12 @@ const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
               }} />
             </div>
             <p style={{ fontSize: '0.6rem', color: t.textMuted, marginTop: 4 }}>
-              {saldoTokens.total_usado.toLocaleString('pt-BR')} créditos utilizados neste ciclo — renova em {saldoTokens.ultimo_reset ? new Date(saldoTokens.ultimo_reset).toLocaleDateString('pt-BR') : '—'}
+              {saldoTokens.total_usado.toLocaleString('pt-BR')} créditos utilizados neste ciclo. Renova em {saldoTokens.ultimo_reset ? new Date(saldoTokens.ultimo_reset).toLocaleDateString('pt-BR') : 'N/A'}
             </p>
           </div>
           {saldoTokens.saldo < 100000 && (
             <div style={{ padding: '6px 14px', background: t.dangerDim, border: `1px solid ${t.danger}44`, borderRadius: 8 }}>
-              <p style={{ fontSize: '0.7rem', color: t.danger, fontWeight: 700 }}>Saldo critico — considere adquirir créditos adicionais.</p>
+              <p style={{ fontSize: '0.7rem', color: t.danger, fontWeight: 700 }}>Saldo crítico. Considere adquirir créditos adicionais.</p>
             </div>
           )}
         </div>
@@ -852,7 +863,7 @@ const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
                   <span style={{ fontSize: '0.6rem', color: t.textMuted }}>100</span>
-                  <span style={{ fontSize: '0.6rem', color: t.textMuted }}>{maxTokensPlano} — limite do plano {PLANO_NOME[plano]}</span>
+                  <span style={{ fontSize: '0.6rem', color: t.textMuted }}>{maxTokensPlano} (limite do plano {PLANO_NOME[plano]})</span>
                 </div>
                 <p style={{ fontSize: '0.62rem', color: t.textMuted, marginTop: 5 }}>Quanto maior, mais detalhada a resposta e maior o consumo de Créditos de I.A.</p>
               </div>
@@ -1002,7 +1013,7 @@ const AgenteIA = ({ plano, usuarioId, navigate, tema }) => {
               </div>
               <div>
                 <p style={{ fontSize: '0.78rem', fontWeight: 700, color: t.text }}>{agente.nome || 'Agente sem nome'}</p>
-                <p style={{ fontSize: '0.62rem', color: t.accent }}>{agente.modelo} — {agente.max_tokens} créditos</p>
+                <p style={{ fontSize: '0.62rem', color: t.accent }}>{agente.modelo} · {agente.max_tokens} créditos</p>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -1038,6 +1049,16 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
   const navigate = useNavigate();
   const t = TEMAS[tema];
   const limite = PLANO_LIMITES[plano]?.instancias || 1;
+
+  const [modal, setModal] = useState(null);
+  const coresTemaWA = { bg: t.selectBg, border: t.cardBorder, text: t.text, muted: t.textMuted, accent: t.accent, danger: t.danger };
+  const confirmarWA = (mensagem, opcoes = {}) => new Promise(resolve => {
+    setModal({ mensagem, ...opcoes, coresTema: coresTemaWA, tipo: 'confirmar', onSim: () => { setModal(null); resolve(true); }, onNao: () => { setModal(null); resolve(false); } });
+  });
+  const alertarWA = (mensagem) => new Promise(resolve => {
+    setModal({ mensagem, coresTema: coresTemaWA, tipo: 'alerta', onSim: () => { setModal(null); resolve(); } });
+  });
+
   const [instancias, setInstancias]       = useState([]);
   const [carregando, setCarregando]       = useState(true);
   const [criando, setCriando]             = useState(false);
@@ -1090,7 +1111,7 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
   };
 
   const excluirInstancia = async (id) => {
-    if (!window.confirm('Excluir esta instância?')) return;
+    if (!await confirmarWA('Excluir esta instância?', { perigo: true })) return;
     // Para polling se existir
     if (pollingRef.current[id]) { clearInterval(pollingRef.current[id]); delete pollingRef.current[id]; }
     try {
@@ -1098,7 +1119,7 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
       setInstancias(prev => prev.filter(i => i.id !== id));
       if (instanciaAtiva?.id === id) setInstanciaAtiva(null);
       setQrCodes(prev => { const n = { ...prev }; delete n[id]; return n; });
-    } catch { alert('Erro ao excluir.'); }
+    } catch { await alertarWA('Erro ao excluir.'); }
   };
 
   const buscarQRCode = async (inst) => {
@@ -1149,6 +1170,7 @@ const WhatsAppTab = ({ fluxos, usuarioId, plano, tema }) => {
 
   return (
     <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
+      <ConfirmModal modal={modal} />
 
       {/* Banner de plano */}
       <div style={{ background: t.accentDim, border: `1px solid ${t.accent}22`, borderRadius: 10, padding: '13px 18px', marginBottom: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
@@ -1443,6 +1465,13 @@ const DisparosTab = ({ plano, navigate, tema }) => {
 const ConfigSettings = ({ usuarioId, tema, setTema }) => {
   const navigate = useNavigate();
   const t = TEMAS[tema];
+
+  const [modal, setModal] = useState(null);
+  const coresTemaConf = { bg: t.selectBg, border: t.cardBorder, text: t.text, muted: t.textMuted, accent: t.accent, danger: t.danger };
+  const confirmarConf = (mensagem, opcoes = {}) => new Promise(resolve => {
+    setModal({ mensagem, ...opcoes, coresTema: coresTemaConf, tipo: 'confirmar', onSim: () => { setModal(null); resolve(true); }, onNao: () => { setModal(null); resolve(false); } });
+  });
+
   const [subTab, setSubTab] = useState('Perfil');
   const [nome, setNome] = useState(localStorage.getItem('usuario_nome') || '');
   const [email, setEmail] = useState('');
@@ -1455,6 +1484,13 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
   const [assinatura, setAssinatura] = useState(null);
   const [loadingAss, setLoadingAss] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [deletandoConta, setDeletandoConta] = useState(false);
+  const [dois_fatores, setDoisFatores] = useState(null);
+  const [loadingTwoFa, setLoadingTwoFa] = useState(false);
+  const [twoFaStep, setTwoFaStep] = useState('idle'); // idle | enviando | codigo
+  const [twoFaSenha, setTwoFaSenha] = useState('');
+  const [twoFaCodigo, setTwoFaCodigo] = useState('');
+  const [desativandoTwoFa, setDesativandoTwoFa] = useState(false);
 
   const mostrarMsg = (texto, tipo = 'ok') => { setMsg(texto); setMsgTipo(tipo); setTimeout(() => setMsg(''), 4500); };
 
@@ -1464,10 +1500,11 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
   }, [usuarioId]);
 
   useEffect(() => {
-    if (subTab !== 'Assinatura') return;
+    if (!usuarioId) return;
     setLoadingAss(true);
     authFetch(`${API_URL}/pagamentos/minha-assinatura`).then(r => r.json()).then(d => setAssinatura(d)).catch(() => setAssinatura(null)).finally(() => setLoadingAss(false));
-  }, [subTab]);
+    authFetch(`${API_URL}/me/2fa/status`).then(r => r.json()).then(d => setDoisFatores(d)).catch(() => {});
+  }, [usuarioId]);
 
   const salvarPerfil = async () => {
     if (!nome.trim()) return mostrarMsg('O nome não pode estar vazio.', 'erro');
@@ -1496,8 +1533,71 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
     finally { setLoading(false); }
   };
 
+  const excluirConta = async () => {
+    const confirmado = await confirmarConf(
+      'Esta ação é irreversível. Todos os seus fluxos, agentes, instâncias e histórico serão excluídos permanentemente. Tem certeza?',
+      { perigo: true }
+    );
+    if (!confirmado) return;
+    // Segunda confirmação para ação tão destrutiva
+    const confirmado2 = await confirmarConf(
+      'Confirme uma última vez: excluir minha conta e todos os dados permanentemente.',
+      { perigo: true }
+    );
+    if (!confirmado2) return;
+    setDeletandoConta(true);
+    try {
+      const res = await authFetch(`${API_URL}/usuarios/${usuarioId}`, { method: 'DELETE' });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Erro ao excluir.'); }
+      localStorage.clear();
+      navigate('/');
+    } catch (e) { mostrarMsg(e.message || 'Erro ao excluir conta.', 'erro'); }
+    finally { setDeletandoConta(false); }
+  };
+
+  const iniciarAtivacao2fa = async () => {
+    if (!twoFaSenha) return mostrarMsg('Informe sua senha atual.', 'erro');
+    setLoadingTwoFa(true);
+    try {
+      const res = await authFetch(`${API_URL}/me/2fa/ativar`, { method: 'POST', body: JSON.stringify({ senha: twoFaSenha }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erro.');
+      setTwoFaStep('codigo');
+      mostrarMsg(data.mensagem);
+    } catch (e) { mostrarMsg(e.message, 'erro'); }
+    finally { setLoadingTwoFa(false); }
+  };
+
+  const confirmarCodigo2fa = async () => {
+    if (!twoFaCodigo) return mostrarMsg('Informe o código recebido.', 'erro');
+    setLoadingTwoFa(true);
+    try {
+      const res = await authFetch(`${API_URL}/me/2fa/confirmar`, { method: 'POST', body: JSON.stringify({ codigo: twoFaCodigo }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Código inválido.');
+      setDoisFatores(prev => ({ ...prev, ativo: true }));
+      setTwoFaStep('idle'); setTwoFaSenha(''); setTwoFaCodigo('');
+      mostrarMsg('2FA ativado com sucesso.');
+    } catch (e) { mostrarMsg(e.message, 'erro'); }
+    finally { setLoadingTwoFa(false); }
+  };
+
+  const desativar2fa = async () => {
+    if (!twoFaSenha) return mostrarMsg('Informe sua senha para desativar.', 'erro');
+    setDesativandoTwoFa(true);
+    try {
+      const res = await authFetch(`${API_URL}/me/2fa/desativar`, { method: 'POST', body: JSON.stringify({ senha: twoFaSenha }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erro.');
+      setDoisFatores(prev => ({ ...prev, ativo: false }));
+      setTwoFaSenha('');
+      mostrarMsg('2FA desativado.');
+    } catch (e) { mostrarMsg(e.message, 'erro'); }
+    finally { setDesativandoTwoFa(false); }
+  };
+
   const cancelarAssinatura = async () => {
-    if (!window.confirm('Tem certeza? O acesso continua até o fim do período pago.')) return;
+    if (!await confirmarConf('Tem certeza? O acesso continua até o fim do período pago.')) return;
     setCancelando(true);
     try {
       const res = await authFetch(`${API_URL}/pagamentos/cancelar`, { method: 'POST' });
@@ -1515,10 +1615,11 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
 
   return (
     <div style={{ paddingTop: 36 }}>
+      <ConfirmModal modal={modal} />
       <div style={{ display: 'flex', gap: 24, borderBottom: `1px solid ${t.cardBorder}`, marginBottom: 26, flexWrap: 'wrap' }}>
-        {['Perfil', 'Seguranca', 'Assinatura', 'Visual'].map(item => (
+        {['Perfil', 'Seguranca', 'Assinatura', 'Visual', 'Conta'].map(item => (
           <div key={item} onClick={() => setSubTab(item)}
-            style={{ padding: '9px 0', fontSize: '0.86rem', fontWeight: 600, color: subTab === item ? t.accent : t.textMuted, borderBottom: subTab === item ? `2px solid ${t.accent}` : '2px solid transparent', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}>
+            style={{ padding: '9px 0', fontSize: '0.86rem', fontWeight: 600, color: subTab === item ? (item === 'Conta' ? t.danger : t.accent) : t.textMuted, borderBottom: subTab === item ? `2px solid ${item === 'Conta' ? t.danger : t.accent}` : '2px solid transparent', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}>
             {item === 'Seguranca' ? 'Segurança' : item}
           </div>
         ))}
@@ -1534,9 +1635,99 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
 
       {subTab === 'Seguranca' && (
         <motion.div {...fadeUp} style={{ display: 'grid', gap: 18, maxWidth: 560 }}>
-          <div style={card}><h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 22, color: t.text }}>Alterar Senha</h4><div style={{ display: 'grid', gap: 13 }}><Input tema={tema} label="Senha Atual" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} placeholder="••••••••" /><Input tema={tema} label="Nova Senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} placeholder="••••••••" /><Input tema={tema} label="Confirmar Nova Senha" type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} placeholder="••••••••" /></div></div>
+
+          {/* ── Alterar Senha ── */}
+          <div style={card}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 22, color: t.text }}>Alterar Senha</h4>
+            <div style={{ display: 'grid', gap: 13 }}>
+              <Input tema={tema} label="Senha Atual" type="password" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} placeholder="••••••••" />
+              <Input tema={tema} label="Nova Senha" type="password" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} placeholder="••••••••" />
+              <Input tema={tema} label="Confirmar Nova Senha" type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} placeholder="••••••••" />
+            </div>
+          </div>
           {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, color: msgTipo === 'ok' ? t.accent : t.danger }}>{msg}</p>}
           <SaveButton onClick={alterarSenha} loading={loading} label="ALTERAR SENHA" tema={tema} />
+
+          {/* ── 2FA ── */}
+          <div style={{ ...card, marginTop: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
+              <div>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: t.text, marginBottom: 4 }}>Verificação em Duas Etapas</h4>
+                <p style={{ fontSize: '0.75rem', color: t.textMuted, lineHeight: 1.6, margin: 0 }}>
+                  Ao ativar, cada login exigirá um código de 6 dígitos enviado para seu e-mail
+                  {dois_fatores?.email ? ` (${dois_fatores.email})` : ''}.
+                </p>
+              </div>
+              <span style={{ background: dois_fatores?.ativo ? `${t.accent}18` : `${t.danger}12`, color: dois_fatores?.ativo ? t.accent : t.danger, padding: '4px 12px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                {dois_fatores?.ativo ? 'ATIVO' : 'INATIVO'}
+              </span>
+            </div>
+
+            {/* ── Ativar 2FA ── */}
+            {dois_fatores && !dois_fatores.ativo && (
+              <div style={{ display: 'grid', gap: 10 }}>
+                {twoFaStep === 'idle' && (
+                  <>
+                    <Input tema={tema} label="Confirme sua senha para ativar" type="password" value={twoFaSenha} onChange={e => setTwoFaSenha(e.target.value)} placeholder="••••••••" />
+                    <button onClick={iniciarAtivacao2fa} disabled={loadingTwoFa}
+                      style={{ background: t.accent, color: t.accentText, border: 'none', padding: '11px 20px', borderRadius: 9, fontWeight: 800, cursor: loadingTwoFa ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: loadingTwoFa ? 0.6 : 1 }}>
+                      {loadingTwoFa ? 'ENVIANDO...' : 'ENVIAR CÓDIGO DE VERIFICAÇÃO'}
+                    </button>
+                  </>
+                )}
+                {twoFaStep === 'codigo' && (
+                  <>
+                    <p style={{ fontSize: '0.75rem', color: t.accent, margin: 0 }}>Código enviado! Verifique seu e-mail.</p>
+                    <Input tema={tema} label="Código de 6 dígitos" type="text" value={twoFaCodigo} onChange={e => setTwoFaCodigo(e.target.value)} placeholder="000000" />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={confirmarCodigo2fa} disabled={loadingTwoFa}
+                        style={{ flex: 1, background: t.accent, color: t.accentText, border: 'none', padding: '11px 20px', borderRadius: 9, fontWeight: 800, cursor: loadingTwoFa ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: loadingTwoFa ? 0.6 : 1 }}>
+                        {loadingTwoFa ? 'VERIFICANDO...' : 'CONFIRMAR CÓDIGO'}
+                      </button>
+                      <button onClick={() => { setTwoFaStep('idle'); setTwoFaSenha(''); setTwoFaCodigo(''); }}
+                        style={{ background: 'transparent', color: t.textMuted, border: `1px solid ${t.cardBorder}`, padding: '11px 16px', borderRadius: 9, fontWeight: 600, cursor: 'pointer', fontSize: '0.78rem' }}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Desativar 2FA ── */}
+            {dois_fatores?.ativo && (
+              <div style={{ display: 'grid', gap: 10 }}>
+                <Input tema={tema} label="Confirme sua senha para desativar" type="password" value={twoFaSenha} onChange={e => setTwoFaSenha(e.target.value)} placeholder="••••••••" />
+                <button onClick={desativar2fa} disabled={desativandoTwoFa}
+                  style={{ background: 'transparent', color: t.danger, border: `1px solid ${t.danger}`, padding: '11px 20px', borderRadius: 9, fontWeight: 700, cursor: desativandoTwoFa ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: desativandoTwoFa ? 0.6 : 1 }}>
+                  {desativandoTwoFa ? 'DESATIVANDO...' : 'DESATIVAR 2FA'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ── Sessão atual ── */}
+          {(() => {
+            let exp = null;
+            try {
+              const token = localStorage.getItem('token');
+              if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.exp) exp = new Date(payload.exp * 1000);
+              }
+            } catch {}
+            return (
+              <div style={{ ...card, marginTop: 4 }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 8, color: t.text }}>Sessão Atual</h4>
+                <p style={{ fontSize: '0.75rem', color: t.textMuted, lineHeight: 1.6, marginBottom: 0 }}>
+                  {exp
+                    ? <>Token válido até <strong style={{ color: t.text }}>{exp.toLocaleDateString('pt-BR')} às {exp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</strong>. Sessões expiram automaticamente após 24h.</>
+                    : 'Sessão ativa. Tokens expiram após 24 horas.'}
+                </p>
+              </div>
+            );
+          })()}
+
         </motion.div>
       )}
 
@@ -1559,7 +1750,7 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                   </div>
                 </div>
                 <div style={{ marginBottom: 24 }}>
-                  {[{ label: 'Plano', valor: PLANO_NOME[assinatura.plano] || assinatura.plano }, { label: 'Período', valor: assinatura.periodo === 'mensal' ? 'Mensal' : 'Anual' }, { label: 'Status', valor: statusLabel[assinatura.status] }, assinatura.periodo_fim ? { label: assinatura.status === 'cancelado' ? 'Acesso até' : 'Próxima cobrança', valor: new Date(assinatura.periodo_fim).toLocaleDateString('pt-BR') } : null].filter(Boolean).map((item, i) => (
+                  {[{ label: 'Plano', valor: PLANO_NOME[assinatura.plano] || assinatura.plano }, { label: 'Período', valor: assinatura.periodo === 'mensal' ? 'Mensal' : 'Anual' }, { label: 'Status', valor: statusLabel[assinatura.status] }, (assinatura.periodo_fim || assinatura.trial_fim) ? { label: assinatura.status === 'cancelado' ? 'Acesso até' : assinatura.status === 'trial' ? 'Trial válido até' : 'Próxima cobrança', valor: new Date(assinatura.status === 'trial' ? (assinatura.trial_fim || assinatura.periodo_fim) : assinatura.periodo_fim).toLocaleDateString('pt-BR') } : null].filter(Boolean).map((item, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${t.cardBorder}` }}>
                       <span style={{ fontSize: '0.83rem', color: t.textMuted }}>{item.label}</span>
                       <span style={{ fontSize: '0.83rem', fontWeight: 700, color: t.text }}>{item.valor}</span>
@@ -1587,6 +1778,59 @@ const ConfigSettings = ({ usuarioId, tema, setTema }) => {
                 </div>
               </div>
             )}
+        </motion.div>
+      )}
+
+      {subTab === 'Conta' && (
+        <motion.div {...fadeUp} style={{ display: 'grid', gap: 18, maxWidth: 560 }}>
+          {/* Informações da conta */}
+          <div style={{ padding: '24px 28px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 18, color: t.text }}>Informações da Conta</h4>
+            <div style={{ display: 'grid', gap: 0 }}>
+              {[
+                { label: 'Nome', valor: nome || '—' },
+                { label: 'E-mail', valor: email || '—' },
+                { label: 'ID da Conta', valor: `#${usuarioId}` },
+                { label: 'Plano', valor: loadingAss ? '...' : (assinatura?.tem_assinatura ? (PLANO_NOME[assinatura.plano] || assinatura.plano) : 'Sem plano ativo') },
+                { label: 'Status', valor: loadingAss ? '...' : (assinatura?.tem_assinatura ? (assinatura.status?.charAt(0).toUpperCase() + assinatura.status?.slice(1)) : '—') },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${t.cardBorder}` }}>
+                  <span style={{ fontSize: '0.83rem', color: t.textMuted }}>{item.label}</span>
+                  <span style={{ fontSize: '0.83rem', fontWeight: 700, color: t.text }}>{item.valor}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sessão atual */}
+          <div style={{ padding: '20px 28px', background: t.card, borderRadius: 14, border: `1px solid ${t.cardBorder}` }}>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 6, color: t.text }}>Sessão Atual</h4>
+            <p style={{ fontSize: '0.78rem', color: t.textMuted, marginBottom: 14, lineHeight: 1.6 }}>
+              Seu token de acesso expira após 24 horas. Para encerrar a sessão manualmente, clique em sair.
+            </p>
+            <button
+              onClick={() => { const c = localStorage.getItem('zapchat_cookies'); localStorage.clear(); if (c) localStorage.setItem('zapchat_cookies', c); navigate('/login'); }}
+              style={{ background: 'transparent', color: t.textMuted, border: `1px solid ${t.cardBorder}`, padding: '10px 20px', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: '0.78rem' }}
+            >
+              ENCERRAR SESSÃO
+            </button>
+          </div>
+
+          {/* Zona de perigo */}
+          <div style={{ padding: '24px 28px', background: `${t.danger}08`, borderRadius: 14, border: `1px solid ${t.danger}30` }}>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 6, color: t.danger }}>Zona de Perigo</h4>
+            <p style={{ fontSize: '0.78rem', color: t.textMuted, marginBottom: 18, lineHeight: 1.6 }}>
+              A exclusão da conta remove permanentemente todos os seus fluxos, agentes, instâncias, histórico de disparos e dados pessoais. Esta ação não pode ser desfeita.
+            </p>
+            {msg && <p style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: 14, color: msgTipo === 'ok' ? t.accent : t.danger }}>{msg}</p>}
+            <button
+              onClick={excluirConta}
+              disabled={deletandoConta}
+              style={{ background: t.danger, color: '#fff', border: 'none', padding: '11px 22px', borderRadius: 9, fontWeight: 700, cursor: deletandoConta ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: deletandoConta ? 0.6 : 1 }}
+            >
+              {deletandoConta ? 'EXCLUINDO...' : 'EXCLUIR MINHA CONTA'}
+            </button>
+          </div>
         </motion.div>
       )}
 
@@ -2074,6 +2318,207 @@ const MetricasDetalhadas = ({ fluxos, plano, tema }) => {
   );
 };
 
+// ─── ABA: CONVERSAS ───────────────────────────────────────────────────────────
+const LABELS_CONVERSA = {
+  nome: 'Nome', sobrenome: 'Sobrenome', nome_completo: 'Nome completo',
+  telefone: 'Telefone', email: 'E-mail', cpf: 'CPF', rg: 'RG',
+  data_agendamento: 'Data', hora_agendamento: 'Horário',
+  profissional: 'Profissional', servico: 'Serviço', especialidade: 'Especialidade',
+  medico: 'Médico', produto: 'Produto', valor: 'Valor',
+  nome_pet: 'Pet', especie_pet: 'Espécie', curso: 'Curso',
+  protocolo: 'Protocolo', resposta_1: 'Info 1', resposta_2: 'Info 2',
+  resposta_3: 'Info 3', tipo_imovel: 'Tipo de imóvel', cidade: 'Cidade',
+  forma_pagamento: 'Pagamento', numero_pedido: 'Nº Pedido',
+};
+
+const AbaConversas = ({ tema }) => {
+  const t = TEMAS[tema];
+  const [conversas, setConversas] = useState([]);
+  const [metricas, setMetricas]   = useState({ total: 0, hoje: 0, semana: 0 });
+  const [carregando, setCarregando] = useState(true);
+  const [expandida, setExpandida] = useState(null);
+  const [pagina, setPagina]       = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [busca, setBusca]         = useState('');
+  const LIMIT = 20;
+
+  const carregar = useCallback(async (pg = 1) => {
+    setCarregando(true);
+    try {
+      const [convRes, metRes] = await Promise.all([
+        authFetch(`${API_URL}/historico/conversas?page=${pg}&limit=${LIMIT}`),
+        authFetch(`${API_URL}/historico/metricas`),
+      ]);
+      const [convData, metData] = await Promise.all([convRes.json(), metRes.json()]);
+      setConversas(convData.conversas || []);
+      setTotalPaginas(convData.total_paginas || 1);
+      setMetricas(metData);
+    } catch {}
+    finally { setCarregando(false); }
+  }, []);
+
+  useEffect(() => { carregar(1); }, [carregar]);
+
+  const fmtTelefone = (tel) => {
+    const d = (tel || '').replace(/\D/g, '');
+    if (d.length >= 12) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}`;
+    return tel;
+  };
+
+  const fmtData = (dt) => {
+    if (!dt) return '—';
+    return new Date(dt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const preview = (dados) => {
+    if (!dados || Object.keys(dados).length === 0) return 'Sem dados coletados';
+    return Object.entries(dados).slice(0, 3).map(([k, v]) => `${LABELS_CONVERSA[k] || k}: ${v}`).join(' · ');
+  };
+
+  const conversasFiltradas = busca
+    ? conversas.filter(c =>
+        c.contato.includes(busca) ||
+        JSON.stringify(c.dados_sessao || {}).toLowerCase().includes(busca.toLowerCase())
+      )
+    : conversas;
+
+  return (
+    <motion.div {...fadeUp} style={{ paddingTop: 36 }}>
+
+      {/* Estatísticas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 32 }}>
+        <StatCard tema={tema} label="Total de Conversas" value={metricas.total} trend="histórico completo" />
+        <StatCard tema={tema} label="Finalizadas Hoje" value={metricas.hoje} />
+        <StatCard tema={tema} label="Últimos 7 dias" value={metricas.semana} />
+      </div>
+
+      {/* Barra de controle */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 12 }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 800, color: t.text, margin: 0 }}>Histórico de Conversas</h3>
+        <input
+          value={busca}
+          onChange={e => setBusca(e.target.value)}
+          placeholder="Buscar por número ou dado..."
+          style={{ background: t.input, border: `1px solid ${t.inputBorder}`, borderRadius: 8, color: t.text, fontSize: '0.78rem', padding: '8px 12px', outline: 'none', width: 220, boxSizing: 'border-box' }}
+        />
+      </div>
+
+      {/* Lista */}
+      {carregando ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+          <span style={{ width: 28, height: 28, border: `2px solid ${t.accent}33`, borderTop: `2px solid ${t.accent}`, borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      ) : conversasFiltradas.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 40px', background: t.card, borderRadius: 16, border: `1px solid ${t.cardBorder}` }}>
+          <p style={{ color: t.textMuted, fontSize: '0.9rem', marginBottom: 8 }}>Nenhuma conversa finalizada ainda.</p>
+          <p style={{ color: t.textSub, fontSize: '0.78rem', lineHeight: 1.6 }}>
+            As conversas aparecem aqui quando o bot chega ao nó final do fluxo.<br />
+            Configure um nó sem opções de resposta para ser o encerramento.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {conversasFiltradas.map(c => {
+            const aberta  = expandida === c.id;
+            const dados   = c.dados_sessao || {};
+            const temDados = Object.keys(dados).length > 0;
+            const iniciais = (dados.nome || c.contato).toUpperCase().replace(/\D/g,'').slice(-2) || 'CT';
+
+            return (
+              <div key={c.id} style={{ background: t.card, border: `1px solid ${aberta ? t.accent + '55' : t.cardBorder}`, borderRadius: 12, overflow: 'hidden', transition: 'border-color 0.2s' }}>
+
+                {/* Linha principal */}
+                <div
+                  onClick={() => setExpandida(aberta ? null : c.id)}
+                  style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.background = t.menuHover}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  {/* Avatar */}
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: t.accentDim, border: `1px solid ${t.accent}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: t.accent }}>{iniciais.slice(0, 2)}</span>
+                  </div>
+
+                  {/* Info principal */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '0.88rem', fontWeight: 700, color: t.text, marginBottom: 2 }}>
+                      {dados.nome || dados.nome_completo || fmtTelefone(c.contato)}
+                    </p>
+                    <p style={{ fontSize: '0.68rem', color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {fmtTelefone(c.contato)}
+                      {c.nome_fluxo && <span style={{ marginLeft: 8, color: t.textSub }}>· {c.nome_fluxo}</span>}
+                    </p>
+                  </div>
+
+                  {/* Preview dos dados */}
+                  <p style={{ fontSize: '0.68rem', color: t.textMuted, flex: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'none' }}
+                    ref={el => { if (el) { const show = el.parentElement?.offsetWidth > 600; el.style.display = show ? 'block' : 'none'; } }}>
+                    {preview(dados)}
+                  </p>
+
+                  {/* Data + seta */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                    <span style={{ fontSize: '0.68rem', color: t.textSub, whiteSpace: 'nowrap' }}>{fmtData(c.finalizado_em)}</span>
+                    <span style={{ color: t.textMuted, fontSize: '0.8rem', display: 'inline-block', transform: aberta ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
+                  </div>
+                </div>
+
+                {/* Detalhes expandidos */}
+                {aberta && (
+                  <div style={{ padding: '14px 20px 18px', borderTop: `1px solid ${t.cardBorder}` }}>
+                    {temDados ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '12px 24px' }}>
+                        {Object.entries(dados).map(([chave, valor]) => (
+                          <div key={chave}>
+                            <p style={{ fontSize: '0.58rem', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>
+                              {LABELS_CONVERSA[chave] || chave.replace(/_/g, ' ')}
+                            </p>
+                            <p style={{ fontSize: '0.85rem', color: t.text, fontWeight: 600, wordBreak: 'break-word' }}>{valor}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: '0.78rem', color: t.textSub, fontStyle: 'italic' }}>
+                        Nenhum dado coletado nesta conversa.
+                      </p>
+                    )}
+
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${t.cardBorder}`, display: 'flex', flexWrap: 'wrap', gap: '6px 20px', fontSize: '0.68rem', color: t.textSub }}>
+                      <span>Contato: <strong style={{ color: t.textMuted }}>{fmtTelefone(c.contato)}</strong></span>
+                      {c.instancia_nome && <span>Instância: <strong style={{ color: t.textMuted }}>{c.instancia_nome}</strong></span>}
+                      {c.nome_fluxo    && <span>Fluxo: <strong style={{ color: t.textMuted }}>{c.nome_fluxo}</strong></span>}
+                      <span>Finalizado: <strong style={{ color: t.textMuted }}>{fmtData(c.finalizado_em)}</strong></span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Paginação */}
+      {totalPaginas > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 24 }}>
+          <button onClick={() => { const pg = Math.max(1, pagina - 1); setPagina(pg); carregar(pg); }}
+            disabled={pagina === 1}
+            style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted, cursor: pagina === 1 ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: pagina === 1 ? 0.4 : 1 }}>
+            ← Anterior
+          </button>
+          <span style={{ fontSize: '0.78rem', color: t.textMuted, padding: '0 8px' }}>
+            {pagina} / {totalPaginas}
+          </span>
+          <button onClick={() => { const pg = Math.min(totalPaginas, pagina + 1); setPagina(pg); carregar(pg); }}
+            disabled={pagina === totalPaginas}
+            style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted, cursor: pagina === totalPaginas ? 'not-allowed' : 'pointer', fontSize: '0.78rem', opacity: pagina === totalPaginas ? 0.4 : 1 }}>
+            Próxima →
+          </button>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 // ─── DASHBOARD PRINCIPAL ──────────────────────────────────────────────────────
 const Dashboard = () => {
   const navigate       = useNavigate();
@@ -2087,8 +2532,16 @@ const Dashboard = () => {
   const [plano, setPlano]         = useState('starter');
   const [menuAberto, setMenuAberto] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [modal, setModal] = useState(null);
 
   const t = TEMAS[tema];
+  const coresTemaMain = { bg: t.selectBg, border: t.cardBorder, text: t.text, muted: t.textMuted, accent: t.accent, danger: t.danger };
+  const confirmarMain = (mensagem, opcoes = {}) => new Promise(resolve => {
+    setModal({ mensagem, ...opcoes, coresTema: coresTemaMain, tipo: 'confirmar', onSim: () => { setModal(null); resolve(true); }, onNao: () => { setModal(null); resolve(false); } });
+  });
+  const alertarMain = (mensagem) => new Promise(resolve => {
+    setModal({ mensagem, coresTema: coresTemaMain, tipo: 'alerta', onSim: () => { setModal(null); resolve(); } });
+  });
   const usuarioId   = parseInt(localStorage.getItem('usuario_id'));
   const usuarioNome = localStorage.getItem('usuario_nome') || 'Usuário';
 
@@ -2099,6 +2552,7 @@ const Dashboard = () => {
     { key: 'Disparos',      label: 'Disparos',        bloqueado: !PLANO_LIMITES[plano]?.disparos },
     { key: 'Templates',     label: 'Templates',       bloqueado: false },
     { key: 'TesteFluxo',   label: 'Teste de Fluxo',  bloqueado: false },
+    { key: 'Conversas',    label: 'Conversas',        bloqueado: false },
     { key: 'AgenteIA',     label: 'Agente IA',        bloqueado: false },
     { key: 'Configuracoes', label: 'Configurações',   bloqueado: false },
     ...(isAdmin ? [{ key: 'Admin', label: 'Painel Admin', bloqueado: false }] : []),
@@ -2106,8 +2560,11 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    authFetch(`${API_URL}/pagamentos/minha-assinatura`).then(r => r.json()).then(d => { if (d.tem_assinatura && d.plano) setPlano(d.plano); }).catch(() => {});
-  }, []);
+    authFetch(`${API_URL}/pagamentos/minha-assinatura`).then(r => r.json()).then(d => {
+      if (!d.tem_assinatura) { navigate('/assinar'); return; }
+      if (d.plano) setPlano(d.plano);
+    }).catch(() => {});
+  }, [navigate]);
 
   useEffect(() => {
     authFetch(`${API_URL}/admin/check`)
@@ -2152,11 +2609,11 @@ const Dashboard = () => {
   };
 
   const excluirFluxo = async (id) => {
-    if (!window.confirm('Excluir este fluxo? Esta ação não pode ser desfeita.')) return;
+    if (!await confirmarMain('Excluir este fluxo? Esta ação não pode ser desfeita.', { perigo: true })) return;
     try {
       await authFetch(`${API_URL}/fluxos/${id}/${usuarioId}`, { method: 'DELETE' });
       setFluxos(prev => prev.filter(f => f.id !== id));
-    } catch { alert('Erro ao excluir.'); }
+    } catch { await alertarMain('Erro ao excluir.'); }
   };
 
   const renderContent = () => {
@@ -2195,6 +2652,7 @@ const Dashboard = () => {
       case 'Disparos':      return <DisparosTab plano={plano} navigate={navigate} tema={tema} />;
       case 'Templates':     return <TemplatesTab plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
       case 'TesteFluxo':   return <TesteFluxo fluxos={fluxos} tema={tema} />;
+      case 'Conversas':    return <AbaConversas tema={tema} />;
       case 'AgenteIA':     return <AgenteIA plano={plano} usuarioId={usuarioId} navigate={navigate} tema={tema} />;
       case 'Configuracoes': return <ConfigSettings usuarioId={usuarioId} tema={tema} setTema={setTema} />;
       case 'Admin':         return <AdminPanel tema={tema} />;
@@ -2235,6 +2693,8 @@ const Dashboard = () => {
           .testes-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
+
+      <ConfirmModal modal={modal} />
 
       <AnimatePresence>
         {trialBanner && (
@@ -2282,7 +2742,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-            <button className="desk-only" onClick={() => { localStorage.clear(); window.location.href = '/login'; }}
+            <button className="desk-only" onClick={() => { const c = localStorage.getItem('zapchat_cookies'); localStorage.clear(); if (c) localStorage.setItem('zapchat_cookies', c); window.location.href = '/login'; }}
               style={{ background: 'transparent', color: t.textMuted, border: `1px solid ${t.cardBorder}`, padding: '10px 18px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: '0.7rem' }}>
               SAIR
             </button>
