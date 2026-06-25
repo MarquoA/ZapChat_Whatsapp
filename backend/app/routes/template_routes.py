@@ -57,7 +57,7 @@ def _plano_suficiente(plano_usuario: str, plano_minimo: str) -> bool:
 def _normalizar_edges_template(nodes, edges):
     if not isinstance(edges, list):
         return []
-    normalized = [dict(e) for e in edges]
+    normalized = [dict(e) for e in edges] # ta convetendo os edges para uma lista de dicionario
     by_source = {}
 
     for edge in normalized:

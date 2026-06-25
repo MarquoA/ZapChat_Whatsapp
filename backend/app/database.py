@@ -12,7 +12,7 @@ _pool = None
 
 def _get_pool():
     global _pool
-    if _pool is None:
+    if _pool is None: 
         _pool = mysql.connector.pooling.MySQLConnectionPool(
             pool_name="zapchat_pool",
             pool_size=10,

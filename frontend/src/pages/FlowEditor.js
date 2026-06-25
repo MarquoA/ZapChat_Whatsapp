@@ -1214,9 +1214,11 @@ const FlowContent = () => {
     const newY = (lastNode?.position.y || 0) + 380;
     const newX = (lastNode?.position.x || 400);
     const typeData = {
-      botNode:   { label: 'Nova mensagem...', options: [], delay: 2 },
-      imageNode: { caption: '', imageUrl: '', delay: 2 },
-      iaNode:    { agenteId: null, agenteName: '', prompt: '', modelo: 'gpt-4o-mini', delay: 3 },
+      botNode:            { label: 'Nova mensagem...', options: [], delay: 2 },
+      imageNode:          { caption: '', imageUrl: '', delay: 2 },
+      iaNode:             { agenteId: null, agenteName: '', prompt: '', modelo: 'gpt-4o-mini', delay: 3 },
+      pegarRespostaNode:  { label: 'Qual é a sua resposta?', capturaVariavel: '' },
+      fimNode:            { label: 'Obrigado pelo contato! Até logo.', resumoSessao: false },
     };
     const newNode = {
       id: Date.now().toString(),
@@ -1380,9 +1382,20 @@ const FlowContent = () => {
 
           <p style={{ color: FE_T.sidebarLabel, fontSize: '0.58rem', fontWeight: '800', letterSpacing: '2px', marginBottom: '14px', textTransform: 'uppercase' }}>ADICIONAR BLOCO</p>
 
-          <ComponentItem title="TEXTO" desc="Mensagem com delay, opções de resposta e captura de dados." color={FE_T.green} locked={false} onClick={() => addNode('botNode')} />
+          <ComponentItemExpandable
+            title="TEXTO"
+            desc="Mensagem com delay, opções de resposta e captura de dados."
+            color={FE_T.green}
+            locked={false}
+            onClick={() => addNode('botNode')}
+            subItems={[
+              { label: 'Mensagem simples', desc: 'Texto com opções', color: FE_T.green, onClick: () => addNode('botNode') },
+              { label: 'Capturar resposta', desc: 'Salva em variável', color: AMBER, onClick: () => addNode('pegarRespostaNode') },
+            ]}
+          />
           <ComponentItem title="IMAGEM" desc="Envie uma imagem com legenda opcional." color={FE_T.blue} locked={!isPro} onClick={() => addNode('imageNode')} />
           <ComponentItem title="IA COM CONTEXTO" desc="Bot responde com IA baseado no histórico da conversa." color={FE_T.purple} locked={!isPro} onClick={() => addNode('iaNode')} />
+          <ComponentItem title="FIM DE CONVERSA" desc="Encerra o fluxo com mensagem final e resumo opcional." color={SLATE} locked={false} onClick={() => addNode('fimNode')} />
 
           {!isPro && (
             <div style={{ background: FE_T.purpleDim, border: `1px solid ${FE_T.purple}22`, borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
@@ -1404,6 +1417,8 @@ const FlowContent = () => {
               { cor: FE_T.cyan, label: 'Fluxo padrao (sem opcoes)' },
               { cor: FE_T.blue, label: 'Saida de imagem' },
               { cor: FE_T.purple, label: 'Saida de IA' },
+              { cor: AMBER, label: 'Captura de variavel' },
+              { cor: SLATE, label: 'Fim de conversa' },
             ].map(({ cor, label }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cor, flexShrink: 0 }} />
